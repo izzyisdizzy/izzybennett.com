@@ -55,6 +55,19 @@ const chipCls =
         </div>
       </fieldset>
 
+      <!-- Temperature (required) — no default, so the customer must actively choose. -->
+      <fieldset>
+        <legend class={labelCls}>Hot or iced? <span class="text-accent-600">*</span></legend>
+        <div class="mt-2 flex flex-wrap gap-2">
+          {[['Hot', '🔥'], ['Iced', '🧊']].map(([value, emoji]) => (
+            <label>
+              <input type="radio" name="temperature" value={value} required class="peer sr-only" />
+              <span class={chipCls}>{value} {emoji}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       {milks.length > 0 && (
         <fieldset>
           <legend class={labelCls}>Milk <span class={optionalCls}>(optional)</span></legend>
@@ -154,11 +167,14 @@ const chipCls =
       if (!kitchenOpen) { setStatus('The kitchen is closed right now.', 'err'); return; }
       const drink = form.querySelector('input[name="drink"]:checked')?.value;
       if (!drink) { setStatus('Pick a drink first.', 'err'); return; }
+      const temperature = form.querySelector('input[name="temperature"]:checked')?.value;
+      if (!temperature) { setStatus('Pick hot or iced first.', 'err'); return; }
       const name = form.name.value.trim();
       if (!name) { setStatus('Add your name first.', 'err'); return; }
 
       const order = {
         drink,
+        temperature,
         name,
         milk: form.querySelector('input[name="milk"]:checked')?.value || undefined,
         syrups: checkedValues('syrup'),
@@ -186,6 +202,8 @@ const chipCls =
         form.querySelectorAll('input[name="syrup"]').forEach((el) => (el.checked = false));
         const noMilk = form.querySelector('input[name="milk"][value=""]');
         if (noMilk) noMilk.checked = true;
+        // Clear temperature so the next order has to choose hot/iced again.
+        form.querySelectorAll('input[name="temperature"]').forEach((el) => (el.checked = false));
         form.name.value = '';
         form.notes.value = '';
       } catch (err) {

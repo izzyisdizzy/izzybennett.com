@@ -136,7 +136,9 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
 
       const drink = document.createElement('div');
       drink.className = 'font-semibold text-neutral-900 dark:text-neutral-100';
-      drink.textContent = order.drink;
+      // Prefix with the hot/iced choice, e.g. "Iced Latte". Older orders may lack it — fall back to
+      // just the drink name.
+      drink.textContent = order.temperature ? `${order.temperature} ${order.drink}` : order.drink;
       el.appendChild(drink);
 
       const bits = [];

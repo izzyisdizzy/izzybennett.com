@@ -20,6 +20,7 @@ import urllib.request
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,18 +59,24 @@ def init_db() -> None:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS orders (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                name       TEXT NOT NULL,
-                drink      TEXT NOT NULL,
-                milk       TEXT,
-                syrups     TEXT NOT NULL DEFAULT '[]',  -- JSON array
-                notes      TEXT,
-                status     TEXT NOT NULL DEFAULT 'new',
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                name        TEXT NOT NULL,
+                drink       TEXT NOT NULL,
+                temperature TEXT,  -- 'Hot' | 'Iced' (nullable: rows predate this column)
+                milk        TEXT,
+                syrups      TEXT NOT NULL DEFAULT '[]',  -- JSON array
+                notes       TEXT,
+                status      TEXT NOT NULL DEFAULT 'new',
+                created_at  TEXT NOT NULL,
+                updated_at  TEXT NOT NULL
             )
             """
         )
+        # Migration for DBs created before `temperature` existed — add the column if it's missing so
+        # an in-place server update doesn't need a manual schema change or a wiped orders.db.
+        have = {row["name"] for row in conn.execute("PRAGMA table_info(orders)")}
+        if "temperature" not in have:
+            conn.execute("ALTER TABLE orders ADD COLUMN temperature TEXT")
         # Small key/value store for app state — currently just whether the kitchen is open.
         conn.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         conn.commit()
@@ -99,8 +106,13 @@ def verify_session(authorization: str | None) -> bool:
     closed (returns False) if the header is missing or the Worker is unreachable."""
     if not authorization or not authorization.startswith("Bearer "):
         return False
+    # Send an explicit User-Agent: the Worker sits behind Cloudflare, whose bot protection 403s the
+    # default "Python-urllib/x.y" UA before the request ever reaches the Worker — which would make
+    # this fail closed and the kitchen toggle never work. Any non-bot UA gets through.
     req = urllib.request.Request(
-        f"{RECIPE_API}/api/me", headers={"Authorization": authorization}, method="GET"
+        f"{RECIPE_API}/api/me",
+        headers={"Authorization": authorization, "User-Agent": "izzy-orders/1.0"},
+        method="GET",
     )
     try:
         with urllib.request.urlopen(req, timeout=5) as res:
@@ -124,6 +136,10 @@ app.add_middleware(
 
 class OrderIn(BaseModel):
     drink: str = Field(min_length=1, max_length=100)
+    # Hot/iced choice. Required by the /order form (client-side), but kept optional here so a
+    # brief site/Pi version skew during a deploy can't 422 legitimate orders; validated to the two
+    # allowed values when present.
+    temperature: Literal["Hot", "Iced"] | None = None
     name: str = Field(min_length=1, max_length=100)
     milk: str | None = Field(default=None, max_length=100)
     syrups: list[str] = Field(default_factory=list)
@@ -193,10 +209,10 @@ def create_order(order: OrderIn) -> dict:
             raise HTTPException(status_code=403, detail="kitchen is closed")
         cur = conn.execute(
             """
-            INSERT INTO orders (name, drink, milk, syrups, notes, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, 'new', ?, ?)
+            INSERT INTO orders (name, drink, temperature, milk, syrups, notes, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?)
             """,
-            (name, drink, clean(order.milk), json.dumps(syrups), clean(order.notes), ts, ts),
+            (name, drink, order.temperature, clean(order.milk), json.dumps(syrups), clean(order.notes), ts, ts),
         )
         conn.commit()
         row = conn.execute("SELECT * FROM orders WHERE id = ?", (cur.lastrowid,)).fetchone()
