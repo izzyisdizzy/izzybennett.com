@@ -60,9 +60,10 @@
 
 // ── Blurb ───────────────────────────────────────────────────────────────────
 #text(style: "italic")[
-  Mobile Software Engineer with over six years of experience working with a
-  team to improve, maintain, and implement features for Android and iOS
-  applications with over millions of downloads.
+  Mobile software engineer with 6+ years shipping Android and iOS apps used by
+  millions. Technical lead for payments-critical systems at Square, scaling
+  Offline Payments to 4M+ sellers and \~\$442M/yr in offline volume across
+  mobile and custom hardware.
 ]
 
 // ── Experience ──────────────────────────────────────────────────────────────
@@ -73,18 +74,21 @@
   [Square],
   [Mobile Software Engineer],
   (
-    [Leader for multiple large scale projects for Square's Android and iOS
-      Checkout across both mobile and custom hardware devices.],
-    [Lead, implemented, and maintained Offline Payments and Checkout for the
-      Android and iOS Point of Sale applications.],
-    [Expanded Offline Payments to over 4 million users doubling GPV for
-      offline payment sales across Android and iOS.],
-    [Collaborate between product managers, quality engineers, UI designers,
-      and other software engineers to both bring projects to success and
-      monitor their health long-term.],
-    [Ensure application and payment health through extensive test plans, UI
-      testing, and metrics monitoring to both prevent and swiftly recover
-      failures.],
+    [Technical lead for Offline Payments and Checkout on Square Point of Sale
+      for Android and iOS across mobile and custom hardware, owning design,
+      implementation, rollout, and long-term health of a \~\$442M/yr payment
+      flow.],
+    [Expanded Offline Payments to over 4 million sellers, raising enablement
+      from \~40% to 92.6% of users and doubling its share of Square GPV
+      (0.11% to 0.22%, \~\$34M in added offline volume).],
+    [Drive projects across product, design, quality engineering, and partner
+      teams, defining rollout strategy, launch criteria, and success metrics
+      for payment-critical features.],
+    [Safeguard payment reliability through staged rollouts, extensive test
+      plans and UI testing, and metrics monitoring and alerting to prevent
+      and swiftly recover from failures.],
+    [Mentor and onboard engineers onto new projects and features to set them
+      up for success.],
   ),
 )
 
@@ -93,17 +97,14 @@
   [Alarm.com],
   [Android Software Engineer II],
   (
-    [Primary code writer for large scale Android projects including a complete
-      UI/UX refresh and implementing Dark Mode across the app.],
-    [Review code and provide useful feedback for teammates to improve the
-      quality of the codebase and prevent bugs.],
-    [Collaborate with product managers, quality engineers, UI designers, and
-      other software engineers to implement features and improvements for the
-      Android application and backend services.],
-    [Write unit tests and UI tests utilizing Espresso, Roboelectric, and JUnit.],
-    [Create build scripts and Gradle tasks for improving the build process.],
-    [Mentored two interns and guided them in collaborating with the team to
-      successfully produce an upcoming feature.],
+    [Led development of large-scale Android projects, including a complete
+      UI/UX refresh and app-wide Dark Mode for an app used by millions.],
+    [Shipped features spanning the Android app and its backend services in
+      close collaboration with product, design, and quality engineering.],
+    [Wrote unit and UI tests with JUnit, Robolectric, and Espresso; built
+      Gradle tasks and build scripts to streamline the build process.],
+    [Mentored two interns and guided them to successfully ship a production
+      feature.],
   ),
 )
 
@@ -112,11 +113,10 @@
   [Alarm.com],
   [Android Software Engineer Intern],
   (
-    [Reconstructed the notification system for the Android application and
-      implemented bundled notifications.],
-    [Responsible for numerous bugs fixes and minor enhancements.],
-    [Collaborated with product managers and quality engineers for improving
-      accessibility for the Android application.],
+    [Reconstructed the Android notification system and implemented bundled
+      notifications.],
+    [Improved accessibility across the Android application in collaboration
+      with product managers and quality engineers.],
   ),
 )
 
@@ -135,9 +135,10 @@
   [
     #section[Additional Skills]
     #list(
-      [#text(weight: "bold")[Languages:] Kotlin, Swift, TypeScript,
-        JavaScript, C\#, Ruby],
-      [#text(weight: "bold")[Tools:] Claude, Codex, Git],
+      [#text(weight: "bold")[Languages:] Kotlin, Swift, TypeScript, C\#, Ruby],
+      [#text(weight: "bold")[Mobile:] Jetpack Compose, SwiftUI, Gradle, JUnit,
+        Robolectric, Espresso],
+      [#text(weight: "bold")[Tools:] Git, Claude Code, Codex],
     )
   ],
 )
