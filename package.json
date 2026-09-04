@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "vitest run"
+    "test": "vitest run",
+    "resume": "typst compile resume/resume.typ public/resume.pdf"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
