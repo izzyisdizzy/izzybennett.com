@@ -18,7 +18,7 @@
     #v(2pt)
     #align(center)[
       #text(size: 9pt, fill: rgb("#595959"))[
-        #link("mailto:me@izzybennett.com")[#underline[me\@izzybennett.com]] | izzybennett.com | github.com/ibennet
+        #link("mailto:me@izzybennett.com")[#underline[me\@izzybennett.com]] | #link("https://izzybennett.com")[#underline[izzybennett.com]] | #link("https://github.com/izzyisdizzy")[#underline[github.com/izzyisdizzy]]
       ]
     ]
   ],
@@ -62,7 +62,7 @@
 #text(style: "italic")[
   Mobile Software Engineer with over six years of experience working with a
   team to improve, maintain, and implement features for Android and iOS
-  Applications with over millions of downloads.
+  applications with over millions of downloads.
 ]
 
 // ── Experience ──────────────────────────────────────────────────────────────
@@ -73,8 +73,8 @@
   [Square],
   [Mobile Software Engineer],
   (
-    [Primary point of contact for multiple large scale migration projects for
-      Square's Android Checkout across multiple verticals.],
+    [Leader for multiple large scale projects for Square's Android and iOS
+      Checkout across both mobile and custom hardware devices.],
     [Introduced and implemented Compose UI to Square's Android Checkout.],
     [Coordinate between product managers, quality engineers, UI designers, and
       other software engineers to bring projects to success within the Android
