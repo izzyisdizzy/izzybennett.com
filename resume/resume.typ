@@ -79,9 +79,9 @@
       Android and iOS Point of Sale applications.],
     [Expanded Offline Payments to over 4 million users doubling GPV for
       offline payment sales across Android and iOS.],
-    [Coordinate between product managers, quality engineers, UI designers, and
-      other software engineers to bring projects to success within the Android
-      application.],
+    [Collaborate between product managers, quality engineers, UI designers,
+      and other software engineers to both bring projects to success and
+      monitor their health long-term.],
     [Provide thorough documentation and testing to properly test and document
       new features.],
     [Mentor and onboard engineers to new projects to ensure their success.],
