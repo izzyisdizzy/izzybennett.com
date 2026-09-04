@@ -82,6 +82,9 @@
     [Collaborate between product managers, quality engineers, UI designers,
       and other software engineers to both bring projects to success and
       monitor their health long-term.],
+    [Ensure application and payment health through extensive test plans, UI
+      testing, and metrics monitoring to both prevent and swiftly recover
+      failures.],
     [Mentor and onboard engineers to new projects to ensure their success.],
   ),
 )
