@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProjectCard from '../components/ProjectCard.astro';
-import groceriesIcon from '../assets/groceries-icon.jpeg';
 import voicepranksIcon from '../assets/voicepranks-icon.png';
+import recipesIcon from '../assets/recipes-icon.png';
 import dizzyosIcon from '../assets/dizzyos-icon.png';
 
 const projects = [
@@ -23,12 +23,12 @@ const projects = [
     byline: 'Created by Izzy Bennett',
   },
   {
-    title: 'Groceries',
-    image: groceriesIcon,
-    url: 'https://github.com/ibennet/groceries-android',
+    title: 'Recipes',
+    image: recipesIcon,
+    url: '/recipes/',
     description:
-      'Android application that allows users to create and collaborate grocery lists with live updates. Currently private.',
-    byline: "Created by Izzy Bennett and Tiernan O'Rourke",
+      'The recipe archive on this very site: structured markdown recipes with search, category filters, and US-to-grams ingredient conversion — plus an in-browser editor that commits new recipes back to the repo through a Cloudflare Worker, so the GitHub token never touches the browser.',
+    byline: 'Created by Izzy Bennett',
   },
 ];
 ---
