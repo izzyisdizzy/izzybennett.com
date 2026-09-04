@@ -77,6 +77,8 @@
       Checkout across both mobile and custom hardware devices.],
     [Lead, implemented, and maintained Offline Payments and Checkout for the
       Android and iOS Point of Sale applications.],
+    [Expanded Offline Payments to over 4 million users doubling GPV for
+      offline payment sales across Android and iOS.],
     [Coordinate between product managers, quality engineers, UI designers, and
       other software engineers to bring projects to success within the Android
       application.],
