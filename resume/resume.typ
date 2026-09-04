@@ -135,10 +135,9 @@
   [
     #section[Additional Skills]
     #list(
-      [#text(weight: "bold")[Languages:] Kotlin, Java, JavaScript, C\#, Ruby,
-        Groovy],
-      [#text(weight: "bold")[Tools:] Android Studio, Git, Atlassian Suite,
-        Espresso, Roboelectric, React.js, .NET],
+      [#text(weight: "bold")[Languages:] Kotlin, Swift, TypeScript,
+        JavaScript, C\#, Ruby],
+      [#text(weight: "bold")[Tools:] Claude, Codex, Git],
     )
   ],
 )
