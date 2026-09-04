@@ -82,8 +82,6 @@
     [Collaborate between product managers, quality engineers, UI designers,
       and other software engineers to both bring projects to success and
       monitor their health long-term.],
-    [Provide thorough documentation and testing to properly test and document
-      new features.],
     [Mentor and onboard engineers to new projects to ensure their success.],
   ),
 )
