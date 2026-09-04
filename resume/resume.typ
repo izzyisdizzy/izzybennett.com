@@ -18,15 +18,15 @@
     #v(2pt)
     #align(center)[
       #text(size: 9pt, fill: rgb("#595959"))[
-        #link("mailto:me@izzybennett.com")[#underline[me\@izzybennett.com]] | izzybennett.com | github.com/ibennet
+        #link("mailto:me@izzybennett.com")[#underline[me\@izzybennett.com]] | #link("https://izzybennett.com")[#underline[izzybennett.com]] | #link("https://github.com/izzyisdizzy")[#underline[github.com/izzyisdizzy]]
       ]
     ]
   ],
 )
 
 #set text(font: "Carlito",size: 10.5pt, fill: rgb("#262626"))
-#set par(leading: 0.55em)
-#set list(indent: 1.5em, spacing: 0.5em)
+#set par(leading: 0.5em)
+#set list(indent: 1.5em, spacing: 0.45em)
 
 // Teal spaced-caps section header with a left accent bar.
 #let section(title) = {
@@ -62,7 +62,7 @@
 #text(style: "italic")[
   Mobile Software Engineer with over six years of experience working with a
   team to improve, maintain, and implement features for Android and iOS
-  Applications with over millions of downloads.
+  applications with over millions of downloads.
 ]
 
 // ── Experience ──────────────────────────────────────────────────────────────
@@ -73,15 +73,18 @@
   [Square],
   [Mobile Software Engineer],
   (
-    [Primary point of contact for multiple large scale migration projects for
-      Square's Android Checkout across multiple verticals.],
-    [Introduced and implemented Compose UI to Square's Android Checkout.],
-    [Coordinate between product managers, quality engineers, UI designers, and
-      other software engineers to bring projects to success within the Android
-      application.],
-    [Provide thorough documentation and testing to properly test and document
-      new features.],
-    [Mentor and onboard engineers to new projects to ensure their success.],
+    [Leader for multiple large scale projects for Square's Android and iOS
+      Checkout across both mobile and custom hardware devices.],
+    [Lead, implemented, and maintained Offline Payments and Checkout for the
+      Android and iOS Point of Sale applications.],
+    [Expanded Offline Payments to over 4 million users doubling GPV for
+      offline payment sales across Android and iOS.],
+    [Collaborate between product managers, quality engineers, UI designers,
+      and other software engineers to both bring projects to success and
+      monitor their health long-term.],
+    [Ensure application and payment health through extensive test plans, UI
+      testing, and metrics monitoring to both prevent and swiftly recover
+      failures.],
   ),
 )
 
@@ -132,10 +135,9 @@
   [
     #section[Additional Skills]
     #list(
-      [#text(weight: "bold")[Languages:] Kotlin, Java, JavaScript, C\#, Ruby,
-        Groovy],
-      [#text(weight: "bold")[Tools:] Android Studio, Git, Atlassian Suite,
-        Espresso, Roboelectric, React.js, .NET],
+      [#text(weight: "bold")[Languages:] Kotlin, Swift, TypeScript,
+        JavaScript, C\#, Ruby],
+      [#text(weight: "bold")[Tools:] Claude, Codex, Git],
     )
   ],
 )
