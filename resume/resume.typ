@@ -25,8 +25,8 @@
 )
 
 #set text(font: "Carlito",size: 10.5pt, fill: rgb("#262626"))
-#set par(leading: 0.55em)
-#set list(indent: 1.5em, spacing: 0.5em)
+#set par(leading: 0.5em)
+#set list(indent: 1.5em, spacing: 0.45em)
 
 // Teal spaced-caps section header with a left accent bar.
 #let section(title) = {
