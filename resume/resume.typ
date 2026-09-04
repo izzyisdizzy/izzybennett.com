@@ -75,7 +75,8 @@
   (
     [Leader for multiple large scale projects for Square's Android and iOS
       Checkout across both mobile and custom hardware devices.],
-    [Introduced and implemented Compose UI to Square's Android Checkout.],
+    [Lead, implemented, and maintained Offline Payments and Checkout for the
+      Android and iOS Point of Sale applications.],
     [Coordinate between product managers, quality engineers, UI designers, and
       other software engineers to bring projects to success within the Android
       application.],
