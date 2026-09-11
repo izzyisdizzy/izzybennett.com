@@ -5,8 +5,9 @@
  * Flow:
  *   GET  /login        → 302 to GitHub's OAuth consent screen (state stored in a cookie)
  *   GET  /callback     → exchange code→token (uses the client secret), verify the user is
- *                        ALLOWED_LOGIN, mint an opaque session id, stash {token,login} in KV,
- *                        then 302 back to the site with the session id in the URL fragment.
+ *                        on the ALLOWED_LOGINS allowlist, mint an opaque session id, stash
+ *                        {token,login} in KV, then 302 back to the site with the session id
+ *                        in the URL fragment.
  *   POST   /api/recipe → create/update a recipe file (auth: `Authorization: Bearer <session>`)
  *   DELETE /api/recipe → delete a recipe file
  *   POST   /api/menu   → overwrite the cafe menu file (auth: `Authorization: Bearer <session>`)
@@ -24,7 +25,7 @@ export interface Env {
   GITHUB_CLIENT_SECRET: string;
   // Vars (wrangler.toml [vars]):
   GITHUB_CLIENT_ID: string;
-  ALLOWED_LOGIN: string;
+  ALLOWED_LOGINS: string;
   OWNER: string;
   REPO: string;
   BRANCH: string;
@@ -54,6 +55,19 @@ const RETURN_PATHS = ['/upload', '/recipes/', '/orders/', '/update-menu'];
 const DEFAULT_RETURN = RETURN_PATHS[0];
 const safeReturn = (path: string | null): string =>
   path && RETURN_PATHS.includes(path) ? path : DEFAULT_RETURN;
+
+// Who may sign in. ALLOWED_LOGINS is a comma-separated list of GitHub logins; compared
+// case-insensitively, since GitHub logins are case-preserving but not case-sensitive.
+// Note each editor writes with their OWN OAuth token, so a login listed here must also have
+// push access to OWNER/REPO or their commits will fail at the Contents API.
+const isAllowedLogin = (login: string | undefined, allowed: string): boolean => {
+  if (!login) return false;
+  const target = login.toLowerCase();
+  return allowed
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .some((entry) => entry !== '' && entry === target);
+};
 
 // The two first-party OAuth cookies in their cleared (Max-Age=0) form. Appended on every callback
 // exit — success or failure — so a half-finished sign-in never leaves them lingering in the browser.
@@ -101,7 +115,7 @@ export default {
         case 'GET /api/me':
           // Lightweight session check for other first-party backends (e.g. the Pi order server,
           // which gates the kitchen open/close toggle on it). A valid session can only belong to
-          // ALLOWED_LOGIN — it's minted nowhere else — so "session valid" == "the allowed user".
+          // an ALLOWED_LOGINS entry — minted nowhere else — so "session valid" == "an allowed user".
           return await withSession(request, env, async () => json(env, 200, { ok: true }));
         case 'GET /':
           return json(env, 200, { ok: true, service: 'izzy-recipe-api' });
@@ -176,12 +190,12 @@ async function handleCallback(request: Request, url: URL, env: Env): Promise<Res
   }
 
   // Identify the user and gate on the allowlist — the OAuth App is public, so anyone could
-  // authorize it; only ALLOWED_LOGIN may ever get a session that can write to the repo.
+  // authorize it; only an ALLOWED_LOGINS entry may ever get a session that can write to the repo.
   const userRes = await fetch(`${GH_API}/user`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'User-Agent': UA },
   });
   const user = (await userRes.json()) as { login?: string };
-  if (!user.login || user.login.toLowerCase() !== env.ALLOWED_LOGIN.toLowerCase()) {
+  if (!isAllowedLogin(user.login, env.ALLOWED_LOGINS)) {
     return htmlError(`Sorry, @${user.login ?? 'unknown'} is not allowed to edit recipes.`, 403, CLEAR_AUTH_COOKIES);
   }
 

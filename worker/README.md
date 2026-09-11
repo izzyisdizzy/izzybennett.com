@@ -20,7 +20,7 @@ OAuth handshake (holding the client secret) and proxies every recipe create/upda
    ```
 
 3. **Fill in `wrangler.toml`** — `GITHUB_CLIENT_ID`, the KV `id`/`preview_id`, and (if different)
-   `ALLOWED_LOGIN`, `SITE_ORIGIN`.
+   `ALLOWED_LOGINS`, `SITE_ORIGIN`.
 
 4. **Set the secret:**
    ```sh
@@ -52,7 +52,7 @@ For local testing, register a second OAuth App (or edit the existing one) whose 
 | Method + path        | Auth                    | Purpose                                  |
 | -------------------- | ----------------------- | ---------------------------------------- |
 | `GET /login`         | —                       | Redirect to GitHub consent               |
-| `GET /callback`      | state cookie            | Exchange code, gate on `ALLOWED_LOGIN`, mint session |
+| `GET /callback`      | state cookie            | Exchange code, gate on `ALLOWED_LOGINS`, mint session |
 | `POST /api/recipe`   | `Bearer <session>`      | Create/update `RECIPE_DIR/<slug>.md` (409 if exists and `overwrite` false) |
 | `DELETE /api/recipe` | `Bearer <session>`      | Delete a recipe file                     |
 | `POST /logout`       | `Bearer <session>`      | Destroy the session                      |

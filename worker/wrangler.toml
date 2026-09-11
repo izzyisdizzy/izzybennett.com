@@ -18,7 +18,7 @@ RECIPE_DIR = "src/content/recipes"
 DENSITIES_PATH = "src/data/densities.json"   # shared ingredient → grams-per-cup list the uploader grows
 SITE_ORIGIN = "https://izzybennett.com"
 SESSION_TTL = "28800"        # 8 hours, in seconds
-ALLOWED_LOGIN = "izzyisdizzy"    # only this GitHub user may mint a session
+ALLOWED_LOGINS = "izzyisdizzy,rma244"   # comma-separated; only these GitHub users may mint a session
 GITHUB_CLIENT_ID = "Ov23liJKTk3X9V904d2f"
 
 # GITHUB_CLIENT_SECRET is a secret, NOT a var. Set it with:
