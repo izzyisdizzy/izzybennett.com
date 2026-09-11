@@ -11,14 +11,14 @@ id = "58e93e762b604bc48498b9127c393d0d"
 preview_id = "930c1eb3c3694e738325eeed83542326"
 
 [vars]
-OWNER = "ibennet"
+OWNER = "izzyisdizzy"
 REPO = "izzybennett.com"
 BRANCH = "master"
 RECIPE_DIR = "src/content/recipes"
 DENSITIES_PATH = "src/data/densities.json"   # shared ingredient → grams-per-cup list the uploader grows
 SITE_ORIGIN = "https://izzybennett.com"
 SESSION_TTL = "28800"        # 8 hours, in seconds
-ALLOWED_LOGIN = "ibennet"    # only this GitHub user may mint a session
+ALLOWED_LOGIN = "izzyisdizzy"    # only this GitHub user may mint a session
 GITHUB_CLIENT_ID = "Ov23liJKTk3X9V904d2f"
 
 # GITHUB_CLIENT_SECRET is a secret, NOT a var. Set it with:
