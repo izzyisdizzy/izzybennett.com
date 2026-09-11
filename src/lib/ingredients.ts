@@ -136,6 +136,13 @@ const MEASURE_WORDS = [...Object.keys(UNIT_ALIASES), ...PROSE_UNITS, ...QTY_FILL
   .map((w) => escapeRegex(w).replace(/ /g, '\\s+'))
   .join('|');
 
+/**
+ * "Oil the pan", "Butter the dish", "Salt the water" — an ingredient word directly followed by
+ * a determiner is a verb, not a use of the ingredient. Inlining there produces "3 tbsp Oil the
+ * pan", and worse, spends the ingredient's one inline slot before its real mention.
+ */
+const VERB_USE = /^\s+(?:the|a|an|your|it|them|this|that)\b/i;
+
 /** True when the text immediately preceding a mention already states a quantity. */
 const PRECEDING_QTY = new RegExp(
   `(?:^|[\\s(\\[])${NUMBER}(?:\\s*(?:${MEASURE_WORDS})(?![\\w])\\.?)*\\s*$`,
@@ -276,6 +283,25 @@ function buildRegex(forms: string[]): RegExp | null {
 
 /** Identity of one measured occurrence — used both to dedupe and to track first mentions. */
 const entryKey = (e: Entry): string => `${e.name}|${e.us}|${e.grams ?? ''}|${e.group ?? ''}`;
+
+/**
+ * How many distinct ingredients a surface form could mean, across both specificity tiers.
+ *
+ * `resolve()` deliberately lets a specific (full-name) hit shadow generic aliases, which is
+ * the right call for a popover the reader opened on purpose. It is the wrong call for text
+ * asserted inline: a recipe with both "cake flour" and "flour" resolves a bare "flour" to the
+ * latter, so inlining would print the streusel's ¼ cup into a batter that wants 2 cups. So
+ * inline amounts require a form that is unambiguous *before* shadowing. Counting by entry key
+ * matters because one ingredient can register the same form by several routes ("all purpose
+ * flour" reaches "flour" as both a head-noun suffix and a leading-strip alias).
+ */
+function candidateCount(index: IngredientIndex, matched: string): number {
+  const rec = index.forms.get(norm(matched));
+  if (!rec) return 0;
+  const seen = new Set<string>();
+  for (const e of [...rec.specific, ...rec.generic]) seen.add(entryKey(e));
+  return seen.size;
+}
 
 /** Resolve a matched surface form to its entries: a specific (full-name) hit wins over aliases. */
 function resolve(index: IngredientIndex, matched: string): Entry[] {
@@ -420,7 +446,9 @@ export function linkIngredientsInHtml(
 
         const inline =
           entries.length === 1 &&
+          candidateCount(index, match) === 1 &&
           !avoided.some(([a, b]) => offset >= a && offset < b) &&
+          !VERB_USE.test(token.slice(offset + match.length)) &&
           !PRECEDING_QTY.test(before + token.slice(0, offset)) &&
           !seen.has(entryKey(entries[0]));
         if (inline) {

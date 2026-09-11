@@ -450,3 +450,63 @@ describe('tool-name avoidance', () => {
     expect(linkIngredientsInHtml('mix with egg beater', idx, createLinkState())).toContain('ing-inline');
   });
 });
+
+describe('ambiguity guard', () => {
+  // Mirrors lemon-blueberry-coffee-cake.md: a qualified flour in one group and a plain
+  // flour in another. A bare "flour" resolves specifically to the ¼ cup one, so inlining
+  // would assert the streusel's amount inside the cake batter's step.
+  const twoFlours: IngredientGroup[] = [
+    { group: 'Cake', items: [{ name: 'cake flour', qty: '2', unit: 'cup' }] },
+    { group: 'Streusel', items: [{ name: 'flour', qty: '¼', unit: 'cup' }] },
+  ];
+
+  it('does not inline a form that could mean more than one ingredient', () => {
+    const html = render('Combine flour, baking powder, and salt', twoFlours);
+    expect(html).not.toContain('ing-inline');
+  });
+
+  it('still links it, so the popover keeps showing the resolved amount', () => {
+    const html = render('Combine flour and salt', twoFlours);
+    expect(html).toContain('class="ing-ref"');
+    expect(html).toContain('¼ cup');
+  });
+
+  it('leaves the ambiguous mention\'s slot open for the qualified one', () => {
+    const idx = buildIngredientIndex(twoFlours);
+    const state = createLinkState();
+    linkIngredientsInHtml('Combine flour and salt', idx, state);
+    const later = linkIngredientsInHtml('fold in the cake flour', idx, state);
+    expect(later).toContain('ing-inline');
+    expect(later).toContain('2 cup');
+  });
+
+  it('counts one ingredient once even when it registers a form by several routes', () => {
+    // "all purpose flour" reaches "flour" as a head-noun suffix AND via leading-strip.
+    const one: IngredientGroup[] = [{ items: [{ name: 'all purpose flour', qty: '3', unit: 'cup' }] }];
+    expect(render('sift the flour', one)).toContain('ing-inline');
+  });
+});
+
+describe('verb-use guard', () => {
+  const oils: IngredientGroup[] = [{ items: [{ name: 'vegetable oil', qty: '3', unit: 'tbsp' }] }];
+
+  it('does not inline an ingredient word used as a verb', () => {
+    expect(render('Oil the pan and spread the batter evenly.', oils)).not.toContain('ing-inline');
+  });
+
+  it('does not let the verb use consume the first-mention slot', () => {
+    const idx = buildIngredientIndex(oils);
+    const state = createLinkState();
+    const a = linkIngredientsInHtml('Oil the pan.', idx, state);
+    const b = linkIngredientsInHtml('Stir in the vegetable oil.', idx, state);
+    expect(a).not.toContain('ing-inline');
+    expect(b).toContain('ing-inline');
+    expect(state.inlineable).toBe(1);
+  });
+
+  it('still inlines a mention followed by ordinary prose', () => {
+    expect(render('Heat the oil in a pan.', oils)).toContain('ing-inline');
+    expect(render('Add the oil and whisk.', oils)).toContain('ing-inline');
+    expect(render('Pour in the oil.', oils)).toContain('ing-inline');
+  });
+});
