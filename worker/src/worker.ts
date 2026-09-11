@@ -4,27 +4,40 @@
  *
  * Flow:
  *   GET  /login        → 302 to GitHub's OAuth consent screen (state stored in a cookie)
- *   GET  /callback     → exchange code→token (uses the client secret), verify the user is
- *                        ALLOWED_LOGIN, mint an opaque session id, stash {token,login} in KV,
- *                        then 302 back to the site with the session id in the URL fragment.
+ *   GET  /callback     → exchange code→token (uses the client secret), look up who they are,
+ *                        verify they're a listed editor, mint an opaque session id, stash
+ *                        {login,userId} in KV, then 302 back to the site with the session id
+ *                        in the URL fragment.
  *   POST   /api/recipe → create/update a recipe file (auth: `Authorization: Bearer <session>`)
  *   DELETE /api/recipe → delete a recipe file
  *   POST   /api/menu   → overwrite the cafe menu file (auth: `Authorization: Bearer <session>`)
  *   POST   /logout     → destroy the session
  *
- * The browser only ever holds the opaque session id. The GitHub token lives in KV and is
- * injected server-side here, and every proxied call is hard-restricted to RECIPE_DIR/<slug>.md
- * or the single fixed MENU_PATH on OWNER/REPO@BRANCH — so a leaked session can only ever touch
- * those files.
+ * Two separate GitHub identities are in play, and keeping them straight is the whole design:
+ *
+ *   - The OAuth App answers "who is this?" and NOTHING else. Its token is discarded the moment
+ *     the login is read, so no user credential is ever stored.
+ *   - The GitHub App does every write, as itself. Editors therefore need no repo access of their
+ *     own — which is what stops a recipe editor from touching anything but recipes, since the
+ *     only way to reach the repo at all is through this worker's capability-checked routes.
+ *
+ * The browser only ever holds the opaque session id; KV holds only {login,userId}. Every proxied
+ * call is hard-restricted to RECIPE_DIR/<slug>.md, DENSITIES_PATH, or the single fixed MENU_PATH
+ * on OWNER/REPO@BRANCH — so a leaked session can only ever touch those files, and only the ones
+ * its capabilities allow.
  */
 
 export interface Env {
   SESSIONS: KVNamespace;
-  // Secret (wrangler secret put):
+  // Secrets (wrangler secret put):
   GITHUB_CLIENT_SECRET: string;
+  GITHUB_APP_PRIVATE_KEY: string;
   // Vars (wrangler.toml [vars]):
   GITHUB_CLIENT_ID: string;
-  ALLOWED_LOGIN: string;
+  GITHUB_APP_ID: string;
+  GITHUB_APP_INSTALLATION_ID: string;
+  RECIPE_EDITORS: string;
+  ADMIN_LOGINS: string;
   OWNER: string;
   REPO: string;
   BRANCH: string;
@@ -34,8 +47,17 @@ export interface Env {
   SESSION_TTL: string;
 }
 
+// What a signed-in session is allowed to do. `recipes` covers the recipe files and the shared
+// ingredient-density list the uploader grows; `admin` additionally covers the cafe menu and the
+// kitchen open/close toggle that gates on /api/me.
+type Capability = 'recipes' | 'admin';
+
+// A session deliberately holds NO GitHub credential — just who the user is. Writes go through
+// the GitHub App installation token instead, so a leaked session can't be replayed against
+// GitHub, only against this worker's own (capability-checked, path-restricted) routes.
 interface Session {
-  token: string;
+  login: string;
+  userId: number;
 }
 
 const GH_API = 'https://api.github.com';
@@ -54,6 +76,29 @@ const RETURN_PATHS = ['/upload', '/recipes/', '/orders/', '/update-menu'];
 const DEFAULT_RETURN = RETURN_PATHS[0];
 const safeReturn = (path: string | null): string =>
   path && RETURN_PATHS.includes(path) ? path : DEFAULT_RETURN;
+
+// Parse a comma-separated login list. Compared case-insensitively, since GitHub logins are
+// case-preserving but not case-sensitive. Empty entries are dropped, so a blank or comma-only
+// var yields an empty set and fails closed rather than matching a stray "".
+const loginSet = (list: string): Set<string> =>
+  new Set(
+    (list ?? '')
+      .split(',')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter((entry) => entry !== '')
+  );
+
+// Resolve a GitHub login to its capabilities. ADMIN_LOGINS implies recipe access too, so an
+// admin doesn't have to be listed twice. An unknown login gets an empty array — no session.
+function capabilitiesFor(login: string | undefined, env: Env): Capability[] {
+  if (!login) return [];
+  const target = login.toLowerCase();
+  const caps: Capability[] = [];
+  const isAdmin = loginSet(env.ADMIN_LOGINS).has(target);
+  if (isAdmin || loginSet(env.RECIPE_EDITORS).has(target)) caps.push('recipes');
+  if (isAdmin) caps.push('admin');
+  return caps;
+}
 
 // The two first-party OAuth cookies in their cleared (Max-Age=0) form. Appended on every callback
 // exit — success or failure — so a half-finished sign-in never leaves them lingering in the browser.
@@ -91,18 +136,22 @@ export default {
             htmlError('Something went wrong during sign-in. Please try again.', 400, CLEAR_AUTH_COOKIES)
           );
         case 'POST /api/recipe':
-          return await withSession(request, env, (_id, s) => putRecipe(request, env, s));
+          return await withSession(request, env, 'recipes', (_id, s) => putRecipe(request, env, s));
         case 'DELETE /api/recipe':
-          return await withSession(request, env, (_id, s) => deleteRecipe(request, env, s));
+          return await withSession(request, env, 'recipes', (_id, s) => deleteRecipe(request, env, s));
         case 'POST /api/menu':
-          return await withSession(request, env, (_id, s) => putMenu(request, env, s));
+          // The cafe menu feeds the order form, /izzys-cafe.json and the LED sign, so it's
+          // admin-only — recipe editors can't reach it.
+          return await withSession(request, env, 'admin', (_id, s) => putMenu(request, env, s));
         case 'POST /logout':
-          return await withSession(request, env, (id) => logout(env, id));
+          return await withSession(request, env, null, (id) => logout(env, id));
         case 'GET /api/me':
-          // Lightweight session check for other first-party backends (e.g. the Pi order server,
-          // which gates the kitchen open/close toggle on it). A valid session can only belong to
-          // ALLOWED_LOGIN — it's minted nowhere else — so "session valid" == "the allowed user".
-          return await withSession(request, env, async () => json(env, 200, { ok: true }));
+          // Identity + capability check for the site and for other first-party backends (the Pi
+          // order server gates its kitchen open/close toggle on this). Callers must check
+          // `admin` — a bare 200 now only means "signed in", not "allowed to do anything".
+          return await withSession(request, env, null, async (_id, s, caps) =>
+            json(env, 200, { ok: true, login: s.login, capabilities: caps, admin: caps.includes('admin') })
+          );
         case 'GET /':
           return json(env, 200, { ok: true, service: 'izzy-recipe-api' });
         default:
@@ -134,7 +183,10 @@ function handleLogin(url: URL, env: Env): Response {
   const authorize = new URL(`${GH_OAUTH}/authorize`);
   authorize.searchParams.set('client_id', env.GITHUB_CLIENT_ID);
   authorize.searchParams.set('redirect_uri', `${url.origin}/callback`);
-  authorize.searchParams.set('scope', 'public_repo'); // least privilege that allows Contents writes
+  // No scope at all. This token is used for exactly one call — GET /user, to read the login —
+  // and then discarded; writes go out as the GitHub App. Requesting `public_repo` here would ask
+  // every editor to grant write access to all of their own public repos, and that grant would
+  // persist on their account, for a credential we throw away seconds later.
   authorize.searchParams.set('state', state);
   authorize.searchParams.set('allow_signup', 'false');
 
@@ -176,19 +228,22 @@ async function handleCallback(request: Request, url: URL, env: Env): Promise<Res
   }
 
   // Identify the user and gate on the allowlist — the OAuth App is public, so anyone could
-  // authorize it; only ALLOWED_LOGIN may ever get a session that can write to the repo.
+  // authorize it; only a listed editor may ever get a session.
   const userRes = await fetch(`${GH_API}/user`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'User-Agent': UA },
   });
-  const user = (await userRes.json()) as { login?: string };
-  if (!user.login || user.login.toLowerCase() !== env.ALLOWED_LOGIN.toLowerCase()) {
+  const user = (await userRes.json()) as { login?: string; id?: number };
+  if (capabilitiesFor(user.login, env).length === 0 || typeof user.id !== 'number') {
     return htmlError(`Sorry, @${user.login ?? 'unknown'} is not allowed to edit recipes.`, 403, CLEAR_AUTH_COOKIES);
   }
 
-  // Mint an opaque session id; the GitHub token stays server-side in KV.
+  // Mint an opaque session id. The user's GitHub token is deliberately NOT kept — it was only
+  // ever needed to answer "who is this?", and writes go out as the App. Nothing in KV can be
+  // replayed against GitHub. Capabilities are re-resolved per request from the live config, so
+  // revoking someone takes effect on their next call rather than whenever their session lapses.
   const sessionId = crypto.randomUUID();
   const ttl = Number(env.SESSION_TTL) || 28800;
-  const session: Session = { token };
+  const session: Session = { login: user.login as string, userId: user.id };
   await env.SESSIONS.put(sessionId, JSON.stringify(session), { expirationTtl: ttl });
 
   // Return to whichever page started sign-in (re-validated against the allowlist, defensively).
@@ -203,19 +258,40 @@ async function handleCallback(request: Request, url: URL, env: Env): Promise<Res
 
 // ---- Session auth wrapper -------------------------------------------------
 
+// Session ids are crypto.randomUUID(). Requiring that shape means a Bearer header can only ever
+// address a session — never another KV entry this worker keeps (e.g. the installation token).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// `required` is the capability this route needs, or null for "any valid session" (logout, /api/me).
+// Capabilities are recomputed from config on every request rather than baked into the session, so
+// removing someone from RECIPE_EDITORS locks them out immediately instead of at session expiry.
 async function withSession(
   request: Request,
   env: Env,
-  handler: (sessionId: string, session: Session) => Promise<Response>
+  required: Capability | null,
+  handler: (sessionId: string, session: Session, caps: Capability[]) => Promise<Response>
 ): Promise<Response> {
   const auth = request.headers.get('Authorization') ?? '';
-  const sessionId = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!sessionId) return json(env, 401, { error: 'Not signed in.' });
+  const sessionId = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!sessionId || !UUID_RE.test(sessionId)) return json(env, 401, { error: 'Not signed in.' });
 
   const raw = await env.SESSIONS.get(sessionId);
   if (!raw) return json(env, 401, { error: 'Session expired. Please sign in again.' });
 
-  return handler(sessionId, JSON.parse(raw) as Session);
+  const session = JSON.parse(raw) as Session;
+  if (!session?.login) return json(env, 401, { error: 'Session expired. Please sign in again.' });
+
+  const caps = capabilitiesFor(session.login, env);
+  // `required === null` means "any valid session" — logout and /api/me. Those must keep working
+  // for someone whose access was just revoked: refusing logout would strand their KV entry until
+  // SESSION_TTL, and /api/me is how callers discover they have no capabilities left.
+  if (required) {
+    if (!caps.includes(required)) {
+      return json(env, 403, { error: `@${session.login} isn't allowed to do that.` });
+    }
+  }
+
+  return handler(sessionId, session, caps);
 }
 
 async function logout(env: Env, sessionId: string): Promise<Response> {
@@ -245,6 +321,169 @@ function ghHeaders(token: string) {
   };
 }
 
+// ---- GitHub App installation token ----------------------------------------
+
+// Every write goes out as the GitHub App, never as the signed-in user — so an editor needs no
+// repo access of their own, and can't reach anything this worker doesn't explicitly expose.
+// The App is installed on OWNER/REPO with Contents: read & write, so its reach is bounded by
+// the installation, and within that by recipePath()/MENU_PATH.
+//
+// Installation tokens last an hour. We cache one in KV and re-mint shortly before expiry. The
+// cache key is deliberately not UUID-shaped, and withSession only accepts UUID session ids, so
+// this entry can never be pulled out through an `Authorization: Bearer` header.
+const INSTALLATION_TOKEN_KEY = 'installation-token::v1';
+const TOKEN_SKEW_MS = 5 * 60 * 1000;
+
+async function installationToken(env: Env): Promise<string> {
+  const cached = await env.SESSIONS.get(INSTALLATION_TOKEN_KEY);
+  if (cached) {
+    const { token, expiresAt } = JSON.parse(cached) as { token?: string; expiresAt?: number };
+    if (token && typeof expiresAt === 'number' && expiresAt - TOKEN_SKEW_MS > Date.now()) return token;
+  }
+
+  const res = await fetch(`${GH_API}/app/installations/${env.GITHUB_APP_INSTALLATION_ID}/access_tokens`, {
+    method: 'POST',
+    headers: ghHeaders(await appJwt(env)),
+  });
+  if (!res.ok) throw new ApiError(502, `Could not authenticate as the GitHub App (${res.status}).`);
+
+  const data = (await res.json()) as { token?: string; expires_at?: string };
+  if (!data.token) throw new ApiError(502, 'GitHub returned no installation token.');
+
+  const expiresAt = data.expires_at ? Date.parse(data.expires_at) : Date.now() + 3_600_000;
+  // Expire the cache entry ahead of the token itself, so a stale read is impossible.
+  const ttl = Math.max(60, Math.floor((expiresAt - TOKEN_SKEW_MS - Date.now()) / 1000));
+  await env.SESSIONS.put(INSTALLATION_TOKEN_KEY, JSON.stringify({ token: data.token, expiresAt }), {
+    expirationTtl: ttl,
+  });
+  return data.token;
+}
+
+// The short-lived RS256 JWT that proves we are the App. GitHub caps these at 10 minutes; we use
+// 9. This is the only thing the private key is ever used for — it's exchanged immediately for an
+// installation token, and that token is what actually touches the repo.
+async function appJwt(env: Env): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  // `iat` is backdated 60s to absorb clock skew between us and GitHub, per GitHub's guidance.
+  const payload = { iat: now - 60, exp: now + 540, iss: env.GITHUB_APP_ID };
+  const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
+
+  const key = await importAppKey(env.GITHUB_APP_PRIVATE_KEY);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(signingInput));
+  return `${signingInput}.${b64urlBytes(new Uint8Array(sig))}`;
+}
+
+// GitHub issues App keys as PKCS#1 ("BEGIN RSA PRIVATE KEY"), but WebCrypto only imports PKCS#8
+// ("BEGIN PRIVATE KEY"). Rather than require an `openssl pkcs8` step during setup — easy to skip
+// and confusing to debug — accept either and wrap PKCS#1 in the PKCS#8 envelope here.
+//
+// Which format it is, is decided by looking at the DER itself rather than the PEM header text:
+// the header is routinely lost when a key is pasted into `wrangler secret put`, and a headerless
+// PKCS#1 body silently looks like PKCS#8 to a text check. Both encodings open as
+// SEQUENCE { INTEGER version, ... }; what follows the version tells them apart — PKCS#8 has an
+// AlgorithmIdentifier SEQUENCE (0x30) there, PKCS#1 has the modulus INTEGER (0x02).
+async function importAppKey(pem: string): Promise<CryptoKey> {
+  const body = (pem ?? '').replace(/-----[^-]*-----/g, '').replace(/\s+/g, '');
+  if (!body) throw new ApiError(500, 'GITHUB_APP_PRIVATE_KEY is missing or empty.');
+
+  let der: Uint8Array;
+  try {
+    der = base64ToBytes(body);
+  } catch {
+    throw new ApiError(500, 'GITHUB_APP_PRIVATE_KEY is not valid base64 — re-paste the .pem.');
+  }
+
+  // Try the structurally-indicated form first, then the other one. Falling back rather than
+  // trusting the sniff outright means an unusual encoding still works instead of hard-failing.
+  const candidates = looksLikePkcs8(der) ? [der, pkcs1ToPkcs8(der)] : [pkcs1ToPkcs8(der), der];
+  for (const candidate of candidates) {
+    try {
+      return await crypto.subtle.importKey(
+        'pkcs8',
+        candidate,
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+    } catch {
+      /* try the next encoding */
+    }
+  }
+  // Both encodings failed, so the stored bytes aren't an RSA key at all — usually a truncated or
+  // mangled paste. Report shape only (byte counts and the leading DER tags); these say nothing
+  // about the key material but are enough to tell truncation from wrong-file from wrong-format.
+  // A healthy 2048-bit key is ~1190 bytes (PKCS#1) or ~1218 (PKCS#8) and starts 30 82.
+  const shape = `${der.length}B, starts ${[...der.slice(0, 4)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join(' ')}, header ${/BEGIN/.test(pem) ? 'present' : 'MISSING'}`;
+  console.warn(`app key unreadable: ${shape}`);
+  throw new ApiError(
+    500,
+    `GITHUB_APP_PRIVATE_KEY could not be read as an RSA private key (${shape}). ` +
+      'Most likely the paste was truncated — set it straight from the file instead: ' +
+      '`npx wrangler secret put GITHUB_APP_PRIVATE_KEY < /path/to/your-app.private-key.pem`'
+  );
+}
+
+// Walk past the outer SEQUENCE header and the version INTEGER; a SEQUENCE tag next means PKCS#8.
+function looksLikePkcs8(der: Uint8Array): boolean {
+  let i = 0;
+  if (der[i++] !== 0x30) return false; // outer SEQUENCE
+  i = skipDerLength(der, i);
+  if (der[i] !== 0x02) return false; // version INTEGER
+  i += 2 + der[i + 1]; // tag + length byte + contents (version is always short-form)
+  return der[i] === 0x30;
+}
+
+// Advance past a DER length field, returning the index of the first content byte.
+function skipDerLength(der: Uint8Array, i: number): number {
+  const first = der[i++];
+  return first & 0x80 ? i + (first & 0x7f) : i;
+}
+
+// Just enough DER to build a PKCS#8 envelope around an existing PKCS#1 key body.
+function derLength(n: number): number[] {
+  if (n < 0x80) return [n];
+  const bytes: number[] = [];
+  for (let v = n; v > 0; v = Math.floor(v / 256)) bytes.unshift(v % 256);
+  return [0x80 | bytes.length, ...bytes];
+}
+
+function derWrap(tag: number, contents: Uint8Array): Uint8Array {
+  const prefix = [tag, ...derLength(contents.length)];
+  const out = new Uint8Array(prefix.length + contents.length);
+  out.set(prefix, 0);
+  out.set(contents, prefix.length);
+  return out;
+}
+
+// PrivateKeyInfo ::= SEQUENCE { version INTEGER 0, AlgorithmIdentifier, privateKey OCTET STRING },
+// with algorithm = rsaEncryption (1.2.840.113549.1.1.1) and NULL parameters.
+const PKCS8_RSA_PREAMBLE = new Uint8Array([
+  0x02, 0x01, 0x00,
+  0x30, 0x0d,
+  0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01,
+  0x05, 0x00,
+]);
+
+function pkcs1ToPkcs8(pkcs1: Uint8Array): Uint8Array {
+  const keyOctet = derWrap(0x04, pkcs1);
+  const body = new Uint8Array(PKCS8_RSA_PREAMBLE.length + keyOctet.length);
+  body.set(PKCS8_RSA_PREAMBLE, 0);
+  body.set(keyOctet, PKCS8_RSA_PREAMBLE.length);
+  return derWrap(0x30, body);
+}
+
+// Attribute the commit to the person who made it, even though the App is the committer — so the
+// repo history still reads "Rachel added a recipe", not "izzy-recipe-bot did everything".
+function commitAuthor(session: Session): { name: string; email: string } {
+  return {
+    name: session.login,
+    email: `${session.userId}+${session.login}@users.noreply.github.com`,
+  };
+}
+
 // Fetch the existing file's sha AND its decoded markdown (the Contents API returns both in one
 // GET, so this costs no extra round-trip). Returns null if the file doesn't exist yet.
 async function getExisting(
@@ -254,15 +493,20 @@ async function getExisting(
 ): Promise<{ sha: string; content: string } | null> {
   const res = await fetch(`${contentsUrl(env, path)}?ref=${env.BRANCH}`, { headers: ghHeaders(token) });
   if (res.status === 404) return null;
-  if (res.status === 401) throw new ApiError(401, 'Your GitHub sign-in expired. Please sign in again.');
+  // 401/403 here is the App installation, not the user — their session is fine, so don't tell
+  // them to sign in again. Surface it as a server-side problem instead.
+  if (res.status === 401 || res.status === 403) {
+    throw new ApiError(502, 'The recipe app lost access to GitHub. Check the GitHub App installation.');
+  }
   if (!res.ok) throw new ApiError(502, `GitHub error ${res.status} while reading the recipe.`);
   const data = (await res.json()) as { sha: string; content?: string };
   return { sha: data.sha, content: data.content ? unb64(data.content) : '' };
 }
 
 // Send a create/update/delete to the GitHub Contents API. Resolves on success; throws an
-// ApiError otherwise — 401 (dead token) is surfaced as-is so the client clears its session,
-// anything else becomes a 502. Both mutation routes share this uniform translation.
+// ApiError otherwise. Everything becomes a 502: the caller's own session is known-good by this
+// point (withSession checked it), so any GitHub rejection here is a server-side problem with the
+// App installation, not something the user can fix by signing in again.
 async function commit(
   env: Env,
   token: string,
@@ -277,7 +521,9 @@ async function commit(
     body: JSON.stringify(payload),
   });
   if (res.ok) return;
-  if (res.status === 401) throw new ApiError(401, 'Your GitHub sign-in expired. Please sign in again.');
+  if (res.status === 401 || res.status === 403) {
+    throw new ApiError(502, 'The recipe app lost access to GitHub. Check the GitHub App installation.');
+  }
   const detail = await res.text();
   throw new ApiError(502, `GitHub rejected the ${action} (${res.status}). ${detail}`.trim());
 }
@@ -295,6 +541,20 @@ function unb64(b64str: string): string {
   const bin = atob(b64str.replace(/\n/g, ''));
   const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
+}
+
+function base64ToBytes(b64str: string): Uint8Array {
+  const bin = atob(b64str);
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
+// base64url (no padding) — the encoding JWT segments use.
+const b64url = (str: string): string => b64urlBytes(new TextEncoder().encode(str));
+
+function b64urlBytes(bytes: Uint8Array): string {
+  let bin = '';
+  for (const byte of bytes) bin += String.fromCharCode(byte);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 // Split a top-level frontmatter block into ordered { key, lines } entries. A key line starts a
@@ -348,7 +608,8 @@ async function putRecipe(request: Request, env: Env, session: Session): Promise<
     return json(env, 400, { error: 'Missing recipe content.' });
   }
 
-  const existing = await getExisting(env, session.token, path);
+  const token = await installationToken(env);
+  const existing = await getExisting(env, token, path);
   // Guard against silently clobbering an existing recipe in add mode; edit mode passes overwrite.
   if (existing && !body.overwrite) {
     return json(env, 409, { error: 'A recipe already exists at that slug.', exists: true });
@@ -360,17 +621,18 @@ async function putRecipe(request: Request, env: Env, session: Session): Promise<
     message: body.message || `${existing ? 'Update' : 'Add'} recipe: ${body.slug}`,
     content: b64(markdown),
     branch: env.BRANCH,
+    author: commitAuthor(session),
   };
   if (existing) payload.sha = existing.sha;
 
-  await commit(env, session.token, 'PUT', path, payload, 'commit');
+  await commit(env, token, 'PUT', path, payload, 'commit');
 
   // Best-effort: fold any new ingredient → grams-per-cup ratios into the shared list, as a
   // second commit. This must never fail the recipe save, so errors are swallowed and reported
   // back as densitiesSaved:false — the uploader keeps the ratios and offers to retry.
   let densitiesSaved: boolean | undefined;
   if (body.densities && typeof body.densities === 'object') {
-    densitiesSaved = await saveDensities(env, session.token, body.densities).catch(() => false);
+    densitiesSaved = await saveDensities(env, token, session, body.densities).catch(() => false);
   }
 
   return json(env, 200, { ok: true, created: !existing, ...(densitiesSaved !== undefined && { densitiesSaved }) });
@@ -379,7 +641,12 @@ async function putRecipe(request: Request, env: Env, session: Session): Promise<
 // Merge client-supplied ingredient ratios into DENSITIES_PATH and commit if anything changed.
 // The list is a flat JSON map of name (lowercased) → grams per US cup. Returns true if the file
 // is up to date afterwards (including the no-change case), false if the commit couldn't happen.
-async function saveDensities(env: Env, token: string, upserts: Record<string, unknown>): Promise<boolean> {
+async function saveDensities(
+  env: Env,
+  token: string,
+  session: Session,
+  upserts: Record<string, unknown>
+): Promise<boolean> {
   const path = env.DENSITIES_PATH;
   if (!path) return false;
 
@@ -422,6 +689,7 @@ async function saveDensities(env: Env, token: string, upserts: Record<string, un
     message: 'Update ingredient densities',
     content: b64(content),
     branch: env.BRANCH,
+    author: commitAuthor(session),
   };
   if (existing) payload.sha = existing.sha;
 
@@ -434,13 +702,15 @@ async function deleteRecipe(request: Request, env: Env, session: Session): Promi
   const path = recipePath(env, body.slug);
   if (!path) return json(env, 400, { error: 'Invalid recipe slug.' });
 
-  const existing = await getExisting(env, session.token, path);
+  const token = await installationToken(env);
+  const existing = await getExisting(env, token, path);
   if (!existing) return json(env, 404, { error: 'That recipe no longer exists.' });
 
-  await commit(env, session.token, 'DELETE', path, {
+  await commit(env, token, 'DELETE', path, {
     message: body.message || `Delete recipe: ${body.slug}`,
     sha: existing.sha,
     branch: env.BRANCH,
+    author: commitAuthor(session),
   }, 'delete');
   return json(env, 200, { ok: true });
 }
@@ -465,15 +735,17 @@ async function putMenu(request: Request, env: Env, session: Session): Promise<Re
     return json(env, 400, { error: 'Menu content looks malformed (missing a "## Menu" heading).' });
   }
 
-  const existing = await getExisting(env, session.token, MENU_PATH);
+  const token = await installationToken(env);
+  const existing = await getExisting(env, token, MENU_PATH);
   const payload: Record<string, unknown> = {
     message: body.message || 'Update cafe menu',
     content: b64(markdown),
     branch: env.BRANCH,
+    author: commitAuthor(session),
   };
   if (existing) payload.sha = existing.sha;
 
-  await commit(env, session.token, 'PUT', MENU_PATH, payload, 'commit');
+  await commit(env, token, 'PUT', MENU_PATH, payload, 'commit');
   return json(env, 200, { ok: true });
 }
 

@@ -2,7 +2,8 @@ name = "izzy-recipe-api"
 main = "src/worker.ts"
 compatibility_date = "2024-11-01"
 
-# KV namespace holding session-id → {GitHub token, login}. Create it once with:
+# KV namespace holding session-id → {login, userId}, plus the cached GitHub App installation
+# token. Create it once with:
 #   npx wrangler kv namespace create SESSIONS
 # then paste the returned id below (and a preview_id for `wrangler dev`).
 [[kv_namespaces]]
@@ -11,15 +12,31 @@ id = "58e93e762b604bc48498b9127c393d0d"
 preview_id = "930c1eb3c3694e738325eeed83542326"
 
 [vars]
-OWNER = "ibennet"
+OWNER = "izzyisdizzy"
 REPO = "izzybennett.com"
 BRANCH = "master"
 RECIPE_DIR = "src/content/recipes"
 DENSITIES_PATH = "src/data/densities.json"   # shared ingredient → grams-per-cup list the uploader grows
 SITE_ORIGIN = "https://izzybennett.com"
 SESSION_TTL = "28800"        # 8 hours, in seconds
-ALLOWED_LOGIN = "ibennet"    # only this GitHub user may mint a session
+
+# Who may sign in, and what they may do. Both are comma-separated GitHub logins, matched
+# case-insensitively. ADMIN_LOGINS implies recipe access, so admins need listing only once.
+# Anyone not named here gets no session at all.
+#   recipes → add/edit/delete RECIPE_DIR/<slug>.md and grow DENSITIES_PATH
+#   admin   → the above, plus the cafe menu and the /orders kitchen toggle
+RECIPE_EDITORS = "izzyisdizzy,rma244"
+ADMIN_LOGINS = "izzyisdizzy"
+
+# The OAuth App — used ONLY to identify who is signing in; its token is never stored.
 GITHUB_CLIENT_ID = "Ov23liJKTk3X9V904d2f"
 
-# GITHUB_CLIENT_SECRET is a secret, NOT a var. Set it with:
-#   npx wrangler secret put GITHUB_CLIENT_SECRET
+# The GitHub App — does every actual write, so editors need no repo access of their own.
+# Install it on OWNER/REPO with Contents: read & write, then fill both ids in. The installation
+# id is the number at the end of the URL on the app's "Configure" page.
+GITHUB_APP_ID = "4911017"
+GITHUB_APP_INSTALLATION_ID = "160909517"
+
+# Secrets, NOT vars. Set each with `npx wrangler secret put <NAME>`:
+#   GITHUB_CLIENT_SECRET    — the OAuth App's client secret
+#   GITHUB_APP_PRIVATE_KEY  — the GitHub App's .pem, pasted whole (PKCS#1 or PKCS#8 both work)
