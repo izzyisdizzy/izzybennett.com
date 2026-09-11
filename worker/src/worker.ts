@@ -370,14 +370,69 @@ async function appJwt(env: Env): Promise<string> {
 // GitHub issues App keys as PKCS#1 ("BEGIN RSA PRIVATE KEY"), but WebCrypto only imports PKCS#8
 // ("BEGIN PRIVATE KEY"). Rather than require an `openssl pkcs8` step during setup — easy to skip
 // and confusing to debug — accept either and wrap PKCS#1 in the PKCS#8 envelope here.
+//
+// Which format it is, is decided by looking at the DER itself rather than the PEM header text:
+// the header is routinely lost when a key is pasted into `wrangler secret put`, and a headerless
+// PKCS#1 body silently looks like PKCS#8 to a text check. Both encodings open as
+// SEQUENCE { INTEGER version, ... }; what follows the version tells them apart — PKCS#8 has an
+// AlgorithmIdentifier SEQUENCE (0x30) there, PKCS#1 has the modulus INTEGER (0x02).
 async function importAppKey(pem: string): Promise<CryptoKey> {
-  const body = (pem ?? '').replace(/-----(BEGIN|END)[^-]*-----/g, '').replace(/\s+/g, '');
-  if (!body) throw new ApiError(500, 'GITHUB_APP_PRIVATE_KEY is missing or malformed.');
-  let der = base64ToBytes(body);
-  if (/BEGIN RSA PRIVATE KEY/.test(pem)) der = pkcs1ToPkcs8(der);
-  return crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, [
-    'sign',
-  ]);
+  const body = (pem ?? '').replace(/-----[^-]*-----/g, '').replace(/\s+/g, '');
+  if (!body) throw new ApiError(500, 'GITHUB_APP_PRIVATE_KEY is missing or empty.');
+
+  let der: Uint8Array;
+  try {
+    der = base64ToBytes(body);
+  } catch {
+    throw new ApiError(500, 'GITHUB_APP_PRIVATE_KEY is not valid base64 — re-paste the .pem.');
+  }
+
+  // Try the structurally-indicated form first, then the other one. Falling back rather than
+  // trusting the sniff outright means an unusual encoding still works instead of hard-failing.
+  const candidates = looksLikePkcs8(der) ? [der, pkcs1ToPkcs8(der)] : [pkcs1ToPkcs8(der), der];
+  for (const candidate of candidates) {
+    try {
+      return await crypto.subtle.importKey(
+        'pkcs8',
+        candidate,
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+    } catch {
+      /* try the next encoding */
+    }
+  }
+  // Both encodings failed, so the stored bytes aren't an RSA key at all — usually a truncated or
+  // mangled paste. Report shape only (byte counts and the leading DER tags); these say nothing
+  // about the key material but are enough to tell truncation from wrong-file from wrong-format.
+  // A healthy 2048-bit key is ~1190 bytes (PKCS#1) or ~1218 (PKCS#8) and starts 30 82.
+  const shape = `${der.length}B, starts ${[...der.slice(0, 4)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join(' ')}, header ${/BEGIN/.test(pem) ? 'present' : 'MISSING'}`;
+  console.warn(`app key unreadable: ${shape}`);
+  throw new ApiError(
+    500,
+    `GITHUB_APP_PRIVATE_KEY could not be read as an RSA private key (${shape}). ` +
+      'Most likely the paste was truncated — set it straight from the file instead: ' +
+      '`npx wrangler secret put GITHUB_APP_PRIVATE_KEY < /path/to/your-app.private-key.pem`'
+  );
+}
+
+// Walk past the outer SEQUENCE header and the version INTEGER; a SEQUENCE tag next means PKCS#8.
+function looksLikePkcs8(der: Uint8Array): boolean {
+  let i = 0;
+  if (der[i++] !== 0x30) return false; // outer SEQUENCE
+  i = skipDerLength(der, i);
+  if (der[i] !== 0x02) return false; // version INTEGER
+  i += 2 + der[i + 1]; // tag + length byte + contents (version is always short-form)
+  return der[i] === 0x30;
+}
+
+// Advance past a DER length field, returning the index of the first content byte.
+function skipDerLength(der: Uint8Array, i: number): number {
+  const first = der[i++];
+  return first & 0x80 ? i + (first & 0x7f) : i;
 }
 
 // Just enough DER to build a PKCS#8 envelope around an existing PKCS#1 key body.
