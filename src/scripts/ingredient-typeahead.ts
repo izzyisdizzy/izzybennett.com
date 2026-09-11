@@ -4,6 +4,11 @@
  * match appears as grey ghost text after the caret (Tab accepts it) with the rest in a
  * listbox below (arrows + Enter, or a click).
  *
+ * One rule ties the keyboard to what's on screen: a highlight, ghost text, and "Tab will
+ * commit this" always appear together. Only a match that completes what's typed is offered
+ * that way, so a name that's already complete lists its variants without pre-selecting one,
+ * and Tab goes on moving to the next field until you pick something with the arrow keys.
+ *
  * This lives in its own module rather than in upload.astro's big inline script because that
  * script is a `define:vars` block, which Astro leaves unprocessed — it can't import, which is
  * why it re-implements its unit maths by hand. Nothing here needs to be duplicated there:
@@ -15,7 +20,7 @@
  * ingredient, a new group, an edited recipe's rehydrated rows — are covered for free.
  */
 import densities from '../data/densities.json';
-import { rankIngredientSuggestions, type Suggestion } from '../lib/ingredient-suggest';
+import { normalizeName, rankIngredientSuggestions, type Suggestion } from '../lib/ingredient-suggest';
 
 const GRAMS_PER_CUP: Record<string, number> = densities;
 const NAMES = Object.keys(GRAMS_PER_CUP).sort();
@@ -181,11 +186,18 @@ function refresh(input: HTMLInputElement): void {
     return;
   }
   state.matches = rankIngredientSuggestions(input.value, NAMES);
-  state.active = state.matches.length > 0 ? 0 : -1;
   if (state.matches.length === 0) {
     close(input);
     return;
   }
+  // Highlight the top match only when it completes what's typed AND what's typed isn't already
+  // an ingredient in its own right, so that a highlight, ghost text, and "Tab will commit this"
+  // always mean the same thing. Both halves matter: "flour" matches only its qualified variants
+  // ("cake flour"), while "butter" is a genuine prefix of "buttermilk" — pre-selecting either
+  // would let a Tab meant for the detail field swap the ingredient, and with it the density the
+  // recipe page converts by. The variants stay listed; they just have to be chosen.
+  const typedIsIngredient = normalizeName(input.value) in GRAMS_PER_CUP;
+  state.active = !typedIsIngredient && state.matches[0].isPrefix ? 0 : -1;
   renderList(input, parts, state);
   renderGhost(input, parts, state);
 }
@@ -195,7 +207,9 @@ function move(input: HTMLInputElement, delta: number): void {
   const state = states.get(input);
   if (!parts || !state || state.matches.length === 0) return;
   const count = state.matches.length;
-  state.active = (state.active + delta + count) % count;
+  // From "nothing highlighted", down lands on the first entry and up on the last.
+  state.active =
+    state.active < 0 ? (delta > 0 ? 0 : count - 1) : (state.active + delta + count) % count;
   renderList(input, parts, state);
   renderGhost(input, parts, state);
 }
@@ -213,8 +227,15 @@ function accept(input: HTMLInputElement, name: string): void {
   }
 }
 
+/**
+ * The name Tab or Enter would commit, or null when nothing is highlighted.
+ *
+ * Null exactly when the field shows no ghost text, which is what stops Tab from rewriting a
+ * name that is already valid and that the user only meant to tab away from. Reaching a
+ * suggestion with the arrow keys is an explicit choice and does make it committable.
+ */
 const activeName = (state: State): string | null =>
-  state.matches[Math.max(state.active, 0)]?.name ?? null;
+  state.active >= 0 ? (state.matches[state.active]?.name ?? null) : null;
 
 /** Attach the typeahead to a form. Every listener is delegated, so it's a one-time call. */
 export function initIngredientTypeahead(form: HTMLElement | null): void {
@@ -250,22 +271,22 @@ export function initIngredientTypeahead(form: HTMLElement | null): void {
 
     switch (e.key) {
       case 'Tab': {
-        // Shift+Tab is never touched, and neither is Tab with nothing to accept: tabbing
-        // through the form has to behave exactly as it does everywhere else.
-        if (!open || e.shiftKey) {
+        // Taken only to commit a highlighted suggestion. Shift+Tab never is, and neither is a
+        // Tab with nothing highlighted — tabbing through the row's fields has to behave
+        // exactly as it does everywhere else in the form.
+        const name = open && !e.shiftKey && state ? activeName(state) : null;
+        if (!name) {
           if (open) close(input);
           return;
         }
-        const name = state && activeName(state);
-        if (!name) return;
         e.preventDefault();
         accept(input, name);
         return;
       }
       case 'Enter': {
-        // Only while the popup is open. Closed, Enter still submits the form and publishes.
-        if (!open) return;
-        const name = state && activeName(state);
+        // With nothing highlighted, Enter keeps the meaning it has everywhere else on this
+        // page and publishes the recipe.
+        const name = open && state ? activeName(state) : null;
         if (!name) return;
         e.preventDefault();
         accept(input, name);

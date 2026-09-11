@@ -4,9 +4,11 @@
  *
  * The candidate pool is the key set of data/densities.json — exactly the ingredients whose
  * measurements are already known. That's deliberate: updateItemRow in upload.astro gates its
- * "how many grams?" prompt on an *exact* key hit (`name in densities`), not on lookupDensity's
- * progressive word-drop, so completing to a real key is what both silences that prompt and
- * guarantees the recipe page can convert the amount.
+ * "how many grams?" prompt on `densityKey(name) in densities`, which lowercases and drops a
+ * parenthetical or anything past the first comma but does no word-dropping of its own — unlike
+ * lookupDensity, which also walks off leading words when the recipe page converts. So the
+ * uploader needs the head of the name to land on a real key, and completing to one is what
+ * both silences that prompt and guarantees the published page can convert the amount.
  */
 
 export interface Suggestion {
@@ -21,7 +23,18 @@ export const MIN_QUERY_LENGTH = 2;
 /** Default number of suggestions offered; enough to see the alternatives, short enough to scan. */
 export const DEFAULT_LIMIT = 6;
 
-const norm = (s: string): string => s.toLowerCase().replace(/\s+/g, ' ').trim();
+/**
+ * Fold a typed name to the form the density keys are written in. Case and spacing only — it
+ * deliberately does no word-dropping, so a fold that lands on a key means the two really are
+ * the same ingredient.
+ */
+export const normalizeName = (s: string): string =>
+  String(s ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const norm = normalizeName;
 
 /**
  * Rank `names` against what's been typed, best first.

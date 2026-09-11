@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest';
+import densities from '../data/densities.json';
 import { initIngredientTypeahead } from './ingredient-typeahead';
 
 /**
@@ -124,6 +125,125 @@ describe('opening and matching', () => {
 
     expect(labels(input)).toEqual(['chocolate chips', 'cocoa powder']);
     expect(ghost(input).hidden).toBe(true);
+  });
+
+  it('highlights nothing when no suggestion completes what was typed', () => {
+    setup();
+    const input = name();
+    // "flour" is already a whole ingredient; only its qualified variants can match.
+    type(input, 'flour');
+
+    expect(labels(input)).toEqual([
+      '00 flour',
+      'all purpose flour',
+      'bread flour',
+      'cake flour',
+    ]);
+    expect(selected(input)).toEqual([]);
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false);
+    expect(ghost(input).hidden).toBe(true);
+  });
+});
+
+// The form's own Tab key is how you get from the name field to the detail field, so a name
+// that is already complete must survive it untouched. A pre-selected variant would silently
+// swap the ingredient — and "sugar" -> "brown sugar" would also change the density the
+// recipe page converts by, from 200 to 220 g/cup.
+describe('a complete name is never rewritten by tabbing on', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  for (const typed of ['flour', 'sugar', 'milk', 'butter', 'cinnamon']) {
+    it(`leaves "${typed}" alone on Tab`, () => {
+      setup();
+      const input = name();
+      type(input, typed);
+
+      expect(isOpen(input)).toBe(true); // the variants are still on offer
+      const event = press(input, 'Tab');
+      expect(event.defaultPrevented).toBe(false);
+      expect(input.value).toBe(typed);
+      expect(isOpen(input)).toBe(false);
+    });
+  }
+
+  it('does not turn "butter" into "buttermilk", though it is a genuine prefix of it', () => {
+    setup();
+    const input = name();
+    type(input, 'butter');
+
+    // The completion is real, which is why the guard can't just be about prefixes: "butter"
+    // is an ingredient on its own, so nothing is offered up for a stray Tab to take.
+    expect(labels(input)).toEqual(['buttermilk', 'plant butter']);
+    expect(selected(input)).toEqual([]);
+    expect(ghost(input).hidden).toBe(true);
+    expect(press(input, 'Tab').defaultPrevented).toBe(false);
+    expect(input.value).toBe('butter');
+  });
+
+  it('still completes butter to buttermilk when that is what was asked for', () => {
+    setup();
+    const input = name();
+    type(input, 'butter');
+    press(input, 'ArrowDown');
+
+    expect(ghost(input)).toEqual({ hidden: false, typed: 'butter', rest: 'milk' });
+    press(input, 'Tab');
+    expect(input.value).toBe('buttermilk');
+  });
+
+  it('leaves a complete name alone on Enter, which still publishes', () => {
+    setup();
+    const input = name();
+    type(input, 'sugar');
+
+    expect(press(input, 'Enter').defaultPrevented).toBe(false);
+    expect(input.value).toBe('sugar');
+  });
+
+  it('commits a variant once the arrow keys pick one', () => {
+    setup();
+    const input = name();
+    type(input, 'flour');
+    press(input, 'ArrowDown');
+
+    expect(selected(input)).toEqual(['00 flour']);
+    expect(press(input, 'Tab').defaultPrevented).toBe(true);
+    expect(input.value).toBe('00 flour');
+  });
+
+  it('reaches the last variant with ArrowUp from nothing highlighted', () => {
+    setup();
+    const input = name();
+    type(input, 'flour');
+    press(input, 'ArrowUp');
+
+    expect(selected(input)).toEqual(['cake flour']);
+  });
+
+  it('still commits a click, which is unambiguous', () => {
+    setup();
+    const input = name();
+    type(input, 'flour');
+    options(input)[2].dispatchEvent(new Event('click', { bubbles: true }));
+
+    expect(input.value).toBe('bread flour');
+  });
+
+  it('holds for every ingredient on file, not just the ones spelled out above', () => {
+    // The invariant: a name already in the density list is exactly the name that must survive
+    // a Tab, so no future addition to densities.json can reintroduce the swap by being a
+    // prefix of another entry. Guards all of them at once.
+    const rewritten: string[] = [];
+    for (const known of Object.keys(densities)) {
+      setup();
+      const input = name();
+      type(input, known);
+      press(input, 'Tab');
+      if (input.value !== known) rewritten.push(`${known} -> ${input.value}`);
+    }
+    expect(rewritten).toEqual([]);
   });
 });
 
