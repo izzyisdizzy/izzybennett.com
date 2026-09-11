@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { buildIngredientIndex, linkIngredientsInHtml, type IngredientGroup } from './ingredients';
 
-// Mirrors chocochip-cookies.md (single unnamed group).
+// The legacy comma-in-name shape of chocochip-cookies.md (single unnamed group). The recipe
+// itself now uses name + detail; this fixture keeps the old shape on purpose as the control arm
+// of the parity tests at the bottom of this file — do not migrate it.
 const cookies: IngredientGroup[] = [
   {
     items: [
@@ -46,7 +48,8 @@ const appleBread: IngredientGroup[] = [
   },
 ];
 
-// Mirrors earl-grey-pound-cake.md — heavily qualified names, short prose references.
+// The legacy comma-in-name shape of earl-grey-pound-cake.md — heavily qualified names, short
+// prose references. Kept unmigrated as the parity control; see the note on `cookies` above.
 const earlGrey: IngredientGroup[] = [
   {
     group: 'Wet Ingredients',

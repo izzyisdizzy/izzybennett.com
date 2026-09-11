@@ -25,6 +25,11 @@ const fieldInput =
   'mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
 const rowInput =
   'min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
+// The ingredient row's two flexible fields, name and detail. They use grow + an explicit basis
+// rather than rowInput's `flex-1`, because the `flex` shorthand resets flex-basis to 0 — which
+// would let the name field collapse to a few pixels instead of wrapping the row on a phone.
+const itemInput =
+  'min-w-0 grow rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
 // Narrow, non-flexing variant of rowInput for the qty box and unit <select> in an ingredient row.
 const cellInput =
   'rounded-lg border border-neutral-300 bg-white px-2 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
@@ -238,8 +243,8 @@ const dragHandle =
             <option value="">—</option>
             {UNIT_OPTIONS.map((u) => <option value={u}>{u}</option>)}
           </select>
-          <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" aria-label="Ingredient" class={rowInput} />
-          <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${cellInput} min-w-0 grow basis-32`} />
+          <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" aria-label="Ingredient" class={`${itemInput} basis-40`} />
+          <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${itemInput} basis-32`} />
           <button type="button" data-action="remove" aria-label="Remove" class={removeBtn}>✕</button>
         </div>
         <div data-grams-prompt class="ml-8 hidden rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
@@ -288,16 +293,15 @@ const dragHandle =
       const normUnit = (u) => { if (!u) return ''; const k = String(u).toLowerCase().trim().replace(/\.$/, ''); return UNIT_ALIASES[k] ?? k; };
       const isVolumeUnit = (u) => normUnit(u) in VOLUME_IN_CUPS;
 
-      // lookupDensity (src/lib/units.ts) normalises a name before looking it up and then drops
-      // leading qualifiers ("unsalted butter" -> "butter"). Mirror both halves here so the grams
-      // prompt's idea of "already known" matches what the recipe page can actually convert, and
-      // so a ratio the user supplies is saved under the same key the page will look up.
+      // The shared density list is keyed on a normalised name, so normalise the same way
+      // lookupDensity (src/lib/units.ts) does before consulting or extending it — otherwise a
+      // name like "lavender paste (or extract)" is saved as its own unreachable key.
+      // Deliberately an EXACT miss, not lookupDensity's leading-word fallback: the fallback is
+      // how the page degrades gracefully, but the prompt's job is to grow the list. Treating
+      // "almond flour" as known because "flour" is listed would silently render it at flour's
+      // 120 g/cup instead of asking for its real ~96.
       const densityKey = (name) =>
         String(name ?? '').toLowerCase().replace(/\([^)]*\)/g, ' ').split(',')[0].replace(/\s+/g, ' ').trim();
-      function hasKnownDensity(name) {
-        const words = densityKey(name).split(' ').filter(Boolean);
-        return words.some((_, i) => knownDensities[words.slice(i).join(' ')] != null);
-      }
       function parseQty(qty) {
         if (qty == null) return null;
         const s = String(qty).trim();
@@ -419,7 +423,7 @@ const dragHandle =
         const unit = unitEl.value;
         const qtyNum = parseQty(qtyEl.value);
 
-        const needs = isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !hasKnownDensity(name);
+        const needs = isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities);
         prompt.classList.toggle('hidden', !needs);
         if (needs) {
           row.querySelector('[data-grams-qty]').textContent = qtyEl.value.trim();
