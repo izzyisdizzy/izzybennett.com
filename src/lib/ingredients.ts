@@ -18,6 +18,8 @@
  * All logic is pure and build-time (Astro SSG) — no client parsing.
  */
 
+import { UNICODE_FRACTIONS, UNIT_ALIASES } from './units';
+
 export interface StructuredItem {
   name: string;
   qty?: string;
@@ -50,6 +52,12 @@ export interface IngredientIndex {
   forms: Map<string, FormEntries>;
   /** Combined, longest-match-first matcher over all forms, or null when nothing indexable. */
   regex: RegExp | null;
+  /**
+   * Phrases a mention may sit inside without really being that ingredient — the recipe's own
+   * tool names ("Egg beater" contains "egg"). Such mentions don't take an inline amount, so
+   * a step never reads "mix with 1 egg beater". Null when the recipe lists no tools.
+   */
+  avoid: RegExp | null;
 }
 
 /**
@@ -84,6 +92,55 @@ const escapeHtml = (s: string): string =>
 
 /** Collapse whitespace and lowercase — the normal form used for all name comparisons. */
 const norm = (s: string): string => s.toLowerCase().replace(/\s+/g, ' ').trim();
+
+/**
+ * Quantity-already-in-the-prose matcher. A step that says "add 1 cup of the flour" or
+ * "beat in 2 eggs" has already stated an amount, so prefixing the ingredient's own
+ * measurement would read as "add 1 cup of the 1 ½ cup flour". These parts detect a
+ * quantity run that reaches right up to the mention; such mentions keep the popover
+ * instead of taking an inline amount.
+ *
+ * Deliberately biased toward suppression: a miss is a visible duplicated amount, while an
+ * over-suppression merely leaves today's hover behaviour in place.
+ */
+const FRACTION_GLYPHS = `[${Object.keys(UNICODE_FRACTIONS).join('')}]`;
+
+/** Spelled-out quantities recipes use instead of digits ("half the apples", "a pinch"). */
+const NUMBER_WORDS = 'a|an|one|two|three|four|five|six|seven|eight|nine|ten|dozen|half|couple|few|several';
+
+/** Integer/decimal, range ("6-8"), ASCII fraction ("1/2"), glyph ("½"), mixed ("1 ½"), or word. */
+const NUMBER =
+  `(?:\\d+(?:\\.\\d+)?(?:\\s*[-–—]\\s*\\d+(?:\\.\\d+)?)?(?:\\s*\\/\\s*\\d+)?(?:\\s*${FRACTION_GLYPHS})?` +
+  `|${FRACTION_GLYPHS}|(?:${NUMBER_WORDS})(?![\\w]))`;
+
+/** Measure words recipes use in prose that aren't convertible units, so aren't in UNIT_ALIASES. */
+const PROSE_UNITS = [
+  'pinch', 'pinches', 'dash', 'dashes', 'handful', 'handfuls', 'splash', 'splashes',
+  'stick', 'sticks', 'clove', 'cloves', 'can', 'cans', 'package', 'packages',
+  'slice', 'slices', 'piece', 'pieces', 'bunch', 'bunches', 'sprig', 'sprigs',
+];
+
+/** Words that may sit between a stated quantity and the ingredient it measures. */
+const QTY_FILLER = [
+  'of', 'the', 'that', 'your', 'more', 'extra', 'additional', 'remaining', 'reserved', 'rest',
+  ...LEADING_STRIP,
+];
+
+/**
+ * One run of measure-or-filler words, longest first so "fluid ounces" wins over "ounces".
+ * Repeatable, so "half of the can of |pumpkin" and "2 tbsp. of the sifted |flour" both reach
+ * the mention, while "bake 50 minutes, then fold in |butter" breaks at "minutes".
+ */
+const MEASURE_WORDS = [...Object.keys(UNIT_ALIASES), ...PROSE_UNITS, ...QTY_FILLER]
+  .sort((a, b) => b.length - a.length)
+  .map((w) => escapeRegex(w).replace(/ /g, '\\s+'))
+  .join('|');
+
+/** True when the text immediately preceding a mention already states a quantity. */
+const PRECEDING_QTY = new RegExp(
+  `(?:^|[\\s(\\[])${NUMBER}(?:\\s*(?:${MEASURE_WORDS})(?![\\w])\\.?)*\\s*$`,
+  'i'
+);
 
 /** Ingredient's US measurement label, e.g. "½ cup", "8 tbsp", or "4" for count items. */
 function measurementLabel(item: StructuredItem): string {
@@ -171,7 +228,8 @@ function genericAliases(canonical: string): Set<string> {
  */
 export function buildIngredientIndex(
   groups: IngredientGroup[],
-  gramsOf?: (item: StructuredItem) => string | null
+  gramsOf?: (item: StructuredItem) => string | null,
+  avoidPhrases: string[] = []
 ): IngredientIndex {
   const forms = new Map<string, FormEntries>();
 
@@ -199,7 +257,11 @@ export function buildIngredientIndex(
     }
   }
 
-  return { forms, regex: buildRegex([...forms.keys()]) };
+  return {
+    forms,
+    regex: buildRegex([...forms.keys()]),
+    avoid: buildRegex(avoidPhrases.map(norm).filter((p) => p.length > 1)),
+  };
 }
 
 /** Combined, word-boundary-anchored, longest-match-first regex over all surface forms. */
@@ -212,6 +274,9 @@ function buildRegex(forms: string[]): RegExp | null {
   return new RegExp(`\\b(${alternation})\\b`, 'gi');
 }
 
+/** Identity of one measured occurrence — used both to dedupe and to track first mentions. */
+const entryKey = (e: Entry): string => `${e.name}|${e.us}|${e.grams ?? ''}|${e.group ?? ''}`;
+
 /** Resolve a matched surface form to its entries: a specific (full-name) hit wins over aliases. */
 function resolve(index: IngredientIndex, matched: string): Entry[] {
   const rec = index.forms.get(norm(matched));
@@ -219,7 +284,7 @@ function resolve(index: IngredientIndex, matched: string): Entry[] {
   const chosen = rec.specific.length > 0 ? rec.specific : rec.generic;
   const seen = new Set<string>();
   return chosen.filter((e) => {
-    const k = `${e.name}|${e.us}|${e.grams ?? ''}|${e.group ?? ''}`;
+    const k = entryKey(e);
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
@@ -237,8 +302,16 @@ function amountHtml(e: Entry): string {
   return `<span class="ing-amt${e.grams ? ' ing-conv' : ''}">${us}${grams}</span>`;
 }
 
-/** The interactive trigger + measurement popover for one matched ingredient mention. */
-function buildTrigger(label: string, entries: Entry[], id: number): string {
+/**
+ * The interactive trigger + measurement popover for one matched ingredient mention.
+ *
+ * When `inline` is set the mention also carries a second, *visible-on-demand* rendering of
+ * the same amount placed before the name, so "mix in butter" can read "mix in ½ cup butter".
+ * It ships `display: none` (see global.css), which makes the default and no-JS page
+ * identical to the popover-only one; `aria-hidden` matches that hidden default and the
+ * amounts toggle lifts it when the copy becomes the only source of the measurement.
+ */
+function buildTrigger(label: string, entries: Entry[], id: number, inline = false): string {
   const popId = `ing-pop-${id}`;
   // A single measurement shows just the amount; group labels only earn their place when
   // they disambiguate between multiple measurements of the same mention.
@@ -251,8 +324,11 @@ function buildTrigger(label: string, entries: Entry[], id: number): string {
               `<span class="ing-pop-row">${amountHtml(e)} <span class="ing-pop-group">· ${escapeHtml(e.group ?? e.name)}</span></span>`
           )
           .join('');
+  // The separating space lives *inside* the copy so nothing is left behind when it is hidden.
+  const inlineCopy = inline ? `<span class="ing-inline" aria-hidden="true">${amountHtml(entries[0])} </span>` : '';
   return (
-    `<span class="ing-ref">` +
+    `<span class="ing-ref${inline ? ' ing-has-amt' : ''}">` +
+    inlineCopy +
     `<button type="button" class="ing-ref-btn" aria-expanded="false" aria-describedby="${popId}">${escapeHtml(label)}</button>` +
     `<span role="tooltip" id="${popId}" class="ing-pop">${inner}</span>` +
     `</span>`
@@ -260,22 +336,53 @@ function buildTrigger(label: string, entries: Entry[], id: number): string {
 }
 
 /**
+ * Per-page state threaded through every step of a recipe, in render order. It carries the
+ * popover id counter, the set of ingredients that have already been given an inline amount
+ * (only an ingredient's *first* mention gets one), and a count of how many mentions
+ * actually took one — which is what tells the layout whether to render the amounts toggle.
+ */
+export interface LinkState {
+  n: number;
+  inlineable?: number;
+  seen?: Set<string>;
+}
+
+export function createLinkState(): LinkState {
+  return { n: 0, inlineable: 0, seen: new Set() };
+}
+
+/**
  * Rewrite already-rendered step HTML, wrapping ingredient mentions in popover triggers.
  *
  * Runs on the HTML produced by inlineMarkdown (markdown-first): the tokenizer only ever
  * touches plain-text runs, so it can't corrupt tags or entities, and it skips text inside
- * <a>/<code> to avoid nesting a button in a link or mangling code. `idState` threads a
+ * <a>/<code> to avoid nesting a button in a link or mangling code. `state` threads a
  * per-page counter so every popover gets a unique id across all steps.
+ *
+ * A mention additionally gets an inline copy of its amount when all three hold:
+ *   - it resolves to exactly one measurement (a multi-row list can't go in a sentence);
+ *   - the prose doesn't already state a quantity for it (see PRECEDING_QTY);
+ *   - it is the first such mention of that ingredient on the page.
+ * Because the second condition is checked before the third, a mention the guard skips does
+ * not consume the ingredient's one inline slot — a later, unqualified mention still gets it.
  */
 export function linkIngredientsInHtml(
   html: string,
   index: IngredientIndex,
-  idState: { n: number } = { n: 0 }
+  state: LinkState = createLinkState()
 ): string {
   const { regex } = index;
   if (!regex) return html;
 
+  const seen = (state.seen ??= new Set<string>());
+  state.inlineable ??= 0;
+
   let skipDepth = 0;
+  // Plain text seen so far in this step, used to look behind a match for a stated quantity.
+  // Tags and entities collapse to a space: they never carry a quantity themselves, and a
+  // space keeps "add <strong>2 cups</strong> flour" readable as one run to the matcher.
+  let carry = '';
+
   // Split into tags, entities, and the text between them; odd matches are tags/entities.
   return html
     .split(/(<[^>]+>|&[^;\s]+;)/)
@@ -283,17 +390,44 @@ export function linkIngredientsInHtml(
       if (!token) return token;
 
       if (token[0] === '<') {
+        carry += ' ';
         if (/^<(a|code)[\s>]/i.test(token)) skipDepth++;
         else if (/^<\/(a|code)>/i.test(token) && skipDepth > 0) skipDepth--;
         return token;
       }
-      if (token[0] === '&') return token; // HTML entity — leave untouched
+      if (token[0] === '&') {
+        carry += ' ';
+        return token; // HTML entity — leave untouched
+      }
+
+      const before = carry;
+      carry += token;
       if (skipDepth > 0) return token; // inside <a>/<code>
 
-      return token.replace(regex, (match) => {
+      // Spans of this token covered by an avoid phrase (a tool name); a mention starting
+      // inside one is a coincidence of wording, not a real use of the ingredient.
+      const avoided: Array<[number, number]> = [];
+      if (index.avoid) {
+        index.avoid.lastIndex = 0;
+        for (let m = index.avoid.exec(token); m !== null; m = index.avoid.exec(token)) {
+          avoided.push([m.index, m.index + m[0].length]);
+        }
+      }
+
+      return token.replace(regex, (match: string, _form: string, offset: number) => {
         const entries = resolve(index, match);
         if (entries.length === 0) return match;
-        return buildTrigger(match, entries, idState.n++);
+
+        const inline =
+          entries.length === 1 &&
+          !avoided.some(([a, b]) => offset >= a && offset < b) &&
+          !PRECEDING_QTY.test(before + token.slice(0, offset)) &&
+          !seen.has(entryKey(entries[0]));
+        if (inline) {
+          seen.add(entryKey(entries[0]));
+          state.inlineable = (state.inlineable ?? 0) + 1;
+        }
+        return buildTrigger(match, entries, state.n++, inline);
       });
     })
     .join('');

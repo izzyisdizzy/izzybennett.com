@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildIngredientIndex, linkIngredientsInHtml, type IngredientGroup } from './ingredients';
+import {
+  buildIngredientIndex,
+  createLinkState,
+  linkIngredientsInHtml,
+  type IngredientGroup,
+} from './ingredients';
 
 // The legacy comma-in-name shape of chocochip-cookies.md (single unnamed group). The recipe
 // itself now uses name + detail; this fixture keeps the old shape on purpose as the control arm
@@ -92,7 +97,7 @@ function render(step: string, groups: IngredientGroup[]): string {
 
 /** How many ingredient triggers a step produced. */
 function triggerCount(html: string): number {
-  return (html.match(/class="ing-ref"/g) ?? []).length;
+  return (html.match(/class="ing-ref[ "]/g) ?? []).length;
 }
 
 describe('measurement resolution', () => {
@@ -219,7 +224,7 @@ describe('HTML safety', () => {
     const html = linkIngredientsInHtml('mix the <strong>flour</strong>', idx(), { n: 0 });
     expect(html).toContain('<strong>');
     expect(html).toContain('</strong>');
-    expect(html).toContain('class="ing-ref"');
+    expect(html).toMatch(/class="ing-ref[ "]/);
   });
 
   it('does not wrap text inside a link', () => {
@@ -235,7 +240,7 @@ describe('HTML safety', () => {
   it('leaves entities untouched', () => {
     const html = linkIngredientsInHtml('350&deg; then flour', idx(), { n: 0 });
     expect(html).toContain('350&deg;');
-    expect(html).toContain('class="ing-ref"');
+    expect(html).toMatch(/class="ing-ref[ "]/);
   });
 
   it('returns the html unchanged when nothing is indexable', () => {
@@ -311,5 +316,137 @@ describe('detail field and legacy comma-in-name parity', () => {
     const pairs = linked(step, earlGreyWithDetail);
     expect(pairs).toEqual(linked(step, earlGrey));
     expect(JSON.stringify(pairs)).not.toContain('room temp');
+  });
+});
+
+describe('inline amounts', () => {
+  // Grams only for cup measurements, mirroring the real convertible/not split.
+  const gramsOf = (item: { qty?: string; unit?: string }) => (item.unit === 'cup' ? '227 g' : null);
+
+  it('emits a name-free amount copy before the trigger for a single measurement', () => {
+    const html = render('mix in the butter', cookies);
+    expect(html).toContain('class="ing-ref ing-has-amt"');
+    expect(html).toContain(
+      '<span class="ing-inline" aria-hidden="true"><span class="ing-amt"><span class="ing-us">½ cup</span></span> </span><button'
+    );
+  });
+
+  it('carries both units in the inline copy when convertible', () => {
+    const html = linkIngredientsInHtml('mix the flour', buildIngredientIndex(cookies, gramsOf), createLinkState());
+    expect(html).toContain(
+      '<span class="ing-inline" aria-hidden="true"><span class="ing-amt ing-conv"><span class="ing-us">1 ½ cup</span><span class="ing-grams">227 g</span></span> </span>'
+    );
+  });
+
+  it('never inlines a multi-measurement mention, and leaves its popover intact', () => {
+    const html = render('mix in the vanilla', earlGrey);
+    expect(html).not.toContain('ing-inline');
+    expect(html).not.toContain('ing-has-amt');
+    expect(triggerCount(html)).toBe(1);
+  });
+
+  it('inlines only the first mention of an ingredient, across separate steps', () => {
+    const idx = buildIngredientIndex(cookies);
+    const state = createLinkState();
+    const first = linkIngredientsInHtml('cream the butter', idx, state);
+    const later = linkIngredientsInHtml('fold the butter back in', idx, state);
+    expect(first).toContain('ing-inline');
+    expect(later).not.toContain('ing-inline');
+    expect(later).toContain('class="ing-ref"'); // still a popover trigger
+  });
+
+  it('counts only the mentions that actually inlined', () => {
+    const state = createLinkState();
+    linkIngredientsInHtml('cream the butter, then add the butter', buildIngredientIndex(cookies), state);
+    expect(state.inlineable).toBe(1);
+  });
+
+  it('reports nothing inlineable when every mention is ambiguous', () => {
+    const state = createLinkState();
+    linkIngredientsInHtml('mix in the vanilla', buildIngredientIndex(earlGrey), state);
+    expect(state.inlineable).toBe(0);
+  });
+
+  it('threads popover ids and the first-mention set through one shared state', () => {
+    const idx = buildIngredientIndex(cookies);
+    const state = createLinkState();
+    const a = linkIngredientsInHtml('cream the butter', idx, state);
+    const b = linkIngredientsInHtml('melt the butter', idx, state);
+    expect(a).toContain('id="ing-pop-0"');
+    expect(b).toContain('id="ing-pop-1"');
+    expect(state.inlineable).toBe(1);
+  });
+});
+
+describe('preceding-quantity guard', () => {
+  /** The mention is still linked, it just doesn't take an inline amount. */
+  const guarded = (step: string, groups: IngredientGroup[]) => {
+    const html = render(step, groups);
+    expect(html).toContain('class="ing-ref"');
+    expect(html).not.toContain('ing-inline');
+  };
+
+  it('skips a stated quantity with a unit', () => guarded('add 1 cup of the flour', cookies));
+  it('skips a bare count', () => guarded('beat in 2 eggs', appleBread));
+  it('skips a unicode fraction', () => guarded('use ½ cup butter', cookies));
+  it('skips a range', () => guarded('core 6-8 apples', appleBread));
+  it('skips a mixed number', () => guarded('add 1 1/2 cup flour', cookies));
+  it('skips a spelled-out number', () => guarded('chop one apple', appleBread));
+  it('skips a word number through prep filler', () => guarded('place half the chopped apples on top', appleBread));
+  it('skips an abbreviated unit with a period', () => guarded('stir in 1 tbsp. of the flour', cookies));
+  it('skips a unit with no space', () => guarded('pour in 2tbsp oat milk', appleBread));
+  it('sees a quantity through inline markup tags', () => guarded('add <strong>2 cups</strong> flour', cookies));
+
+  it('does not suppress when the number belongs to something else', () => {
+    expect(render('bake 50 minutes, then fold in the flour', cookies)).toContain('ing-inline');
+    expect(render('Step 2. Add flour', cookies)).toContain('ing-inline');
+  });
+
+  it('a guarded mention does not consume the first-mention slot', () => {
+    const idx = buildIngredientIndex(cookies);
+    const state = createLinkState();
+    const a = linkIngredientsInHtml('add 1 cup of the flour', idx, state);
+    const b = linkIngredientsInHtml('sift the flour', idx, state);
+    expect(a).not.toContain('ing-inline');
+    expect(b).toContain('ing-inline');
+    expect(state.inlineable).toBe(1);
+  });
+});
+
+describe('tool-name avoidance', () => {
+  const tools = ['Mixing bowl', 'Egg beater', 'Baking sheet x2'];
+
+  it('does not inline an ingredient word that is part of a tool name', () => {
+    const idx = buildIngredientIndex(cookies, undefined, tools);
+    const html = linkIngredientsInHtml('mix together with egg beater', idx, createLinkState());
+    expect(html).not.toContain('ing-inline');
+  });
+
+  it('leaves the tool mention linked, exactly as before', () => {
+    const idx = buildIngredientIndex(cookies, undefined, tools);
+    const html = linkIngredientsInHtml('mix together with egg beater', idx, createLinkState());
+    expect(html).toContain('class="ing-ref"');
+  });
+
+  it('does not let a tool mention consume the first-mention slot', () => {
+    const idx = buildIngredientIndex(cookies, undefined, tools);
+    const state = createLinkState();
+    const html = linkIngredientsInHtml('beat with the egg beater, then add the egg', idx, state);
+    // Exactly one inline copy, and it belongs to the real mention at the end.
+    expect(html.match(/ing-inline/g)?.length).toBe(1);
+    expect(html.indexOf('ing-inline')).toBeGreaterThan(html.indexOf('beater'));
+    expect(state.inlineable).toBe(1);
+  });
+
+  it('still inlines the same ingredient elsewhere in the step', () => {
+    const idx = buildIngredientIndex(cookies, undefined, tools);
+    const html = linkIngredientsInHtml('add the egg using an egg beater', idx, createLinkState());
+    expect(html.match(/ing-inline/g)?.length).toBe(1);
+  });
+
+  it('is a no-op when the recipe lists no tools', () => {
+    const idx = buildIngredientIndex(cookies);
+    expect(idx.avoid).toBeNull();
+    expect(linkIngredientsInHtml('mix with egg beater', idx, createLinkState())).toContain('ing-inline');
   });
 });

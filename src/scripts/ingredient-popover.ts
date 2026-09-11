@@ -24,6 +24,10 @@ export function initIngredientPopovers(): void {
     if (!btn) continue;
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      // An inlined mention shows its amount in the prose and its popover is CSS-hidden, so a
+      // tap must do nothing rather than flip aria-expanded to a lie. Read the mode live: it
+      // can change after this listener is attached.
+      if (document.documentElement.dataset.amounts === 'inline' && ref.classList.contains('ing-has-amt')) return;
       const open = ref.toggleAttribute('data-open');
       btn.setAttribute('aria-expanded', String(open));
       if (open) closeAll(ref);

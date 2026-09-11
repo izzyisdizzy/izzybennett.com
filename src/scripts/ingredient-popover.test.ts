@@ -79,3 +79,58 @@ describe('initIngredientPopovers', () => {
     expect(() => initIngredientPopovers()).not.toThrow();
   });
 });
+
+describe('inline-amounts mode', () => {
+  /** An inlined mention — its amount is in the prose, so its popover is suppressed. */
+  function setupMixed() {
+    document.body.innerHTML =
+      `<span class="ing-ref ing-has-amt">` +
+      `<span class="ing-inline"><span class="ing-amt">½ cup</span> </span>` +
+      `<button type="button" class="ing-ref-btn" aria-expanded="false" aria-describedby="ing-pop-0">butter</button>` +
+      `<span role="tooltip" id="ing-pop-0" class="ing-pop">½ cup</span>` +
+      `</span>` +
+      trigger(1, 'vanilla');
+    initIngredientPopovers();
+    const refs = Array.from(document.querySelectorAll<HTMLElement>('.ing-ref'));
+    return {
+      inlined: refs[0],
+      inlinedBtn: refs[0].querySelector<HTMLButtonElement>('.ing-ref-btn')!,
+      plain: refs[1],
+      plainBtn: refs[1].querySelector<HTMLButtonElement>('.ing-ref-btn')!,
+    };
+  }
+
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    delete document.documentElement.dataset.amounts;
+  });
+
+  it('ignores a tap on an inlined mention while inline mode is on', () => {
+    const { inlined, inlinedBtn } = setupMixed();
+    document.documentElement.dataset.amounts = 'inline';
+
+    inlinedBtn.click();
+    expect(inlined.hasAttribute('data-open')).toBe(false);
+    expect(inlinedBtn.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('still toggles a multi-measurement mention in inline mode', () => {
+    const { plain, plainBtn } = setupMixed();
+    document.documentElement.dataset.amounts = 'inline';
+
+    plainBtn.click();
+    expect(plain.hasAttribute('data-open')).toBe(true);
+    expect(plainBtn.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('resumes toggling the inlined mention once inline mode is off', () => {
+    const { inlined, inlinedBtn } = setupMixed();
+    document.documentElement.dataset.amounts = 'inline';
+    inlinedBtn.click();
+    expect(inlined.hasAttribute('data-open')).toBe(false);
+
+    delete document.documentElement.dataset.amounts;
+    inlinedBtn.click();
+    expect(inlined.hasAttribute('data-open')).toBe(true);
+  });
+});

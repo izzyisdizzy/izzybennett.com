@@ -84,19 +84,54 @@ body {
   display: block;
 }
 
-/* US ↔ grams inside the popover, driven by the same toggle as the ingredient list (which
-   sets data-units on <html>). Scoped to `.ing-pop` so it never touches the ingredient
-   list, which has its own (scoped) us/grams rules. Grams text is hidden until grams mode;
-   in grams mode the US text hides only on convertible amounts, so count/unknown items keep
-   showing US. Before the toggle script runs, no data-units is set → the default US view. */
-.ing-pop .ing-grams {
+/* US ↔ grams inside any generated amount — the popover panel and the inline copy alike —
+   driven by the same toggle as the ingredient list (which sets data-units on <html>).
+   Scoped to `.ing-amt`, a class only lib/ingredients.ts emits, so it never touches the
+   ingredient list, which has its own (component-scoped) us/grams rules. Grams text is
+   hidden until grams mode; in grams mode the US text hides only on convertible amounts, so
+   count/unknown items keep showing US. Before the toggle script runs, no data-units is set
+   → the default US view. */
+.ing-amt .ing-grams {
   display: none;
 }
-:root[data-units='grams'] .ing-pop .ing-conv .ing-us {
+:root[data-units='grams'] .ing-amt.ing-conv .ing-us {
   display: none;
 }
-:root[data-units='grams'] .ing-pop .ing-conv .ing-grams {
+:root[data-units='grams'] .ing-amt.ing-conv .ing-grams {
   display: inline;
+}
+
+/* Inline amounts mode. A mention that resolved to exactly one measurement, is the first of
+   its ingredient, and isn't already quantified in the prose bakes a second copy of its
+   amount before the name (`.ing-inline`). It ships hidden, so the default — and the no-JS —
+   page is exactly the popover-only one. The "Show amounts" button stamps
+   <html data-amounts="inline">, which swaps that copy in and suppresses only that mention's
+   popover and hover affordance; every other mention keeps the popover in both modes.
+
+   These rules are (0,4,0) — :root + the attribute + two classes — so they beat the
+   reveal rules below at (0,3,0) regardless of source order, and the :hover/:focus-visible
+   pair is (0,5,0) against `.ing-ref-btn:hover` at (0,2,0). `border-bottom-style` is a
+   longhand, so it is orthogonal to the dark-mode block's `border-bottom-color`. */
+.ing-inline {
+  display: none;
+}
+.ing-inline .ing-amt {
+  white-space: nowrap; /* never break "½ cup" across lines */
+}
+
+:root[data-amounts='inline'] .ing-has-amt > .ing-inline {
+  display: inline;
+}
+:root[data-amounts='inline'] .ing-has-amt > .ing-pop {
+  display: none;
+}
+:root[data-amounts='inline'] .ing-has-amt > .ing-ref-btn {
+  cursor: inherit;
+  border-bottom-style: none;
+}
+:root[data-amounts='inline'] .ing-has-amt > .ing-ref-btn:hover,
+:root[data-amounts='inline'] .ing-has-amt > .ing-ref-btn:focus-visible {
+  color: inherit;
 }
 
 .ing-pop-group {
