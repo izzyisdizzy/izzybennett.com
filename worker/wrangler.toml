@@ -34,8 +34,8 @@ GITHUB_CLIENT_ID = "Ov23liJKTk3X9V904d2f"
 # The GitHub App — does every actual write, so editors need no repo access of their own.
 # Install it on OWNER/REPO with Contents: read & write, then fill both ids in. The installation
 # id is the number at the end of the URL on the app's "Configure" page.
-GITHUB_APP_ID = ""
-GITHUB_APP_INSTALLATION_ID = ""
+GITHUB_APP_ID = "4911017"
+GITHUB_APP_INSTALLATION_ID = "160909517"
 
 # Secrets, NOT vars. Set each with `npx wrangler secret put <NAME>`:
 #   GITHUB_CLIENT_SECRET    — the OAuth App's client secret
