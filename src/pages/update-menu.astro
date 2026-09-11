@@ -275,6 +275,24 @@ const removeBtn =
         });
       }
 
+      // Editing the menu is admin-only, but a recipe-only editor can still sign in here, since
+      // /update-menu is one of the Worker's RETURN_PATHS. Ask /api/me up front and disable the
+      // form, rather than letting them compose a whole menu and rejecting it at submit. The
+      // Worker enforces this regardless — this is just so the refusal arrives before the work.
+      async function applyCapabilities() {
+        if (!currentSession()) return;
+        try {
+          const res = await apiFetch('/api/me', { method: 'GET' });
+          if (!res.ok) return; // 401 is dealt with on submit; don't pre-empt it here
+          const me = await res.json();
+          if (me?.admin === true) return;
+          saveBtn.disabled = true;
+          setStatus(`Signed in as @${me?.login ?? 'you'} — editing the cafe menu is admin-only.`, 'err');
+        } catch {
+          /* offline: leave the form usable, the server is still the one enforcing */
+        }
+      }
+
       async function apiError(res) {
         let msg = '';
         try { msg = (await res.json()).error ?? ''; } catch { /* noop */ }
@@ -329,6 +347,7 @@ const removeBtn =
 
       ingestSessionFromHash();
       renderAuthState();
+      applyCapabilities();
       populate(initialItems);
       loadLatest();
     </script>

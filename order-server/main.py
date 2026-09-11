@@ -101,13 +101,17 @@ def kitchen_is_open(conn: sqlite3.Connection) -> bool:
     return get_setting(conn, "kitchen_open", "1") == "1"
 
 
-def verify_session(authorization: str | None) -> bool:
-    """Validate the caller's opaque recipe session against the OAuth Worker's /api/me, and require
-    the `admin` capability. A 200 alone is no longer sufficient: the Worker also issues sessions to
-    recipe-only editors, who may add recipes but must not flip the kitchen. Fails closed (returns
-    False) if the header is missing, the Worker is unreachable, or the response isn't admin."""
+def verify_session(authorization: str | None) -> str:
+    """Check the caller's opaque recipe session against the OAuth Worker's /api/me and require the
+    `admin` capability — a 200 alone is not enough, since the Worker also issues sessions to
+    recipe-only editors who may add recipes but must not flip the kitchen.
+
+    Returns one of "ok", "unauthenticated", "forbidden" or "unavailable" rather than a bool,
+    because collapsing them loses the difference between "sign in again" and "you may not do
+    this". An admin whose session expired must be sent back through OAuth; a recipe-only editor
+    must NOT be, or they'd loop through sign-in forever. Fails closed in every branch."""
     if not authorization or not authorization.startswith("Bearer "):
-        return False
+        return "unauthenticated"
     # Send an explicit User-Agent: the Worker sits behind Cloudflare, whose bot protection 403s the
     # default "Python-urllib/x.y" UA before the request ever reaches the Worker — which would make
     # this fail closed and the kitchen toggle never work. Any non-bot UA gets through.
@@ -118,12 +122,18 @@ def verify_session(authorization: str | None) -> bool:
     )
     try:
         with urllib.request.urlopen(req, timeout=5) as res:
-            if res.status != 200:
-                return False
             payload = json.loads(res.read())
+    except urllib.error.HTTPError as err:
+        # The Worker already draws this line: 401 for a missing/expired session, 403 for a valid
+        # session without the capability. Propagate it instead of flattening both to one answer.
+        return "unauthenticated" if err.code == 401 else "forbidden"
     except (urllib.error.URLError, OSError, ValueError):
-        return False
-    return payload.get("admin") is True
+        # Worker unreachable or unparseable. Refuse, but as "can't check right now" — calling it
+        # "forbidden" would tell an admin they'd lost access they still have.
+        return "unavailable"
+    if not isinstance(payload, dict):
+        return "unavailable"
+    return "ok" if payload.get("admin") is True else "forbidden"
 
 
 init_db()
@@ -182,8 +192,14 @@ def get_status() -> dict:
 def set_status(body: KitchenIn, authorization: str | None = Header(default=None)) -> dict:
     """Open or close the kitchen (the /orders toggle). Requires an admin GitHub sign-in (verified
     against the OAuth Worker). Closing rejects new orders."""
-    if not verify_session(authorization):
-        raise HTTPException(status_code=403, detail="admin sign-in required to open or close the kitchen")
+    outcome = verify_session(authorization)
+    if outcome == "unauthenticated":
+        # 401 specifically: the client clears its stored session and restarts OAuth on this code.
+        raise HTTPException(status_code=401, detail="sign in with GitHub to open or close the kitchen")
+    if outcome == "forbidden":
+        raise HTTPException(status_code=403, detail="admin access required to open or close the kitchen")
+    if outcome != "ok":
+        raise HTTPException(status_code=503, detail="can't verify sign-in right now — try again shortly")
     with closing(connect()) as conn:
         set_setting(conn, "kitchen_open", "1" if body.open else "0")
         conn.commit()

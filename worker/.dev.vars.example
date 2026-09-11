@@ -2,8 +2,10 @@
 # `wrangler secret put` (the secrets) and [vars] in wrangler.toml (the rest).
 GITHUB_CLIENT_SECRET="your-oauth-app-client-secret"
 
-# The GitHub App's private key .pem, pasted whole — newlines and all. Either format GitHub or
-# OpenSSL produces works ("BEGIN RSA PRIVATE KEY" or "BEGIN PRIVATE KEY").
-GITHUB_APP_PRIVATE_KEY="""-----BEGIN RSA PRIVATE KEY-----
+# The GitHub App's private key .pem, pasted whole — newlines and all — between ONE pair of double
+# quotes. `.dev.vars` is parsed by dotenv, which supports multi-line values in this form; triple
+# quotes are not a thing here and would silently keep only the first line.
+# Either format works ("BEGIN RSA PRIVATE KEY" or "BEGIN PRIVATE KEY").
+GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
 ...
------END RSA PRIVATE KEY-----"""
+-----END RSA PRIVATE KEY-----"

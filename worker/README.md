@@ -33,10 +33,12 @@ OAuth handshake (holding the client secret) and proxies every recipe create/upda
    `GITHUB_APP_INSTALLATION_ID`, the KV `id`/`preview_id`, and (if different) `RECIPE_EDITORS`,
    `ADMIN_LOGINS`, `SITE_ORIGIN`.
 
-5. **Set the secrets:**
+5. **Set the secrets.** Pipe the key in from the file rather than pasting it — the interactive
+   prompt mangles a multi-line paste, and the truncated result fails in a way that looks like a
+   bad key rather than a bad paste:
    ```sh
-   npx wrangler secret put GITHUB_CLIENT_SECRET    # the OAuth App's client secret
-   npx wrangler secret put GITHUB_APP_PRIVATE_KEY  # paste the .pem whole, then Ctrl-D
+   npx wrangler secret put GITHUB_CLIENT_SECRET   # short, safe to paste at the prompt
+   npx wrangler secret put GITHUB_APP_PRIVATE_KEY < /path/to/your-app.private-key.pem
    ```
 
 6. **Deploy:**

@@ -183,7 +183,10 @@ function handleLogin(url: URL, env: Env): Response {
   const authorize = new URL(`${GH_OAUTH}/authorize`);
   authorize.searchParams.set('client_id', env.GITHUB_CLIENT_ID);
   authorize.searchParams.set('redirect_uri', `${url.origin}/callback`);
-  authorize.searchParams.set('scope', 'public_repo'); // least privilege that allows Contents writes
+  // No scope at all. This token is used for exactly one call — GET /user, to read the login —
+  // and then discarded; writes go out as the GitHub App. Requesting `public_repo` here would ask
+  // every editor to grant write access to all of their own public repos, and that grant would
+  // persist on their account, for a credential we throw away seconds later.
   authorize.searchParams.set('state', state);
   authorize.searchParams.set('allow_signup', 'false');
 
@@ -279,9 +282,13 @@ async function withSession(
   if (!session?.login) return json(env, 401, { error: 'Session expired. Please sign in again.' });
 
   const caps = capabilitiesFor(session.login, env);
-  if (caps.length === 0) return json(env, 403, { error: 'Your access has been removed.' });
-  if (required && !caps.includes(required)) {
-    return json(env, 403, { error: `@${session.login} isn't allowed to do that.` });
+  // `required === null` means "any valid session" — logout and /api/me. Those must keep working
+  // for someone whose access was just revoked: refusing logout would strand their KV entry until
+  // SESSION_TTL, and /api/me is how callers discover they have no capabilities left.
+  if (required) {
+    if (!caps.includes(required)) {
+      return json(env, 403, { error: `@${session.login} isn't allowed to do that.` });
+    }
   }
 
   return handler(sessionId, session, caps);

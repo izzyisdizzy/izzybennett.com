@@ -75,9 +75,27 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
     ingestSessionFromHash();
     const signIn = () => { location.href = `${RECIPE_API}/login?return_to=/orders/`; };
 
+    // Set once the server tells us this signed-in user isn't an admin. Sticky: the status poll runs
+    // every few seconds and would otherwise re-enable and relabel the button, so both renderKitchen()
+    // and the click handler's `finally` have to respect it.
+    let adminDenied = false;
+
+    // Signed in, but without the `admin` capability (e.g. a recipe-only editor). Explanation goes in
+    // the button's tooltip rather than #orders-meta, which the poll rewrites to "live"/"offline".
+    function renderAdminDenied() {
+      adminDenied = true;
+      toggle.disabled = true;
+      toggle.textContent = 'Admin only';
+      toggle.title = 'You can add recipes, but not open or close the kitchen.';
+      toggle.className =
+        'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ' +
+        'border-neutral-300 text-neutral-400 dark:border-neutral-700 dark:text-neutral-500';
+    }
+
     // Reflect open/closed state onto the toggle button (red "Close" when open, green "Open" when closed).
     function renderKitchen(open) {
       kitchenOpen = open;
+      if (adminDenied) return; // keep the denied state; the poll must not resurrect the button
       toggle.disabled = false; // real state is known now — clickable
       toggle.textContent = open ? 'Close kitchen' : 'Open kitchen';
       toggle.className =
@@ -116,14 +134,14 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
         if (res.status === 403) {
           // Signed in, but not an admin (e.g. a recipe-only editor). Deliberately NOT treated like
           // 401: clearing the session and re-running OAuth would just loop back to another 403.
-          toggle.disabled = true;
-          toggle.textContent = 'Admin only';
-          meta.textContent = 'you can add recipes, but not open or close the kitchen';
+          renderAdminDenied();
           return;
         }
         if (res.ok) renderKitchen((await res.json()).open);
       } catch { /* leave the button as-is; next poll re-syncs */ }
-      finally { toggle.disabled = false; }
+      // `finally` runs on the early returns above too, so honour the denied state here or it would
+      // be undone the instant it's set.
+      finally { if (!adminDenied) toggle.disabled = false; }
     });
 
     async function patchStatus(id, status) {
