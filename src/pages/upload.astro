@@ -243,7 +243,16 @@ const dragHandle =
             <option value="">—</option>
             {UNIT_OPTIONS.map((u) => <option value={u}>{u}</option>)}
           </select>
-          <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" aria-label="Ingredient" class={`${itemInput} basis-40`} />
+          <!-- The name field autocompletes over the ingredients whose densities are already
+               known (see scripts/ingredient-typeahead.ts). The wrapper takes the row's flex
+               sizing so the field itself can host the overlays; .ing-ta-ghost in
+               styles/global.css must keep itemInput's padding and border or the ghost text
+               drifts out of line with what's typed. -->
+          <div data-typeahead class="relative flex min-w-0 grow basis-40">
+            <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="both" aria-label="Ingredient" class={`${itemInput} w-full`} />
+            <span data-ta-ghost aria-hidden="true" hidden class="ing-ta-ghost"><span data-ta-typed></span><span data-ta-rest></span></span>
+            <ul data-ta-list role="listbox" hidden class="ing-ta-list"></ul>
+          </div>
           <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${itemInput} basis-32`} />
           <button type="button" data-action="remove" aria-label="Remove" class={removeBtn}>✕</button>
         </div>
@@ -1182,6 +1191,17 @@ const dragHandle =
       restoreDraft();
       loadDensities();
       loadRecipeIndex();
+    </script>
+
+    <!-- Ingredient-name autocomplete. It's a module rather than part of the script above
+         because that one is a define:vars block, which Astro leaves unprocessed and which
+         therefore can't import. Loading it after that block keeps the uploader's own
+         delegated listeners registered first, so they see an accepted name the same way
+         they see a keystroke. -->
+    <script>
+      import { initIngredientTypeahead } from '../scripts/ingredient-typeahead';
+
+      initIngredientTypeahead(document.getElementById('recipe-form'));
     </script>
   </body>
 </html>
