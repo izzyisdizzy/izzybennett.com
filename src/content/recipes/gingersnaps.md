@@ -9,9 +9,10 @@ tools:
 ingredients:
   - items:
       - name: "Canola spray"
-      - name: "plant butter, softened"
+      - name: "plant butter"
         qty: "¼"
         unit: "cup"
+        detail: "softened"
       - name: "brown sugar"
         qty: "1"
         unit: "cup"

@@ -8,12 +8,15 @@ tools:
 ingredients:
   - items:
       - name: "Cooking oil"
-      - name: "large leeks, chopped"
+      - name: "large leeks"
         qty: "4"
-      - name: "cloves garlic, crushed"
+        detail: "chopped"
+      - name: "cloves garlic"
         qty: "3"
-      - name: "gold/butter potatoes, chopped into ½ inch cubes"
+        detail: "crushed"
+      - name: "gold/butter potatoes"
         qty: "5-6"
+        detail: "chopped into ½ inch cubes"
       - name: "low sodium chicken broth"
         qty: "6"
         unit: "cup"

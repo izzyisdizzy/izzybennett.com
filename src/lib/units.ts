@@ -195,7 +195,21 @@ export function formatGrams(grams: number): string {
   return `${rounded} g`;
 }
 
+/**
+ * Append an ingredient's prep detail as a comma clause: ("butter", "softened") → "butter, softened".
+ * Shared by the US and grams labels so both render the detail identically.
+ */
+export function withDetail(text: string, detail?: string): string {
+  const d = (detail ?? '').trim();
+  return d ? `${text}, ${d}` : text;
+}
+
 /** The US-facing "qty unit name" label for a structured ingredient, e.g. "2 ¼ cup flour". */
-export function ingredientLabel(item: { name: string; qty?: string; unit?: string }): string {
-  return [item.qty, item.unit, item.name].filter(Boolean).join(' ');
+export function ingredientLabel(item: {
+  name: string;
+  qty?: string;
+  unit?: string;
+  detail?: string;
+}): string {
+  return withDetail([item.qty, item.unit, item.name].filter(Boolean).join(' '), item.detail);
 }
