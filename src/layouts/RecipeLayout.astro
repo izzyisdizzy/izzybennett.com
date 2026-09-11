@@ -2,7 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import type { CollectionEntry } from 'astro:content';
 import { inlineMarkdown } from '../lib/markdown';
-import { toGrams, formatGrams, ingredientLabel, type Densities } from '../lib/units';
+import { toGrams, formatGrams, ingredientLabel, withDetail, type Densities } from '../lib/units';
 import { buildIngredientIndex, linkIngredientsInHtml } from '../lib/ingredients';
 import densityData from '../data/densities.json';
 
@@ -25,7 +25,10 @@ const ingredientGroups = ingredients.map((group) => ({
   items: group.items.map((item) => {
     const us = ingredientLabel(item);
     const grams = toGrams(item.qty, item.unit, item.name, densities);
-    return { us, grams: grams === null ? null : `${formatGrams(grams)} ${item.name}` };
+    return {
+      us,
+      grams: grams === null ? null : withDetail(`${formatGrams(grams)} ${item.name}`, item.detail),
+    };
   }),
 }));
 const anyConvertible = ingredientGroups.some((group) => group.items.some((item) => item.grams !== null));

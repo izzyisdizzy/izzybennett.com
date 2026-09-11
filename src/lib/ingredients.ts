@@ -22,6 +22,8 @@ export interface StructuredItem {
   name: string;
   qty?: string;
   unit?: string;
+  /** Prep note ("softened"). Carried for typing only — popovers show amounts, not prep. */
+  detail?: string;
 }
 
 export interface IngredientGroup {

@@ -9,9 +9,10 @@ tools:
 ingredients:
   - items:
       - name: "Oil spray"
-      - name: "butter, softened"
+      - name: "butter"
         qty: "½"
         unit: "cup"
+        detail: "softened"
       - name: "brown sugar"
         qty: "½"
         unit: "cup"

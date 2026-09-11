@@ -225,11 +225,13 @@ const dragHandle =
       </div>
     </template>
 
-    <!-- One ingredient: qty + unit + name, with a grams prompt that appears when the unit is a
-         volume the ingredient's density isn't known for yet (see updateItemRow). -->
+    <!-- One ingredient: qty + unit + name + detail, with a grams prompt that appears when the
+         unit is a volume the ingredient's density isn't known for yet (see updateItemRow).
+         `detail` is the prep note ("softened") and is kept out of `name` so `name` stays a
+         clean density-lookup key. -->
     <template id="tpl-item">
       <div data-unit="item-row" class="space-y-1.5">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <span data-drag-handle draggable="true" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
           <input type="text" data-field="item-qty" inputmode="text" placeholder="2 ¼" autocomplete="off" aria-label="Quantity" class={`${cellInput} w-16 shrink-0 text-center`} />
           <select data-field="item-unit" aria-label="Unit" class={`${cellInput} w-24 shrink-0`}>
@@ -237,6 +239,7 @@ const dragHandle =
             {UNIT_OPTIONS.map((u) => <option value={u}>{u}</option>)}
           </select>
           <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" aria-label="Ingredient" class={rowInput} />
+          <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${cellInput} min-w-0 grow basis-32`} />
           <button type="button" data-action="remove" aria-label="Remove" class={removeBtn}>✕</button>
         </div>
         <div data-grams-prompt class="ml-8 hidden rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
@@ -284,6 +287,17 @@ const dragHandle =
       // above (so the numbers never drift). define:vars can't cross functions, only data.
       const normUnit = (u) => { if (!u) return ''; const k = String(u).toLowerCase().trim().replace(/\.$/, ''); return UNIT_ALIASES[k] ?? k; };
       const isVolumeUnit = (u) => normUnit(u) in VOLUME_IN_CUPS;
+
+      // lookupDensity (src/lib/units.ts) normalises a name before looking it up and then drops
+      // leading qualifiers ("unsalted butter" -> "butter"). Mirror both halves here so the grams
+      // prompt's idea of "already known" matches what the recipe page can actually convert, and
+      // so a ratio the user supplies is saved under the same key the page will look up.
+      const densityKey = (name) =>
+        String(name ?? '').toLowerCase().replace(/\([^)]*\)/g, ' ').split(',')[0].replace(/\s+/g, ' ').trim();
+      function hasKnownDensity(name) {
+        const words = densityKey(name).split(' ').filter(Boolean);
+        return words.some((_, i) => knownDensities[words.slice(i).join(' ')] != null);
+      }
       function parseQty(qty) {
         if (qty == null) return null;
         const s = String(qty).trim();
@@ -363,14 +377,19 @@ const dragHandle =
 
       // The item builders take an optional value so add mode (no value) and edit-mode
       // rehydration (value from data) share the one call — see fillGroups. `value` is a
-      // { name, qty?, unit? } object (a bare string is tolerated as the name, defensively).
+      // { name, qty?, unit?, detail? } object (a bare string is tolerated as the name, defensively).
       function addItem(itemsList, value) {
         const row = makeItemRow();
         itemsList.appendChild(row);
         if (value != null) {
           const set = (field, v) => { if (v != null) row.querySelector(`[data-field="${field}"]`).value = v; };
           if (typeof value === 'string') set('item-name', value);
-          else { set('item-name', value.name); set('item-qty', value.qty); setUnit(row, value.unit); }
+          else {
+            set('item-name', value.name);
+            set('item-qty', value.qty);
+            set('item-detail', value.detail);
+            setUnit(row, value.unit);
+          }
           updateItemRow(row);
         }
         return row;
@@ -396,11 +415,11 @@ const dragHandle =
         const gramsEl = row.querySelector('[data-field="item-grams"]');
         const prompt = row.querySelector('[data-grams-prompt]');
         const name = (nameEl.value ?? '').trim();
-        const nameKey = name.toLowerCase();
+        const nameKey = densityKey(name);
         const unit = unitEl.value;
         const qtyNum = parseQty(qtyEl.value);
 
-        const needs = isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities);
+        const needs = isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !hasKnownDensity(name);
         prompt.classList.toggle('hidden', !needs);
         if (needs) {
           row.querySelector('[data-grams-qty]').textContent = qtyEl.value.trim();
@@ -609,9 +628,11 @@ const dragHandle =
           if (!name) continue;
           const qty = (rowEl.querySelector('[data-field="item-qty"]')?.value ?? '').trim();
           const unit = (rowEl.querySelector('[data-field="item-unit"]')?.value ?? '').trim();
+          const detail = (rowEl.querySelector('[data-field="item-detail"]')?.value ?? '').trim();
           const item = { name };
           if (qty) item.qty = qty;
           if (unit) item.unit = unit;
+          if (detail) item.detail = detail;
           items.push(item);
         }
         return items;
@@ -723,6 +744,7 @@ const dragHandle =
         L.push(`      - name: ${q(it.name)}`);
         if (it.qty) L.push(`        qty: ${q(it.qty)}`);
         if (it.unit) L.push(`        unit: ${q(it.unit)}`);
+        if (it.detail) L.push(`        detail: ${q(it.detail)}`);
       }
 
       function toMarkdown(r) {
@@ -846,7 +868,7 @@ const dragHandle =
           // ingredients actually in THIS recipe. That drops anything left in pendingDensities from
           // a rename or a prior recipe, so unrelated ratios never tag along on a publish.
           const recipeNames = new Set(
-            recipe.ingredients.flatMap((g) => g.items.map((it) => it.name.toLowerCase()))
+            recipe.ingredients.flatMap((g) => g.items.map((it) => densityKey(it.name)))
           );
           const pending = Object.fromEntries(
             Object.entries(pendingDensities).filter(([name]) => recipeNames.has(name))

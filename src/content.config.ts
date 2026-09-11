@@ -26,6 +26,9 @@ const recipes = defineCollection({
               name: z.string(),
               qty: z.string().optional(), // freeform to preserve "2 ¼", "6-8", "½"
               unit: z.string().optional(), // "cup", "tbsp", "oz", "g", … or absent for count items
+              // Preparation note rendered after the name ("softened", "grated", "room temp").
+              // Kept out of `name` so `name` stays a clean density-lookup and prose-matching key.
+              detail: z.string().optional(),
             })
           ),
         })

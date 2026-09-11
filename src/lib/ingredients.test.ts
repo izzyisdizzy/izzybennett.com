@@ -240,3 +240,73 @@ describe('HTML safety', () => {
     expect(linkIngredientsInHtml('spray the pan', empty)).toBe('spray the pan');
   });
 });
+
+// The `detail` field exists so a prep note can live outside `name`. Both spellings must behave
+// identically here, because `cleanName` already truncates a name at its first comma — that is
+// what makes migrating "butter, softened" to name + detail a no-op for popovers. Legacy
+// comma-in-name recipes are still schema-valid, so both shapes have to keep working.
+describe('detail field and legacy comma-in-name parity', () => {
+  const cookiesWithDetail: IngredientGroup[] = [
+    {
+      items: [
+        { name: 'Oil spray' },
+        { name: 'butter', qty: '½', unit: 'cup', detail: 'softened' },
+        { name: 'brown sugar', qty: '½', unit: 'cup' },
+        { name: 'white sugar', qty: '6', unit: 'tbsp' },
+        { name: 'vanilla extract', qty: '1', unit: 'tsp' },
+        { name: 'egg', qty: '1' },
+        { name: 'flour', qty: '1 ½', unit: 'cup' },
+        { name: 'chocolate chips', qty: '6', unit: 'oz' },
+      ],
+    },
+  ];
+
+  const earlGreyWithDetail: IngredientGroup[] = [
+    {
+      group: 'Wet Ingredients',
+      items: [
+        { name: 'unsalted butter', qty: '1', unit: 'cup', detail: 'room temp' },
+        { name: 'vegetable oil', qty: '1/4', unit: 'cup' },
+        { name: 'granulated sugar', qty: '1 3/4', unit: 'cup' },
+        { name: 'Greek yogurt', qty: '1/2', unit: 'cup', detail: 'room temp' },
+        { name: 'vanilla bean paste', qty: '1', unit: 'tsp' },
+        { name: 'lavender paste (or extract)', qty: '1', unit: 'tsp' },
+      ],
+    },
+    {
+      group: 'Buttercream Ingredients',
+      items: [
+        { name: 'unsalted butter', qty: '3/4', unit: 'cup', detail: 'softened' },
+        { name: 'powdered sugar', qty: '2', unit: 'cup' },
+        { name: 'vanilla bean paste', qty: '1 1/2', unit: 'tsp' },
+        { name: 'lavender extract', qty: '1/2', unit: 'tsp' },
+      ],
+    },
+  ];
+
+  const steps = [
+    'cream the butter and sugar until light',
+    'beat in the egg, then fold in the flour',
+    'whisk the Greek yogurt into the batter',
+    'spread the buttercream over the cooled cake',
+  ];
+
+  it.each(steps)('renders identically for both shapes: %s', (step) => {
+    expect(render(step, cookiesWithDetail)).toBe(render(step, cookies));
+    expect(render(step, earlGreyWithDetail)).toBe(render(step, earlGrey));
+  });
+
+  it('keeps the detail out of the popover, showing amounts only', () => {
+    const step = 'cream the butter and sugar';
+    const pairs = linked(step, cookiesWithDetail);
+    expect(pairs).toEqual(linked(step, cookies));
+    expect(JSON.stringify(pairs)).not.toContain('softened');
+  });
+
+  it('indexes two items that differ only by their detail', () => {
+    const step = 'cream the butter, then beat the buttercream';
+    const pairs = linked(step, earlGreyWithDetail);
+    expect(pairs).toEqual(linked(step, earlGrey));
+    expect(JSON.stringify(pairs)).not.toContain('room temp');
+  });
+});
