@@ -1,3 +1,9 @@
 # Copy to `.dev.vars` for `wrangler dev` (git-ignored). In production these come from
-# `wrangler secret put` (the secret) and [vars] in wrangler.toml (the rest).
+# `wrangler secret put` (the secrets) and [vars] in wrangler.toml (the rest).
 GITHUB_CLIENT_SECRET="your-oauth-app-client-secret"
+
+# The GitHub App's private key .pem, pasted whole — newlines and all. Either format GitHub or
+# OpenSSL produces works ("BEGIN RSA PRIVATE KEY" or "BEGIN PRIVATE KEY").
+GITHUB_APP_PRIVATE_KEY="""-----BEGIN RSA PRIVATE KEY-----
+...
+-----END RSA PRIVATE KEY-----"""

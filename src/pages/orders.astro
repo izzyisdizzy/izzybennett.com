@@ -113,6 +113,14 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
           signIn();
           return;
         }
+        if (res.status === 403) {
+          // Signed in, but not an admin (e.g. a recipe-only editor). Deliberately NOT treated like
+          // 401: clearing the session and re-running OAuth would just loop back to another 403.
+          toggle.disabled = true;
+          toggle.textContent = 'Admin only';
+          meta.textContent = 'you can add recipes, but not open or close the kitchen';
+          return;
+        }
         if (res.ok) renderKitchen((await res.json()).open);
       } catch { /* leave the button as-is; next poll re-syncs */ }
       finally { toggle.disabled = false; }

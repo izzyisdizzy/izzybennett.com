@@ -29,8 +29,9 @@ from pydantic import BaseModel, Field
 DB_PATH = Path(__file__).with_name("orders.db")
 
 # Base URL of the OAuth Worker (same one /upload uses). The kitchen open/close toggle is verified
-# against its /api/me endpoint, so only a signed-in GitHub user can flip it. Set RECIPE_API on the
-# Pi to the deployed Worker URL; defaults to the local `wrangler dev` port for development.
+# against its /api/me endpoint and requires the `admin` capability, so a recipe-only editor can't
+# flip it. Set RECIPE_API on the Pi to the deployed Worker URL; defaults to the local
+# `wrangler dev` port for development.
 RECIPE_API = os.environ.get("RECIPE_API", "http://localhost:8787").rstrip("/")
 
 # Order lifecycle. "archived" drops a card off the kitchen board (the "Clear done" action)
@@ -101,9 +102,10 @@ def kitchen_is_open(conn: sqlite3.Connection) -> bool:
 
 
 def verify_session(authorization: str | None) -> bool:
-    """Validate the caller's opaque recipe session against the OAuth Worker's /api/me. A valid
-    session can only belong to the allowed GitHub user, so this is both authn and authz. Fails
-    closed (returns False) if the header is missing or the Worker is unreachable."""
+    """Validate the caller's opaque recipe session against the OAuth Worker's /api/me, and require
+    the `admin` capability. A 200 alone is no longer sufficient: the Worker also issues sessions to
+    recipe-only editors, who may add recipes but must not flip the kitchen. Fails closed (returns
+    False) if the header is missing, the Worker is unreachable, or the response isn't admin."""
     if not authorization or not authorization.startswith("Bearer "):
         return False
     # Send an explicit User-Agent: the Worker sits behind Cloudflare, whose bot protection 403s the
@@ -116,9 +118,12 @@ def verify_session(authorization: str | None) -> bool:
     )
     try:
         with urllib.request.urlopen(req, timeout=5) as res:
-            return res.status == 200
-    except (urllib.error.URLError, OSError):
+            if res.status != 200:
+                return False
+            payload = json.loads(res.read())
+    except (urllib.error.URLError, OSError, ValueError):
         return False
+    return payload.get("admin") is True
 
 
 init_db()
@@ -175,10 +180,10 @@ def get_status() -> dict:
 
 @app.post("/status")
 def set_status(body: KitchenIn, authorization: str | None = Header(default=None)) -> dict:
-    """Open or close the kitchen (the /orders toggle). Requires a valid GitHub sign-in (verified
+    """Open or close the kitchen (the /orders toggle). Requires an admin GitHub sign-in (verified
     against the OAuth Worker). Closing rejects new orders."""
     if not verify_session(authorization):
-        raise HTTPException(status_code=401, detail="sign in with GitHub to open or close the kitchen")
+        raise HTTPException(status_code=403, detail="admin sign-in required to open or close the kitchen")
     with closing(connect()) as conn:
         set_setting(conn, "kitchen_open", "1" if body.open else "0")
         conn.commit()
