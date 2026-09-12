@@ -24,6 +24,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run test
       - run: npm run build
         env:
           # Base URL of the recipe API Worker (the /upload OAuth backend). Set this once in
@@ -34,6 +35,10 @@ jobs:
           # Set once in repo Settings → Secrets and variables → Actions → Variables as
           # PUBLIC_ORDER_API, e.g. https://orders.izzybennett.com
           PUBLIC_ORDER_API: ${{ vars.PUBLIC_ORDER_API }}
+      # /izzys-cafe.json is a published contract, not an internal detail: the dizzyos LED sign in
+      # the kitchen fetches it by hardcoded URL and renders a stale fallback menu rather than going
+      # blank when it breaks. Validate the real artifact before anything is published.
+      - run: npm run check:menu-feed
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

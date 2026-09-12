@@ -11,6 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
+    "check:menu-feed": "node scripts/check-menu-feed.mjs",
     "resume": "typst compile resume/resume.typ public/resume.pdf"
   },
   "dependencies": {
