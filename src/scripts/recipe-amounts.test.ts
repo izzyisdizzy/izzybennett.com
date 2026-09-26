@@ -28,7 +28,7 @@ const throwingStorage = (): Storage =>
     length: 0,
   }) as unknown as Storage;
 
-/** The trigger markup lib/ingredients.ts bakes for a mention that carries an inline amount. */
+/** The trigger markup @izzy/recipe-engine/ingredients bakes for a mention that carries an inline amount. */
 function inlined(id: number, label: string, amount: string): string {
   return (
     `<span class="ing-ref ing-has-amt">` +

@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "rm -rf .astro",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -15,10 +16,10 @@
     "resume": "typst compile resume/resume.typ public/resume.pdf"
   },
   "dependencies": {
+    "@izzy/recipe-engine": "github:izzyisdizzy/recipe-engine#v1.0.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.8",
-    "marked": "^18.0.7",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {

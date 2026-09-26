@@ -20,7 +20,7 @@
  * ingredient, a new group, an edited recipe's rehydrated rows — are covered for free.
  */
 import densities from '../data/densities.json';
-import { normalizeName, rankIngredientSuggestions, type Suggestion } from '../lib/ingredient-suggest';
+import { normalizeName, rankIngredientSuggestions, type Suggestion } from '@izzy/recipe-engine/ingredient-suggest';
 
 const GRAMS_PER_CUP: Record<string, number> = densities;
 const NAMES = Object.keys(GRAMS_PER_CUP).sort();

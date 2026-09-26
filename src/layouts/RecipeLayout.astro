@@ -2,9 +2,9 @@
 import BaseLayout from './BaseLayout.astro';
 import UnitsToggle from '../components/UnitsToggle.astro';
 import type { CollectionEntry } from 'astro:content';
-import { inlineMarkdown } from '../lib/markdown';
-import { toGrams, formatGrams, ingredientLabel, withDetail, type Densities } from '../lib/units';
-import { buildIngredientIndex, createLinkState, linkIngredientsInHtml } from '../lib/ingredients';
+import { inlineMarkdown } from '@izzy/recipe-engine/markdown';
+import { toGrams, formatGrams, ingredientLabel, withDetail, type Densities } from '@izzy/recipe-engine/units';
+import { buildIngredientIndex, createLinkState, linkIngredientsInHtml } from '@izzy/recipe-engine/ingredients';
 import densityData from '../data/densities.json';
 
 interface Props {
@@ -193,7 +193,7 @@ const anyStepAmounts = anyConvertible && linkState.n > 0;
 
 <script>
   import { applyAuthState } from '../scripts/recipe-session';
-  import { initIngredientPopovers } from '../scripts/ingredient-popover';
+  import { initIngredientPopovers } from '@izzy/recipe-engine/ingredient-popover';
   import { initUnitsToggle } from '../scripts/recipe-units';
   import { initAmountsToggle } from '../scripts/recipe-amounts';
 

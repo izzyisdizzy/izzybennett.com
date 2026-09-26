@@ -25,10 +25,10 @@ body {
 }
 
 /* Ingredient-measurement popovers in recipe steps. Triggers + panels are injected into the
-   step HTML at build time (src/lib/ingredients.ts), so these styles live here (global) rather
+   step HTML at build time (@izzy/recipe-engine/ingredients), so these styles live here (global) rather
    than in the layout's scoped <style>, which wouldn't reach set:html content. The panel is
    position:absolute → no layout shift; it reveals on hover, keyboard focus, or the [data-open]
-   set by the tap-toggle script (src/scripts/ingredient-popover.ts). */
+   set by the tap-toggle script (@izzy/recipe-engine/ingredient-popover). */
 .ing-ref {
   position: relative;
   display: inline;
@@ -86,7 +86,7 @@ body {
 
 /* US ↔ grams inside any generated amount — the popover panel and the inline copy alike —
    driven by the same toggle as the ingredient list (which sets data-units on <html>).
-   Scoped to `.ing-amt`, a class only lib/ingredients.ts emits, so it never touches the
+   Scoped to `.ing-amt`, a class only @izzy/recipe-engine/ingredients emits, so it never touches the
    ingredient list, which has its own (component-scoped) us/grams rules. Grams text is
    hidden until grams mode; in grams mode the US text hides only on convertible amounts, so
    count/unknown items keep showing US. Before the toggle script runs, no data-units is set
