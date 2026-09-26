@@ -6,6 +6,12 @@ dist/
 # dependencies
 node_modules/
 
+# cloudflare worker — worker/ moved to izzyisdizzy/auth-worker, but existing checkouts keep
+# untracked local state there (.wrangler/ can hold session data, .dev.vars holds secrets).
+# Drop these once no checkout still has a leftover worker/ directory.
+.wrangler/
+worker/.dev.vars
+
 # logs
 npm-debug.log*
 yarn-debug.log*
