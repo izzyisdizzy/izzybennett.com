@@ -29,6 +29,8 @@ const rowInput =
 // The ingredient row's two flexible fields, name and detail. They use grow + an explicit basis
 // rather than rowInput's `flex-1`, because the `flex` shorthand resets flex-basis to 0 — which
 // would let the name field collapse to a few pixels instead of wrapping the row on a phone.
+// Its padding + border (px-3 py-2, 1px) are mirrored by .ing-ta-ghost in
+// @izzy/recipe-engine/styles/recipes.css — change one and the typeahead's ghost text misaligns.
 const itemInput =
   'min-w-0 grow rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
 // Narrow, non-flexing variant of rowInput for the qty box and unit <select> in an ingredient row.
@@ -245,10 +247,10 @@ const dragHandle =
             {UNIT_OPTIONS.map((u) => <option value={u}>{u}</option>)}
           </select>
           <!-- The name field autocompletes over the ingredients whose densities are already
-               known (see scripts/ingredient-typeahead.ts). The wrapper takes the row's flex
-               sizing so the field itself can host the overlays; .ing-ta-ghost in
-               styles/global.css must keep itemInput's padding and border or the ghost text
-               drifts out of line with what's typed. -->
+               known (@izzy/recipe-engine/ingredient-typeahead). The wrapper takes the row's
+               flex sizing so the field itself can host the overlays; .ing-ta-ghost in the
+               engine's styles/recipes.css must keep itemInput's padding and border or the
+               ghost text drifts out of line with what's typed. -->
           <div data-typeahead class="relative flex min-w-0 grow basis-40">
             <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="both" aria-label="Ingredient" class={`${itemInput} w-full`} />
             <span data-ta-ghost aria-hidden="true" hidden class="ing-ta-ghost"><span data-ta-typed></span><span data-ta-rest></span></span>
@@ -1199,9 +1201,12 @@ const dragHandle =
          delegated listeners registered first, so they see an accepted name the same way
          they see a keystroke. -->
     <script>
-      import { initIngredientTypeahead } from '../scripts/ingredient-typeahead';
+      import { initIngredientTypeahead } from '@izzy/recipe-engine/ingredient-typeahead';
+      // Bundled at build time, as before: suggestions come from the densities committed so far.
+      // (The inline script above separately fetches /densities.json for its grams prompt.)
+      import densities from '../data/densities.json';
 
-      initIngredientTypeahead(document.getElementById('recipe-form'));
+      initIngredientTypeahead(document.getElementById('recipe-form'), densities);
     </script>
   </body>
 </html>
