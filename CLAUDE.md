@@ -37,7 +37,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
 - `@izzy/recipe-engine` ([izzyisdizzy/recipe-engine](https://github.com/izzyisdizzy/recipe-engine),
   pinned by git tag in `package.json`) — the recipe schema, `units` (US→grams
   conversion), `ingredients` (step↔ingredient linking), `markdown`,
-  `ingredient-suggest`, the recipe page body (`Recipe.astro`) and index row
+  `ingredient-suggest`, the `/upload` ingredient typeahead, the recipe page body
+  (`Recipe.astro`) and index row
   (`RecipeCard.astro`), their client scripts and styles, and all their tests.
   `src/pages/recipes/[...slug].astro` wraps `Recipe` in `BaseLayout` and runs the
   session check; `src/styles/global.css` must keep importing
