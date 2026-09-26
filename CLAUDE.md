@@ -28,8 +28,11 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `recipes.json.ts`, `densities.json.ts`.
 - `src/lib/` — `cafe-menu.ts` (the shared menu parser), `ingredients.ts` +
   `units.ts` (US→grams conversion, with `ingredients.test.ts`), `markdown.ts`.
-- `worker/` — Cloudflare Worker (`wrangler.toml`): the GitHub OAuth handshake and
-  recipe create/update/delete proxy behind `/upload`.
+- The Cloudflare Worker (`izzy-recipe-api`) lives in its own repo,
+  [izzyisdizzy/auth-worker](https://github.com/izzyisdizzy/auth-worker) (locally
+  `~/Development/auth-worker`): the GitHub OAuth handshake, `/api/me` capabilities,
+  and the recipe/menu write proxy. It still writes to *this* repo's content, and
+  deploys manually from there (`npm run deploy`) — nothing here deploys it.
 - `order-server/` — FastAPI + SQLite service (`main.py`, `orders.db`)
   running on the Pi behind a Cloudflare Tunnel at `orders.izzybennett.com`,
   backing `/order` and the `/orders` kitchen queue. CORS is locked to the site

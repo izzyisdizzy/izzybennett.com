@@ -4,7 +4,7 @@
 // file client-side, then hands it to the recipe API Worker, which — after a GitHub OAuth
 // sign-in — commits it to the repo on your behalf. The GitHub token never reaches the
 // browser; this page only ever holds an opaque session id. Commits trigger the normal
-// GitHub Pages deploy. See /worker for the backend.
+// GitHub Pages deploy. Backend: github.com/izzyisdizzy/auth-worker.
 import '../styles/global.css';
 import { categoryValues } from '../content.config';
 // Unit tables shared with the recipe pages. UNIT_OPTIONS fills the item unit <select>; the
