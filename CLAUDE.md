@@ -26,7 +26,14 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   whose markdown body **is** the cafe menu.
 - `src/pages/` — routes. Note the JSON endpoints: `izzys-cafe.json.ts`,
   `recipes.json.ts`, `densities.json.ts`.
-- `src/lib/` — `cafe-menu.ts` (the shared menu parser).
+- `src/lib/izzys-cafe-content.test.ts` — asserts the *live* menu content's shape
+  (canonical sections, in order, at least one drink). Never item text.
+- `@izzy/cafe-menu` ([izzyisdizzy/cafe-menu](https://github.com/izzyisdizzy/cafe-menu),
+  pinned by git tag) — `parseMenu`, `sectionItems`, `MENU_SECTIONS`, and their
+  unit tests. Used by `izzys-cafe.json.ts`, `/order` and `/update-menu`. Its
+  output **is** the sign's feed: before bumping the pin, byte-diff the built
+  `dist/izzys-cafe.json` against the live one, and prefer doing it with the
+  kitchen closed.
 - `@izzy/recipe-engine` ([izzyisdizzy/recipe-engine](https://github.com/izzyisdizzy/recipe-engine),
   pinned by git tag in `package.json`) — the recipe schema, `units` (US→grams
   conversion), `ingredients` (step↔ingredient linking), `markdown`,
@@ -80,7 +87,7 @@ dies unexpectedly, check `node -v` before debugging anything else.
   it as a versioned API, not an internal detail.
 - **The cafe menu markdown is the single source of truth.** The `izzys-cafe` page
   body feeds the JSON endpoint, the order form, and the sign, all through
-  `parseMenu` in `src/lib/cafe-menu.ts`. Don't add a second menu representation.
+  `parseMenu` from `@izzy/cafe-menu`. Don't add a second menu representation.
 - **`MENU_SECTIONS` is locked in code.** `Drinks | Milks | Syrups | Food` — the
   order form assigns meaning by those exact names, which is why `/update-menu`
   won't let section names be edited freely. Renaming one is a code change across
