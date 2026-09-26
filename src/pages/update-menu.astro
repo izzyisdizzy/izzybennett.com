@@ -5,7 +5,7 @@
 // recipe API Worker, which — after a GitHub OAuth sign-in — commits it to the repo. The GitHub
 // token never reaches the browser; this page only ever holds an opaque session id. The commit
 // triggers the normal GitHub Pages deploy, so the order form, /izzys-cafe.json feed, and the
-// dizzyos LED sign all pick up the change. See /worker for the backend.
+// dizzyos LED sign all pick up the change. Backend: github.com/izzyisdizzy/auth-worker.
 import '../styles/global.css';
 import { getEntry } from 'astro:content';
 import { parseMenu, sectionItems, MENU_SECTIONS } from '../lib/cafe-menu';

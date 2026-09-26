@@ -33,8 +33,11 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `ingredient-suggest`, `ingredient-popover`, and their tests. Changing recipe
   logic means a change + new tag there, then bumping the pin here. The density
   table (`src/data/densities.json`) stays here — it's the Worker's write target.
-- `worker/` — Cloudflare Worker (`wrangler.toml`): the GitHub OAuth handshake and
-  recipe create/update/delete proxy behind `/upload`.
+- The Cloudflare Worker (`izzy-recipe-api`) lives in its own repo,
+  [izzyisdizzy/auth-worker](https://github.com/izzyisdizzy/auth-worker) (locally
+  `~/Development/auth-worker`): the GitHub OAuth handshake, `/api/me` capabilities,
+  and the recipe/menu write proxy. It still writes to *this* repo's content, and
+  deploys manually from there (`npm run deploy`) — nothing here deploys it.
 - `order-server/` — FastAPI + SQLite service (`main.py`, `orders.db`)
   running on the Pi behind a Cloudflare Tunnel at `orders.izzybennett.com`,
   backing `/order` and the `/orders` kitchen queue. CORS is locked to the site
