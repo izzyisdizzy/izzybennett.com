@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import RecipeCard from '../../components/RecipeCard.astro';
+import RecipeCard from '@izzy/recipe-engine/components/RecipeCard.astro';
 import { categoryValues } from '@izzy/recipe-engine/schema';
 
 // Base URL of the recipe API Worker (the OAuth backend). Injected at build time; falls back to
@@ -69,7 +69,7 @@ const filters = ['', ...categories];
   </div>
 
   <div id="recipe-grid" class="mt-6 flex flex-col border-t border-neutral-200 dark:border-neutral-800">
-    {recipes.map((recipe) => <RecipeCard recipe={recipe} />)}
+    {recipes.map((recipe) => <RecipeCard recipe={recipe} editHref={`/upload?edit=${recipe.id}`} />)}
   </div>
 
   <p id="recipe-no-results" hidden class="mt-6 text-neutral-500 dark:text-neutral-500">

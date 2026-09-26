@@ -16,7 +16,7 @@
     "resume": "typst compile resume/resume.typ public/resume.pdf"
   },
   "dependencies": {
-    "@izzy/recipe-engine": "github:izzyisdizzy/recipe-engine#v1.0.0",
+    "@izzy/recipe-engine": "github:izzyisdizzy/recipe-engine#v1.1.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.8",
