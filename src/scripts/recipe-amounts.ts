@@ -2,7 +2,7 @@
  * "Show amounts" mode for recipe steps.
  *
  * Every eligible ingredient mention already carries a hidden copy of its measurement,
- * baked in at build time (see lib/ingredients.ts) and revealed by CSS from
+ * baked in at build time (see @izzy/recipe-engine/ingredients) and revealed by CSS from
  * <html data-amounts="inline">. This module owns the button's state, its persistence, and
  * the accessibility fix-ups CSS can't do.
  *
