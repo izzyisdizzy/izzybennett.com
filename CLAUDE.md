@@ -30,9 +30,15 @@ Pages, with two small backends alongside it. Tech decisions, and why:
 - `@izzy/recipe-engine` ([izzyisdizzy/recipe-engine](https://github.com/izzyisdizzy/recipe-engine),
   pinned by git tag in `package.json`) — the recipe schema, `units` (US→grams
   conversion), `ingredients` (step↔ingredient linking), `markdown`,
-  `ingredient-suggest`, `ingredient-popover`, and their tests. Changing recipe
-  logic means a change + new tag there, then bumping the pin here. The density
-  table (`src/data/densities.json`) stays here — it's the Worker's write target.
+  `ingredient-suggest`, the recipe page body (`Recipe.astro`) and index row
+  (`RecipeCard.astro`), their client scripts and styles, and all their tests.
+  `src/pages/recipes/[...slug].astro` wraps `Recipe` in `BaseLayout` and runs the
+  session check; `src/styles/global.css` must keep importing
+  `@izzy/recipe-engine/styles/recipes.css`, which also registers the package with
+  Tailwind — drop it and the recipe pages lose ~20 utilities silently. Changing
+  recipe logic or UI means a change + new tag there, then bumping the pin here.
+  The density table (`src/data/densities.json`) stays here — it's the Worker's
+  write target.
 - The Cloudflare Worker (`izzy-recipe-api`) lives in its own repo,
   [izzyisdizzy/auth-worker](https://github.com/izzyisdizzy/auth-worker) (locally
   `~/Development/auth-worker`): the GitHub OAuth handshake, `/api/me` capabilities,

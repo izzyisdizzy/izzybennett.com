@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
-import RecipeLayout from '../../layouts/RecipeLayout.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Recipe from '@izzy/recipe-engine/components/Recipe.astro';
+import type { Densities } from '@izzy/recipe-engine/units';
+import densityData from '../../data/densities.json';
 
 export async function getStaticPaths() {
   const recipes = await getCollection('recipes', ({ data }) => !data.draft);
@@ -13,4 +16,14 @@ export async function getStaticPaths() {
 const { recipe } = Astro.props;
 ---
 
-<RecipeLayout recipe={recipe} />
+<BaseLayout title={recipe.data.title} description={recipe.data.description}>
+  <Recipe recipe={recipe} densities={densityData as Densities} editHref={`/upload?edit=${recipe.id}`} />
+</BaseLayout>
+
+<script>
+  import { applyAuthState } from '../../scripts/recipe-session';
+
+  // Reveal the edit link only when signed in. OAuth never returns to a detail page, so there's no
+  // hash to ingest here — just reflect the stored session onto <html data-auth> and let CSS gate.
+  applyAuthState();
+</script>
