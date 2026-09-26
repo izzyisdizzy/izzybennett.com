@@ -11,6 +11,7 @@ import { categoryValues } from '@izzy/recipe-engine/schema';
 // numeric tables are handed to the inline script (via define:vars) so its grams math uses the
 // exact same factors — see the compact re-implementations of normUnit/parseQty there.
 import { UNIT_OPTIONS, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS } from '@izzy/recipe-engine/units';
+import { SESSION_KEY } from '@izzy/auth-client/session';
 
 // Base URL of the recipe API Worker (the OAuth backend + write proxy). Injected at build
 // time; falls back to the local `wrangler dev` port so `astro dev` works out of the box.
@@ -278,12 +279,11 @@ const dragHandle =
       </div>
     </template>
 
-    <script define:vars={{ RECIPE_API, SITE_ORIGIN, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS }}>
+    <script define:vars={{ RECIPE_API, SESSION_KEY, SITE_ORIGIN, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS }}>
       // ---- Config ---------------------------------------------------------
-      // RECIPE_API is injected from the frontmatter above. The browser only ever holds the
-      // opaque session id under SESSION_KEY — never a GitHub token.
+      // RECIPE_API and SESSION_KEY (from @izzy/auth-client) are injected from the frontmatter above.
+      // The browser only ever holds the opaque session id under SESSION_KEY — never a GitHub token.
       const API = RECIPE_API;
-      const SESSION_KEY = 'izzy-recipe-session';
       // Unsaved form content is autosaved here so it survives a full-page reload — most
       // importantly the GitHub OAuth round-trip, which navigates away and back. Holds
       // { editingSlug, recipe, pendingDensities } where recipe is a readForm() snapshot.

@@ -2,6 +2,9 @@
 /* Recipe page + card styles (ingredient popovers, inline amounts), and the @source lines that
    register the engine's components with Tailwind — node_modules is never scanned otherwise. */
 @import "@izzy/recipe-engine/styles/recipes.css";
+/* `.auth-only` / `.auth-when-out`, gated off <html data-auth> by @izzy/auth-client's
+   applyAuthState(). A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
+@import "@izzy/auth-client/styles/auth.css";
 @plugin "@tailwindcss/typography";
 
 @theme {
@@ -15,16 +18,6 @@
 
 body {
   font-family: var(--font-sans);
-}
-
-/* Client-side auth gating. Elements stay hidden until the shared session script stamps
-   <html data-auth="in|out"> (see src/scripts/recipe-session.ts). The `:not()` selectors apply
-   `display: none` only in the non-matching state and never touch `display` in the shown state, so a
-   revealed element keeps its own display (inline-flex, flex, …) with no wrapper needed. Before the
-   script runs neither attribute is set, so both stay hidden — the safe, signed-out view. */
-:root:not([data-auth="in"]) .auth-only,
-:root:not([data-auth="out"]) .auth-when-out {
-  display: none;
 }
 
 /* Ingredient-name typeahead on /upload. The options are built by

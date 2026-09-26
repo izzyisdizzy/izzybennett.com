@@ -21,7 +21,7 @@ const { recipe } = Astro.props;
 </BaseLayout>
 
 <script>
-  import { applyAuthState } from '../../scripts/recipe-session';
+  import { applyAuthState } from '@izzy/auth-client/session';
 
   // Reveal the edit link only when signed in. OAuth never returns to a detail page, so there's no
   // hash to ingest here — just reflect the stored session onto <html data-auth> and let CSS gate.
