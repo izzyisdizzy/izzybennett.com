@@ -5,7 +5,7 @@
 // kitchen sees it on /orders. No auth — anyone with the link can order.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getEntry } from 'astro:content';
-import { parseMenu, sectionItems } from '../lib/cafe-menu';
+import { parseMenu, sectionItems } from '@izzy/cafe-menu';
 
 // Base URL of the Pi order server (reached in prod via the Cloudflare Tunnel). Injected at build
 // time. `||` (not `??`) so an unset GitHub Actions var — which arrives as an empty string — falls
