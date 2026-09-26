@@ -39,6 +39,13 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   recipe logic or UI means a change + new tag there, then bumping the pin here.
   The density table (`src/data/densities.json`) stays here — it's the Worker's
   write target.
+- `@izzy/auth-client` ([izzyisdizzy/auth-client](https://github.com/izzyisdizzy/auth-client),
+  pinned by git tag) — the browser half of sign-in: `SESSION_KEY`, `#session=`
+  ingestion, `applyAuthState()`, `signOut()`, and the `.auth-only` /
+  `.auth-when-out` CSS (imported by `global.css`). Module scripts import it
+  directly; `/upload` and `/update-menu` (`define:vars` scripts, which can't
+  import) get `SESSION_KEY` injected from their frontmatter — never re-spell it.
+  `.auth-only` is a *signed-in* gate: admin-only UI must check `/api/me` → `admin`.
 - The Cloudflare Worker (`izzy-recipe-api`) lives in its own repo,
   [izzyisdizzy/auth-worker](https://github.com/izzyisdizzy/auth-worker) (locally
   `~/Development/auth-worker`): the GitHub OAuth handshake, `/api/me` capabilities,

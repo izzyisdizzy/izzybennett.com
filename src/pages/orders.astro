@@ -49,7 +49,7 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
   </div>
 
   <script>
-    import { currentSession, clearSession, ingestSessionFromHash } from '../scripts/recipe-session';
+    import { currentSession, clearSession, ingestSessionFromHash } from '@izzy/auth-client/session';
     import { fetchKitchenOpen, pollWhileVisible } from '../scripts/order-status';
 
     const NEXT = { new: 'making', making: 'done' };
