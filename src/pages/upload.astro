@@ -6,11 +6,11 @@
 // browser; this page only ever holds an opaque session id. Commits trigger the normal
 // GitHub Pages deploy. Backend: github.com/izzyisdizzy/auth-worker.
 import '../styles/global.css';
-import { categoryValues } from '../content.config';
+import { categoryValues } from '@izzy/recipe-engine/schema';
 // Unit tables shared with the recipe pages. UNIT_OPTIONS fills the item unit <select>; the
 // numeric tables are handed to the inline script (via define:vars) so its grams math uses the
 // exact same factors — see the compact re-implementations of normUnit/parseQty there.
-import { UNIT_OPTIONS, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS } from '../lib/units';
+import { UNIT_OPTIONS, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS } from '@izzy/recipe-engine/units';
 
 // Base URL of the recipe API Worker (the OAuth backend + write proxy). Injected at build
 // time; falls back to the local `wrangler dev` port so `astro dev` works out of the box.
@@ -297,13 +297,13 @@ const dragHandle =
       const pendingDensities = {};
       const clearPending = () => { for (const k of Object.keys(pendingDensities)) delete pendingDensities[k]; };
 
-      // Compact re-implementations of src/lib/units.ts, using the tables injected via define:vars
+      // Compact re-implementations of @izzy/recipe-engine/units, using the tables injected via define:vars
       // above (so the numbers never drift). define:vars can't cross functions, only data.
       const normUnit = (u) => { if (!u) return ''; const k = String(u).toLowerCase().trim().replace(/\.$/, ''); return UNIT_ALIASES[k] ?? k; };
       const isVolumeUnit = (u) => normUnit(u) in VOLUME_IN_CUPS;
 
       // The shared density list is keyed on a normalised name, so normalise the same way
-      // lookupDensity (src/lib/units.ts) does before consulting or extending it — otherwise a
+      // lookupDensity (@izzy/recipe-engine/units) does before consulting or extending it — otherwise a
       // name like "lavender paste (or extract)" is saved as its own unreachable key.
       // Deliberately an EXACT miss, not lookupDensity's leading-word fallback: the fallback is
       // how the page degrades gracefully, but the prompt's job is to grow the list. Treating

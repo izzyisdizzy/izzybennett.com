@@ -17,8 +17,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
 
 ### Layout
 
-- `src/content/recipes/*.md` — the recipes. `src/content.config.ts` is their Zod
-  schema: `title`, `category` (one of `main|dessert|side|sauce|drink|other`),
+- `src/content/recipes/*.md` — the recipes. Their Zod schema is `recipeSchema`
+  from `@izzy/recipe-engine/schema`, wired up in `src/content.config.ts`: `title`, `category` (one of `main|dessert|side|sauce|drink|other`),
   structured `ingredients` (grouped, with optional freeform `qty`/`unit` so
   "2 ¼" and "6-8" survive), `steps`, `notes`, `draft`, and `keywords` (search
   only — not a browsable taxonomy).
@@ -26,8 +26,13 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   whose markdown body **is** the cafe menu.
 - `src/pages/` — routes. Note the JSON endpoints: `izzys-cafe.json.ts`,
   `recipes.json.ts`, `densities.json.ts`.
-- `src/lib/` — `cafe-menu.ts` (the shared menu parser), `ingredients.ts` +
-  `units.ts` (US→grams conversion, with `ingredients.test.ts`), `markdown.ts`.
+- `src/lib/` — `cafe-menu.ts` (the shared menu parser).
+- `@izzy/recipe-engine` ([izzyisdizzy/recipe-engine](https://github.com/izzyisdizzy/recipe-engine),
+  pinned by git tag in `package.json`) — the recipe schema, `units` (US→grams
+  conversion), `ingredients` (step↔ingredient linking), `markdown`,
+  `ingredient-suggest`, `ingredient-popover`, and their tests. Changing recipe
+  logic means a change + new tag there, then bumping the pin here. The density
+  table (`src/data/densities.json`) stays here — it's the Worker's write target.
 - The Cloudflare Worker (`izzy-recipe-api`) lives in its own repo,
   [izzyisdizzy/auth-worker](https://github.com/izzyisdizzy/auth-worker) (locally
   `~/Development/auth-worker`): the GitHub OAuth handshake, `/api/me` capabilities,
@@ -73,5 +78,9 @@ dies unexpectedly, check `node -v` before debugging anything else.
   `PUBLIC_ORDER_API` are set in repo Settings → Variables and injected by the
   deploy workflow — don't hardcode either URL.
 - **Recipe schema changes are migrations.** Adding a required field to
-  `content.config.ts` invalidates every existing file in `src/content/recipes/`;
-  give new fields a default or make them optional.
+  `recipeSchema` (in `@izzy/recipe-engine`) invalidates every existing file in
+  `src/content/recipes/`; give new fields a default or make them optional.
+- **Clear `.astro/` after bumping `@izzy/recipe-engine`.** Astro keys its content
+  cache on `content.config.ts`'s own bytes, not its imports, so a schema change in
+  the package is invisible to it. `prebuild` does `rm -rf .astro`; `npm run dev`
+  does not, so clear it by hand.
