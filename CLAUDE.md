@@ -24,6 +24,12 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   only — not a browsable taxonomy).
 - `src/content/pages/*.md` — freeform pages, including the `izzys-cafe` entry
   whose markdown body **is** the cafe menu.
+- `src/content/projects/*.md` — the projects. Frontmatter (`title`, `tagline`,
+  `repo`, `icon` relative to the entry, `order`, `links`, optional `demo`)
+  drives the `/projects/` grid of `ProjectWindow`s; the markdown body is the
+  `/projects/<slug>/` page, styled by `.iz-prose` (fenced code is themed through
+  Shiki's light/dark CSS variables — see `astro.config.mjs`). `demo: cafe-feed | recipes-feed`
+  adds a `FeedDemo` window that fetches the live feed client-side, read-only.
 - `src/dizzy/` — the Dizzy design system, vendored: `tokens.json` (source of
   truth: colours for the `daylight`/`afterglow` themes, type, spacing, radii,
   strokes, shadows), `bundle.css` (the `dz-*` components + motion), `bundle.js`

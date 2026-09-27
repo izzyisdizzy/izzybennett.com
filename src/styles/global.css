@@ -23,7 +23,6 @@
 /* `.auth-only` / `.auth-when-out`, gated off <html data-auth> by the applyAuthState() helper in
    @izzy/auth-client. A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
 @import "@izzy/auth-client/styles/auth.css";
-@plugin "@tailwindcss/typography";
 
 /* Legacy `dark:` utilities follow the Dizzy theme instead of the OS while pages are still being
    migrated, so toggling daylight on a dark OS cannot leave light text on a cream page. The second

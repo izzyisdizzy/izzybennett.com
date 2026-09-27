@@ -1,0 +1,107 @@
+---
+/**
+ * A dz-window that fetches one of the site's own JSON feeds client-side and renders a readable
+ * summary of it — proof that the feed a project depends on is live, on the project's own page.
+ * Read-only: nothing here can change the feeds' shape.
+ *
+ * FEEDS is the one place a feed is described; the script's renderers are keyed the same way.
+ */
+interface Props {
+  kind: FeedKind;
+}
+
+type FeedKind = 'cafe-feed' | 'recipes-feed';
+
+const FEEDS: Record<FeedKind, { src: string; heading: string }> = {
+  'cafe-feed': { src: '/izzys-cafe.json', heading: 'What the sign reads right now' },
+  'recipes-feed': { src: '/recipes.json', heading: 'What the feed holds right now' },
+};
+
+const { kind } = Astro.props;
+const { src, heading } = FEEDS[kind];
+---
+
+<section class="dz-window" data-feed-demo={kind} data-src={src} aria-label={`Live ${src}`}>
+  <div class="dz-window__bar">
+    <span class="dz-window__lights" aria-hidden="true">
+      <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
+    </span>
+    <span class="dz-window__title">GET {src}</span>
+  </div>
+  <div class="dz-window__body">
+    <h2 class="h3">{heading}</h2>
+    <p class="body-s mt-1 text-ink-muted">
+      Fetched from this site as the page loaded. <a class="dz-link" href={src}>Open the raw JSON →</a>
+    </p>
+    <!-- The one-line status is the only live region; the list below is static content, so a
+         screen reader isn't read the whole menu the moment the fetch lands. -->
+    <p class="sr-only" role="status" data-feed-status></p>
+    <div class="iz-well mt-4 p-4" data-feed-out>
+      <p class="mono">loading…</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  type MenuFeed = { title: string; sections: { heading: string; items: string[] }[] };
+  type RecipesFeed = { slug: string; title: string; category: string }[];
+  type Rendered = { nodes: HTMLElement[]; status: string };
+
+  const el = (tag: string, cls: string, text?: string) => {
+    const node = document.createElement(tag);
+    node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+
+  // Everything is built with textContent — the feeds are ours, but the menu is edited from a
+  // phone and item text must never be parsed as markup.
+  function renderMenu(feed: MenuFeed): Rendered {
+    const nodes = feed.sections.flatMap((section) => {
+      const list = el('ul', 'mono mt-1 mb-3');
+      for (const item of section.items) list.appendChild(el('li', '', `· ${item}`));
+      return [el('h3', 'label', section.heading), list];
+    });
+    return { nodes, status: `Loaded ${feed.sections.length} menu sections.` };
+  }
+
+  function renderRecipes(feed: RecipesFeed): Rendered {
+    const shown = feed.slice(0, 6);
+    const list = el('ul', 'mono mt-1');
+    for (const recipe of shown) {
+      const li = el('li', '');
+      const link = el('a', 'dz-link', recipe.title) as HTMLAnchorElement;
+      link.href = `/recipes/${recipe.slug}/`;
+      li.append('· ', link, ` — ${recipe.category}`);
+      list.appendChild(li);
+    }
+    const nodes = [el('p', 'label', `${feed.length} published recipes`), list];
+    if (feed.length > shown.length) nodes.push(el('p', 'caption mt-2', `…and ${feed.length - shown.length} more.`));
+    return { nodes, status: `Loaded ${feed.length} recipes.` };
+  }
+
+  const RENDER: Record<string, (data: never) => Rendered> = {
+    'cafe-feed': renderMenu,
+    'recipes-feed': renderRecipes,
+  };
+
+  for (const demo of document.querySelectorAll<HTMLElement>('[data-feed-demo]')) {
+    const out = demo.querySelector<HTMLElement>('[data-feed-out]');
+    const status = demo.querySelector<HTMLElement>('[data-feed-status]');
+    const render = RENDER[demo.dataset.feedDemo ?? ''];
+    const src = demo.dataset.src;
+    if (!out || !render || !src) continue;
+    fetch(src, { headers: { Accept: 'application/json' } })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((data) => {
+        const rendered = render(data as never);
+        out.replaceChildren(...rendered.nodes);
+        if (status) status.textContent = rendered.status;
+      })
+      .catch(() => {
+        const message = `Could not load ${src} — open it directly instead.`;
+        out.replaceChildren(el('p', 'mono', message));
+        if (status) status.textContent = message;
+      });
+  }
+</script>

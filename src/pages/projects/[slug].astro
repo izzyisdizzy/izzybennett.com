@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FeedDemo from '../../components/FeedDemo.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const { title, tagline, repo, links, demo } = project.data;
+---
+
+<BaseLayout title={title} description={tagline}>
+  <p><a href="/projects/" class="dz-link body-s">← Projects</a></p>
+  <h1 class="display-l mt-4" data-dz-bounce="hover">{title}</h1>
+  <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
+
+  {(repo || links.length > 0) && (
+    <div class="mt-5 flex flex-wrap gap-3">
+      {repo && (
+        <a href={repo} class="dz-btn dz-btn--ghost dz-btn--sm" target="_blank" rel="noopener noreferrer">GitHub →</a>
+      )}
+      {links.map((link) => (
+        <a href={link.href} class="dz-btn dz-btn--ghost dz-btn--sm">{link.label}</a>
+      ))}
+    </div>
+  )}
+
+  <div class="iz-prose mt-8">
+    <Content />
+  </div>
+
+  {demo && (
+    <div class="mt-8">
+      <FeedDemo kind={demo} />
+    </div>
+  )}
+</BaseLayout>

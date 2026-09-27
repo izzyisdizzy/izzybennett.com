@@ -1,0 +1,47 @@
+---
+/**
+ * One project on the /projects/ grid: a dz-window whose title bar shows the repo, whose media
+ * is the project's icon (or a sparkle block when it has none), and whose body links to the
+ * detail page. Only the heading and the buttons are links — the image isn't, so keyboard users
+ * don't get the same page twice.
+ */
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, tagline, icon, repo } = project.data;
+const href = `/projects/${project.id}/`;
+const barTitle = repo ? repo.replace(/^https:\/\/github\.com\//, '') : project.id;
+---
+
+<article class="dz-window flex flex-col">
+  <div class="dz-window__bar">
+    <span class="dz-window__lights" aria-hidden="true">
+      <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
+    </span>
+    <span class="dz-window__title">{barTitle}</span>
+  </div>
+
+  {icon ? (
+    <Image src={icon} alt="" width={480} height={360} class="dz-window__media" />
+  ) : (
+    <div class="iz-window-art" aria-hidden="true">✦</div>
+  )}
+
+  <div class="dz-window__body flex flex-1 flex-col">
+    <h2 class="dz-window__heading"><a href={href} class="hover:text-hotpink">{title}</a></h2>
+    <p class="dz-window__text">{tagline}</p>
+    <div class="mt-auto flex flex-wrap items-center gap-3 pt-5">
+      <!-- Every card repeats these two labels, so give each an accessible name a links rotor
+           can tell apart. -->
+      <a href={href} class="dz-btn dz-btn--sm" aria-label={`Read more about ${title}`}>Read more</a>
+      {repo && (
+        <a href={repo} class="dz-link body-s" target="_blank" rel="noopener noreferrer" aria-label={`${barTitle} on GitHub`}>GitHub →</a>
+      )}
+    </div>
+  </div>
+</article>
