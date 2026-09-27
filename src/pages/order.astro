@@ -2,143 +2,128 @@
 // Customer ordering page for the home cafe. The menu is built at build time from the same
 // markdown the cafe page + dizzyos sign use (src/content/pages/izzys-cafe.md, via the shared
 // parser), so options never drift from the menu. Submitting POSTs to the Pi order server; the
-// kitchen sees it on /orders. No auth — anyone with the link can order.
+// kitchen sees it on /orders. No auth — anyone with the link can order. The confirmation is a
+// receipt swapped in on this page (the server returns the stored order, id included).
 import BaseLayout from '../layouts/BaseLayout.astro';
+import OptionPicker from '../components/OptionPicker.astro';
 import { getEntry } from 'astro:content';
 import { parseMenu, sectionItems } from '@izzy/cafe-menu';
 
-// Base URL of the Pi order server (reached in prod via the Cloudflare Tunnel). Injected at build
-// time. `||` (not `??`) so an unset GitHub Actions var — which arrives as an empty string — falls
-// back too; the local uvicorn port is used only in dev so `astro dev` works out of the box, while a
-// misconfigured prod build yields an empty base (fetchKitchenOpen short-circuits) rather than
-// polling same-origin /status.
+// Base URL of the Pi order server. Injected at build time. `||` (not `??`) so an unset GitHub
+// Actions var — which arrives as an empty string — falls back too; the local uvicorn port is used
+// only in dev so `astro dev` works out of the box, while a misconfigured prod build yields an
+// empty base (fetchKitchenOpen short-circuits) rather than polling same-origin /status.
 const ORDER_API = import.meta.env.PUBLIC_ORDER_API || (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 const page = await getEntry('pages', 'izzys-cafe');
 const sections = parseMenu(page?.body ?? '');
-const drinks = sectionItems(sections, 'Drinks');
-const milks = sectionItems(sections, 'Milks');
-const syrups = sectionItems(sections, 'Syrups');
-
-// Shared class strings, hoisted so a styling tweak happens in one place (mirrors upload.astro).
-const labelCls = 'block text-sm font-semibold text-neutral-800 dark:text-neutral-200';
-const optionalCls = 'font-normal text-neutral-400';
-const fieldInput =
-  'mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
-// A selectable "chip" — the peer-checked variants light it up in accent pink when its input is picked.
-const chipCls =
-  'cursor-pointer select-none rounded-full border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors peer-checked:border-accent-600 peer-checked:bg-accent-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-accent-600/40 hover:border-accent-400 dark:border-neutral-700 dark:text-neutral-300 dark:peer-checked:text-white';
+const asOptions = (items: string[]) => items.map((item) => ({ value: item, label: item }));
+const drinks = asOptions(sectionItems(sections, 'Drinks'));
+const milks = asOptions(sectionItems(sections, 'Milks'));
+const syrups = asOptions(sectionItems(sections, 'Syrups'));
 ---
 
 <BaseLayout title="Order" description="Place an order at Izzy's home cafe.">
-  <div class="max-w-xl">
-    <div id="closed-banner" class="mb-4 hidden rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-      😴 The kitchen is closed — orders are paused right now.
+  <div class="max-w-2xl">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <h1 class="display-xl" data-dz-bounce="hover">Order ☕</h1>
+      <a href="/orders/" class="dz-link body-s">See orders →</a>
     </div>
-    <div class="flex items-baseline justify-between gap-3">
-      <h1 class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Order at Izzy's Cafe ☕</h1>
-      <a href="/orders/" class="shrink-0 text-sm text-accent-600 hover:underline dark:text-accent-100">See orders →</a>
+    <p class="body-l mt-2 text-ink-muted">Pick your drink, tweak it, and send it to the kitchen.</p>
+
+    <div id="closed-banner" class="iz-well mt-6 flex items-center gap-3 p-4" hidden>
+      <span class="dz-tag dz-tag--stopped">Closed</span>
+      <p>😴 The kitchen is closed — orders are paused right now.</p>
     </div>
-    <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-500">Pick your drink, tweak it, and send it to the kitchen.</p>
 
-    <form id="order-form" data-order-api={ORDER_API} class="mt-6 space-y-7" novalidate>
-      <!-- Drink (required) -->
-      <fieldset>
-        <legend class={labelCls}>Drink <span class="text-accent-600">*</span></legend>
-        <div class="mt-2 flex flex-wrap gap-2">
-          {drinks.map((d, i) => (
-            <label>
-              <input type="radio" name="drink" value={d} required checked={i === 0} class="peer sr-only" />
-              <span class={chipCls}>{d}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+    <form id="order-form" data-order-api={ORDER_API} class="mt-8 space-y-8" novalidate>
+      <OptionPicker legend="Drink" required name="drink" options={drinks} checked={drinks[0]?.value} />
 
-      <!-- Temperature (required) — no default, so the customer must actively choose. -->
-      <fieldset>
-        <legend class={labelCls}>Hot or iced? <span class="text-accent-600">*</span></legend>
-        <div class="mt-2 flex flex-wrap gap-2">
-          {[['Hot', '🔥'], ['Iced', '🧊']].map(([value, emoji]) => (
-            <label>
-              <input type="radio" name="temperature" value={value} required class="peer sr-only" />
-              <span class={chipCls}>{value} {emoji}</span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <!-- No default, so the customer must actively choose. -->
+      <OptionPicker
+        legend="Hot or iced?"
+        required
+        name="temperature"
+        options={[{ value: 'Hot', label: 'Hot 🔥' }, { value: 'Iced', label: 'Iced 🧊' }]}
+      />
 
       {milks.length > 0 && (
-        <fieldset>
-          <legend class={labelCls}>Milk <span class={optionalCls}>(optional)</span></legend>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <label>
-              <input type="radio" name="milk" value="" checked class="peer sr-only" />
-              <span class={chipCls}>None</span>
-            </label>
-            {milks.map((m) => (
-              <label>
-                <input type="radio" name="milk" value={m} class="peer sr-only" />
-                <span class={chipCls}>{m}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <OptionPicker
+          legend="Milk"
+          hint="(optional)"
+          name="milk"
+          options={[{ value: '', label: 'None' }, ...milks]}
+          checked=""
+        />
       )}
 
       {syrups.length > 0 && (
-        <fieldset>
-          <legend class={labelCls}>Syrups <span class={optionalCls}>(pick any)</span></legend>
-          <div class="mt-2 flex flex-wrap gap-2">
-            {syrups.map((s) => (
-              <label>
-                <input type="checkbox" name="syrup" value={s} class="peer sr-only" />
-                <span class={chipCls}>{s}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <OptionPicker legend="Syrups" hint="(pick any)" name="syrup" type="checkbox" options={syrups} />
       )}
 
       <div>
-        <label for="name" class={labelCls}>Name <span class="text-accent-600">*</span></label>
-        <input id="name" name="name" type="text" required autocomplete="name" maxlength="100" placeholder="Who's this for?" class={fieldInput} />
+        <label for="name" class="label">Name <span class="text-hotpink" aria-hidden="true">*</span></label>
+        <input id="name" name="name" type="text" required autocomplete="name" maxlength="100" placeholder="Who's this for?" class="iz-field mt-2" />
       </div>
 
       <div>
-        <label for="notes" class={labelCls}>Notes <span class={optionalCls}>(optional)</span></label>
-        <textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Extra hot, half sweet…" class={fieldInput}></textarea>
+        <label for="notes" class="label">Notes <span class="font-normal normal-case tracking-normal">(optional)</span></label>
+        <textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Extra hot, half sweet…" class="iz-field mt-2"></textarea>
       </div>
 
       <div>
-        <button type="submit" id="submit-order"
-          class="w-full rounded-lg bg-accent-600 px-4 py-3 text-center font-semibold text-white transition-colors hover:bg-accent-700 disabled:opacity-60">
-          Send order 🚀
-        </button>
-        <p id="order-status" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+        <button type="submit" id="submit-order" class="dz-btn dz-btn--lg w-full justify-center">Send order 🚀</button>
+        <p id="order-status" class="caption mt-3" role="status" aria-live="polite"></p>
       </div>
     </form>
+
+    <!-- The confirmation. Every value is filled with textContent — name and notes are user input. -->
+    <section id="order-receipt" class="dz-window dz-pop mt-8" hidden aria-labelledby="receipt-heading">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true">
+          <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
+        </span>
+        <span class="dz-window__title">receipt.txt</span>
+        <span class="dz-counter" data-receipt="number">#000000</span>
+      </div>
+      <div class="dz-window__body">
+        <span class="dz-tag dz-tag--ready">✓ Sent to the kitchen</span>
+        <h2 id="receipt-heading" class="display-l mt-4" tabindex="-1">
+          Thanks, <span data-receipt="name"></span>!
+        </h2>
+        <dl class="iz-well mono mt-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 p-4">
+          <dt class="text-ink-muted">drink</dt><dd data-receipt="drink"></dd>
+          <dt class="text-ink-muted">milk</dt><dd data-receipt="milk"></dd>
+          <dt class="text-ink-muted">syrups</dt><dd data-receipt="syrups"></dd>
+          <dt class="text-ink-muted" data-receipt-row="notes">notes</dt><dd data-receipt="notes"></dd>
+        </dl>
+        <p class="body-s mt-4 text-ink-muted">Hang tight — I'll call your name when it's ready.</p>
+        <button type="button" id="order-again" class="dz-btn dz-btn--ghost mt-5">Order another</button>
+      </div>
+    </section>
   </div>
 
   <script>
     import { fetchKitchenOpen, pollWhileVisible } from '../scripts/order-status';
 
-    const form = document.getElementById('order-form');
-    const submitBtn = document.getElementById('submit-order');
-    const statusEl = document.getElementById('order-status');
-    const closedBanner = document.getElementById('closed-banner');
+    const form = document.getElementById('order-form') as HTMLFormElement;
+    const submitBtn = document.getElementById('submit-order') as HTMLButtonElement;
+    const statusEl = document.getElementById('order-status')!;
+    const closedBanner = document.getElementById('closed-banner')!;
+    const receipt = document.getElementById('order-receipt')!;
+    const againBtn = document.getElementById('order-again')!;
     const STATUS_POLL_MS = 10000;
     // Build-time config rides on the form's data attribute so this can be a module <script>.
-    const ORDER_API = form.dataset.orderApi;
+    const ORDER_API = form.dataset.orderApi ?? '';
     let kitchenOpen = true;
     // True while a submit is in flight, so a background status poll can't re-enable the button
     // mid-request and let a double-click send a duplicate order.
     let submitting = false;
 
     // Show/hide the closed banner and lock the submit button to match the kitchen state.
-    function applyKitchen(open) {
+    function applyKitchen(open: boolean) {
       kitchenOpen = open;
-      closedBanner.classList.toggle('hidden', open);
+      closedBanner.hidden = open;
       // Never re-enable while a submit is in flight; the submit's finally block owns that.
       submitBtn.disabled = !open || submitting;
       submitBtn.textContent = open ? 'Send order 🚀' : 'Kitchen closed 😴';
@@ -150,35 +135,73 @@ const chipCls =
       if (open !== null) applyKitchen(open);
     }
 
-    function setStatus(msg, kind = '') {
+    function setStatus(msg: string, kind: '' | 'err' = '') {
       statusEl.textContent = msg;
-      statusEl.className =
-        'mt-2 text-sm ' +
-        (kind === 'ok' ? 'text-green-600 dark:text-green-500'
-          : kind === 'err' ? 'text-red-600 dark:text-red-400'
-          : 'text-neutral-500 dark:text-neutral-400');
+      statusEl.className = `caption mt-3 ${kind === 'err' ? 'text-cherry' : 'text-ink-muted'}`;
     }
 
-    const checkedValues = (name) =>
-      Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map((el) => el.value).filter(Boolean);
+    const checked = (name: string) =>
+      form.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value;
+    const checkedValues = (name: string) =>
+      Array.from(form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:checked`))
+        .map((el) => el.value)
+        .filter(Boolean);
+
+    type Order = { id: number; drink: string; temperature?: string | null; milk?: string | null; syrups: string[]; name: string; notes?: string | null };
+
+    function showReceipt(order: Order) {
+      const fill = (key: string, value: string) => {
+        const el = receipt.querySelector(`[data-receipt="${key}"]`);
+        if (el) el.textContent = value;
+      };
+      fill('number', `#${String(order.id).padStart(6, '0')}`);
+      fill('name', order.name);
+      fill('drink', [order.temperature, order.drink].filter(Boolean).join(' '));
+      fill('milk', order.milk || 'none');
+      fill('syrups', order.syrups.length ? order.syrups.join(', ') : 'none');
+      fill('notes', order.notes || '');
+      // Hide the notes row entirely when there are none.
+      for (const el of receipt.querySelectorAll<HTMLElement>('[data-receipt-row="notes"], [data-receipt="notes"]')) {
+        el.hidden = !order.notes;
+      }
+      form.hidden = true;
+      receipt.hidden = false;
+      receipt.querySelector<HTMLElement>('#receipt-heading')?.focus();
+    }
+
+    againBtn.addEventListener('click', () => {
+      // Reset the extras but keep the first drink selected, ready for the next order.
+      form.querySelectorAll<HTMLInputElement>('input[name="syrup"]').forEach((el) => (el.checked = false));
+      const noMilk = form.querySelector<HTMLInputElement>('input[name="milk"][value=""]');
+      if (noMilk) noMilk.checked = true;
+      // Clear temperature so the next order has to choose hot/iced again.
+      form.querySelectorAll<HTMLInputElement>('input[name="temperature"]').forEach((el) => (el.checked = false));
+      (form.elements.namedItem('name') as HTMLInputElement).value = '';
+      (form.elements.namedItem('notes') as HTMLTextAreaElement).value = '';
+      setStatus('');
+      receipt.hidden = true;
+      form.hidden = false;
+      form.querySelector<HTMLInputElement>('input[name="drink"]:checked')?.focus();
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!kitchenOpen) { setStatus('The kitchen is closed right now.', 'err'); return; }
-      const drink = form.querySelector('input[name="drink"]:checked')?.value;
+      const drink = checked('drink');
       if (!drink) { setStatus('Pick a drink first.', 'err'); return; }
-      const temperature = form.querySelector('input[name="temperature"]:checked')?.value;
+      const temperature = checked('temperature');
       if (!temperature) { setStatus('Pick hot or iced first.', 'err'); return; }
-      const name = form.name.value.trim();
+      const name = (form.elements.namedItem('name') as HTMLInputElement).value.trim();
       if (!name) { setStatus('Add your name first.', 'err'); return; }
+      const notes = (form.elements.namedItem('notes') as HTMLTextAreaElement).value.trim();
 
       const order = {
         drink,
         temperature,
         name,
-        milk: form.querySelector('input[name="milk"]:checked')?.value || undefined,
+        milk: checked('milk') || undefined,
         syrups: checkedValues('syrup'),
-        notes: form.notes.value.trim() || undefined,
+        notes: notes || undefined,
       };
 
       submitting = true;
@@ -197,15 +220,8 @@ const chipCls =
           return;
         }
         if (!res.ok) throw new Error(`Server error ${res.status}`);
-        setStatus('Order sent! The kitchen has it. ☕', 'ok');
-        // Reset the extras but keep the first drink selected, ready for the next order.
-        form.querySelectorAll('input[name="syrup"]').forEach((el) => (el.checked = false));
-        const noMilk = form.querySelector('input[name="milk"][value=""]');
-        if (noMilk) noMilk.checked = true;
-        // Clear temperature so the next order has to choose hot/iced again.
-        form.querySelectorAll('input[name="temperature"]').forEach((el) => (el.checked = false));
-        form.name.value = '';
-        form.notes.value = '';
+        setStatus('');
+        showReceipt(await res.json());
       } catch (err) {
         setStatus(err instanceof Error ? err.message : 'Could not send the order.', 'err');
       } finally {

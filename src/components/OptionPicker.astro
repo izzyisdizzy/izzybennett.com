@@ -1,0 +1,50 @@
+---
+/**
+ * A set of window-shaped choices (.iz-option in site.css) backed by real radio or checkbox
+ * inputs, so native form semantics, arrow-key roving between radios and `form.elements` all keep
+ * working. The input is visually hidden inside its label; the selected look comes from
+ * `.iz-option:has(:checked)`.
+ */
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  legend: string;
+  /** Shown after the legend: "*" for required, or a muted hint like "(optional)". */
+  hint?: string;
+  required?: boolean;
+  name: string;
+  type?: 'radio' | 'checkbox';
+  options: Option[];
+  /** Value pre-selected on load (radios only). */
+  checked?: string;
+}
+
+const { legend, hint, required = false, name, type = 'radio', options, checked } = Astro.props;
+---
+
+<fieldset>
+  <legend class="label">
+    {legend}
+    {required && <span class="text-hotpink" aria-hidden="true"> *</span>}
+    {hint && <span class="ml-1 font-normal normal-case tracking-normal">{hint}</span>}
+  </legend>
+  <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+    {options.map((option) => (
+      <label class="iz-option">
+        <input
+          type={type}
+          name={name}
+          value={option.value}
+          checked={option.value === checked}
+          required={required && type === 'radio'}
+          class="sr-only"
+        />
+        <span class="iz-option__check" aria-hidden="true"></span>
+        <span class="min-w-0">{option.label}</span>
+      </label>
+    ))}
+  </div>
+</fieldset>
