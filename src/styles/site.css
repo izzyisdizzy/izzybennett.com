@@ -32,7 +32,7 @@
 }
 
 /* A plain card — a window without the title bar — for panels that are documents, not apps.
-   Flat: its outline separates it (see "shadows" below). */
+   No drop shadow: its outline and bevel separate it (see "retro chrome" below). */
 .iz-card {
   border: var(--stroke-1) solid var(--outline);
   border-radius: var(--radius-lg);
@@ -96,8 +96,8 @@
   cursor: pointer;
   transition: background-color 120ms ease;
 }
-.iz-option:hover { background: var(--orange-soft); }
-.iz-option:has(:checked) { background: var(--hotpink-soft); }
+.iz-option:hover { background-color: var(--orange-soft); }
+.iz-option:has(:checked) { background-color: var(--hotpink-soft); }
 .iz-option:has(:focus-visible) { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
 .iz-option__check {
   display: inline-flex;
@@ -218,9 +218,8 @@
    that float (the mobile nav sheet, popovers) keep one. Everything else sits flat on its
    outline. Overrides bundle.css, which stays as vendored; same layer, later import, so these
    win at equal specificity. With no offset shadow to land on, the hover/press nudges on ghost
-   buttons read as jitter, so those go too. */
-.dz-nav,
-.dz-window,
+   buttons read as jitter, so those go too. The nav and windows trade their drop shadow for
+   the inset bevel in "retro chrome" below. */
 .dz-marquee,
 .dz-btn--ghost,
 .dz-btn--ghost:active,
@@ -230,6 +229,72 @@
 .dz-nav__link[aria-current] { box-shadow: none; }
 .dz-btn--ghost:hover,
 .dz-btn--ghost:active { transform: none; }
+
+/* ----------------------------------------------------------- retro chrome */
+/* The always-on retro look from the design canvas (docs/design/flows/site.css, "Retro" and
+   "Shading"). The tight radii and chunky strokes live in tokens.json; this adds raised inset
+   bevels on the big panels (a bevel, not a drop shadow, so it sits with "fewer shadows"),
+   striped window title bars, and tonal shading. */
+:root { --retro-bevel: inset 3px 3px 0 var(--chrome-hi), inset -3px -3px 0 var(--chrome-lo); }
+.dz-nav,
+.dz-window,
+.iz-card,
+.dz-footer { box-shadow: var(--retro-bevel); }
+.iz-hero { box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
+
+/* Striped title bars, with the title on a solid patch so it stays readable. bundle.css's
+   ellipsis rules still apply to long titles. */
+.dz-window__bar {
+  background: repeating-linear-gradient(to bottom, var(--cocoa-soft) 0 2px, var(--surface-raised) 2px 4px);
+}
+.dz-window__title {
+  flex: none;
+  max-width: 70%;
+  margin-inline: auto;
+  padding: 0 var(--space-2);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Shading: tonal depth rather than drop shadows. Panels catch light at the top and fall into
+   shade at the bottom; filled buttons get a stronger gel curve. background-image only, laid
+   over each element's own fill, so hover, pressed and checked colours still show through —
+   which is why the state rules above set background-color, not the shorthand. The button
+   selectors are two classes deep to match bundle.css's `.dz-btn:hover`, whose shorthand
+   would otherwise reset the image. */
+.iz-hero,
+.iz-card,
+.dz-nav,
+.dz-window__body,
+.dz-footer,
+.iz-option,
+.iz-mnav__sheet {
+  background-image: linear-gradient(to bottom,
+    color-mix(in srgb, var(--chrome-hi) 80%, transparent) 0%,
+    transparent 38%,
+    color-mix(in srgb, var(--chrome-lo) 40%, transparent) 100%);
+}
+.iz-well {
+  background-image: linear-gradient(to bottom,
+    color-mix(in srgb, var(--chrome-lo) 45%, transparent) 0%,
+    transparent 45%);
+}
+.dz-btn:not(.dz-btn--ghost) {
+  background-image: linear-gradient(to bottom,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.06) 48%,
+    rgba(0, 0, 0, 0.1) 52%,
+    rgba(0, 0, 0, 0.22) 100%);
+}
+.dz-btn.dz-btn--ghost {
+  background-image: linear-gradient(to bottom, transparent 40%, color-mix(in srgb, var(--chrome-lo) 50%, transparent));
+}
+.dz-tag {
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent 55%, rgba(0, 0, 0, 0.06));
+}
 
 /* ----------------------------------------------------------- button burst */
 /* Pixels in the button's own colours pop out and fall when a button is released. Pure CSS:
@@ -303,7 +368,7 @@ html { overflow-x: clip; }
 /* ------------------------------------------------------------- tag buttons */
 /* A dz-tag used as a toggle (the recipe category filters). */
 .iz-tag-button { cursor: pointer; }
-.iz-tag-button:hover:not(.dz-tag--selected) { background: var(--orange-soft); }
+.iz-tag-button:hover:not(.dz-tag--selected) { background-color: var(--orange-soft); }
 
 /* ------------------------------------------------------------------- print */
 @media print {
