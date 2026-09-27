@@ -47,9 +47,36 @@
     el.appendChild(frag);
     el.classList.add('dz-bouncy');
     if (opts.trigger === 'hover') el.classList.add('dz-bouncy--hover');
+    if (opts.trigger === 'once') el.classList.add('dz-bouncy--once');
     if (stagger) el.style.setProperty('--dz-bounce-stagger', stagger);
     el.setAttribute('data-dz-bouncified', 'true');
+    if (opts.trigger === 'hover' || opts.trigger === 'once') replayOnHover(el, opts.trigger === 'once');
     return el;
+  }
+
+  /* Local patch (izzybennett.com): drive `hover`/`once` bounces as single waves. Each wave
+     adds .dz-bouncing and the last letter's animationend removes it, so a pointer that
+     leaves mid-wave lets the wave finish; while still hovered or focused, it goes again.
+     Upstream Dizzy pauses an infinite loop instead, which freezes letters mid-bounce. */
+  function replayOnHover(el, playNow) {
+    if (REDUCED()) return;
+    var spans = el.querySelectorAll(':scope > span');
+    var last = spans[spans.length - 1];
+    if (!last) return;
+
+    function start() {
+      if (el.classList.contains('dz-bouncing')) return;
+      void el.offsetWidth; // restart the keyframes even if the class was just removed
+      el.classList.add('dz-bouncing');
+    }
+
+    last.addEventListener('animationend', function () {
+      el.classList.remove('dz-bouncing');
+      if (el.matches(':hover, :focus-visible')) start();
+    });
+    el.addEventListener('mouseenter', start);
+    el.addEventListener('focusin', start);
+    if (playNow) start();
   }
 
   /* Duplicate a marquee's content once so the loop has no visible seam, and set the
@@ -100,11 +127,12 @@
   }
 
   /* Scan a subtree and start everything declared in markup:
-     [data-dz-bounce], [data-dz-bounce="hover"] and [data-dz-marquee]. */
+     [data-dz-bounce], [data-dz-bounce="hover"], [data-dz-bounce="once"] and [data-dz-marquee]. */
   function init(root) {
     var scope = root || document;
     [].slice.call(scope.querySelectorAll('[data-dz-bounce]')).forEach(function (el) {
-      bouncify(el, { trigger: el.getAttribute('data-dz-bounce') === 'hover' ? 'hover' : 'always' });
+      var trigger = el.getAttribute('data-dz-bounce');
+      bouncify(el, { trigger: trigger === 'hover' || trigger === 'once' ? trigger : 'always' });
     });
     [].slice.call(scope.querySelectorAll('[data-dz-marquee]')).forEach(function (el) {
       marquee(el);
