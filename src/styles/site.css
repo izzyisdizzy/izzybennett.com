@@ -210,6 +210,11 @@
 .iz-prose blockquote { padding-left: var(--space-4); border-left: var(--stroke-2) solid var(--hotpink); color: var(--ink-muted); }
 .iz-prose hr { height: var(--stroke-hair); border: 0; background: var(--hairline); }
 
+/* ------------------------------------------------------------- tag buttons */
+/* A dz-tag used as a toggle (the recipe category filters). */
+.iz-tag-button { cursor: pointer; }
+.iz-tag-button:hover:not(.dz-tag--selected) { background: var(--orange-soft); }
+
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }

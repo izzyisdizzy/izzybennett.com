@@ -21,7 +21,13 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   from `@izzy/recipe-engine/schema`, wired up in `src/content.config.ts`: `title`, `category` (one of `main|dessert|side|sauce|drink|other`),
   structured `ingredients` (grouped, with optional freeform `qty`/`unit` so
   "2 ¼" and "6-8" survive), `steps`, `notes`, `draft`, and `keywords` (search
-  only — not a browsable taxonomy).
+  only — not a browsable taxonomy). Since engine v2, also optional `yield` and
+  `oven` (meta strip) and, per ingredient item, `key` (defaults to the slug of
+  `name`) and `grams` (override). Steps can reference an ingredient as `[[key]]`
+  or `[[key|display text]]`; unbracketed prose is still matched lexically. An
+  unknown or ambiguous `[[key]]` **fails the build**, listing the valid keys.
+  ⚠️ `/upload` doesn't know the v2 fields yet (M6): editing a recipe there drops
+  `yield`/`oven`/`key`/`grams`, so hand-edit recipes that use them.
 - `src/content/pages/*.md` — freeform pages, including the `izzys-cafe` entry
   whose markdown body **is** the cafe menu.
 - `src/content/projects/*.md` — the projects. Frontmatter (`title`, `tagline`,
