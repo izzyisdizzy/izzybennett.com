@@ -7,6 +7,7 @@
 // triggers the normal GitHub Pages deploy, so the order form, /izzys-cafe.json feed, and the
 // dizzyos LED sign all pick up the change. Backend: github.com/izzyisdizzy/auth-worker.
 import '../styles/global.css';
+import ThemeBoot from '../components/ThemeBoot.astro';
 import { getEntry } from 'astro:content';
 import { parseMenu, sectionItems, MENU_SECTIONS } from '@izzy/cafe-menu';
 import { SESSION_KEY } from '@izzy/auth-client/session';
@@ -43,12 +44,12 @@ const removeBtn =
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#db2777" />
+    <ThemeBoot />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <title>Update the menu · Izzy's Cafe</title>
   </head>
-  <body class="min-h-screen bg-white text-neutral-800 dark:bg-neutral-950 dark:text-neutral-200">
+  <body class="min-h-screen">
     <main class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <header class="flex items-baseline justify-between gap-3">
         <h1 class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Update the menu</h1>

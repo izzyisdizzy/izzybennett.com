@@ -1,21 +1,63 @@
 @import "tailwindcss";
+
+/* Self-hosted fonts (fontsource). The variable packages register "<Name> Variable", which the
+   generated --font-display / --font-body stacks lead with. Space Mono is static: 400 + 700. */
+@import "@fontsource-variable/baloo-2";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+
+/* Dizzy. tokens.css and tailwind-theme.css are GENERATED from src/dizzy/tokens.json by
+   `npm run dizzy:tokens` (src/dizzy/tokens.test.ts fails when they are stale). bundle.css and
+   site.css go into the components layer so a Tailwind layout utility on the same element
+   (hidden, sm:flex, justify-center) still overrides a dz- or iz- default. Left unlayered, they
+   would beat every utility regardless of specificity. */
+@import "../dizzy/tokens.css";
+@import "../dizzy/tailwind-theme.css";
+@import "../dizzy/bundle.css" layer(components);
+@import "./site.css" layer(components);
+
 /* Recipe page + card styles (ingredient popovers, inline amounts), and the @source lines that
    register the engine's components with Tailwind — node_modules is never scanned otherwise. */
 @import "@izzy/recipe-engine/styles/recipes.css";
-/* `.auth-only` / `.auth-when-out`, gated off <html data-auth> by @izzy/auth-client's
-   applyAuthState(). A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
+/* `.auth-only` / `.auth-when-out`, gated off <html data-auth> by the applyAuthState() helper in
+   @izzy/auth-client. A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
 @import "@izzy/auth-client/styles/auth.css";
 @plugin "@tailwindcss/typography";
 
-@theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+/* Legacy `dark:` utilities follow the Dizzy theme toggle instead of the OS while pages are still
+   being migrated, so toggling daylight on a dark OS cannot leave light text on a cream page.
+   Remove once no `dark:` variant remains in the site (and drop the accent bridge below with it). */
+@custom-variant dark (&:where([data-theme="afterglow"], [data-theme="afterglow"] *));
 
-  --color-accent-50: #fdf2f8;
-  --color-accent-100: #fce7f3;
-  --color-accent-600: #db2777;
-  --color-accent-700: #be185d;
+@theme inline {
+  /* Bridge for the pinned @izzy/recipe-engine v1.x, whose popovers and badges read the old
+     --color-accent-* tokens. Goes away when the engine moves onto Dizzy tokens. */
+  --color-accent-50: var(--hotpink-soft);
+  --color-accent-100: var(--hotpink);
+  --color-accent-600: var(--hotpink);
+  --color-accent-700: var(--hotpink-strong);
+}
+
+html {
+  background: var(--surface);
 }
 
 body {
-  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 26px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* Every focusable thing gets the system's ring; components that draw their own override it. */
+:focus-visible {
+  outline: var(--stroke-2) solid var(--focus);
+  outline-offset: 2px;
 }

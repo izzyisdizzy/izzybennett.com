@@ -1,0 +1,51 @@
+---
+/**
+ * The daylight ↔ afterglow switch. Shows the theme you'd switch *to* (moon by day, sun by
+ * night — see .iz-theme-toggle in site.css), persists the choice, and reports state through
+ * aria-pressed ("afterglow is on"). ThemeBoot.astro must have stamped data-theme already.
+ */
+import tokens from '../dizzy/tokens.json';
+
+const surface = tokens.color.tokens.find((token) => token.name === 'surface')!.value;
+---
+
+<button
+  type="button"
+  class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle"
+  data-theme-toggle
+  data-surface-daylight={surface.daylight}
+  data-surface-afterglow={surface.afterglow}
+  aria-pressed="false"
+  aria-label="Switch to the afterglow theme"
+>
+  <span class="iz-theme-toggle__moon" aria-hidden="true">☾</span>
+  <span class="iz-theme-toggle__sun" aria-hidden="true">☀︎</span>
+</button>
+
+<script>
+  import { applyTheme, storeTheme, isTheme, type Theme } from '../scripts/theme';
+
+  const root = document.documentElement;
+
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
+    const surface: Record<Theme, string> = {
+      daylight: btn.dataset.surfaceDaylight ?? '',
+      afterglow: btn.dataset.surfaceAfterglow ?? '',
+    };
+
+    const sync = () => {
+      const dark = root.dataset.theme === 'afterglow';
+      btn.setAttribute('aria-pressed', String(dark));
+      btn.setAttribute('aria-label', dark ? 'Switch to the daylight theme' : 'Switch to the afterglow theme');
+    };
+    sync();
+
+    btn.addEventListener('click', () => {
+      const current = isTheme(root.dataset.theme) ? root.dataset.theme : 'daylight';
+      const next: Theme = current === 'afterglow' ? 'daylight' : 'afterglow';
+      applyTheme(next, surface);
+      storeTheme(next);
+      sync();
+    });
+  }
+</script>

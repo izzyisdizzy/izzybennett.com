@@ -1,0 +1,493 @@
+/* Dizzy — component stylesheet.
+   Loaded after tokens.css, so every value here comes from a token. Class names are
+   prefixed `dz-`; nothing here styles a bare element except the reduced-motion guard,
+   so the sheet can drop into the Tailwind build without fighting it. */
+
+:root {
+  /* Motion. The token file carries no motion family, so the durations live here and
+     nowhere else — change them once and every animation in the system follows. */
+  --dz-bounce-duration: 900ms;
+  --dz-bounce-stagger: 70ms;
+  --dz-wiggle-duration: 600ms;
+  --dz-press-shift: 3px;
+  --dz-ease-bounce: cubic-bezier(0.28, 0.84, 0.42, 1);
+}
+
+/* ---------------------------------------------------------------- keyframes */
+
+@keyframes dz-bounce {
+  0%, 60%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-0.28em) rotate(-3deg); }
+  40% { transform: translateY(-0.1em) rotate(2deg); }
+}
+
+@keyframes dz-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3.5deg); }
+  75% { transform: rotate(3.5deg); }
+}
+
+@keyframes dz-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes dz-twinkle {
+  0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.35; transform: scale(0.7) rotate(45deg); }
+}
+
+@keyframes dz-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* One switch for the whole system. Everything below animates only through these
+   keyframes, so this block genuinely stops all of it. */
+@media (prefers-reduced-motion: reduce) {
+  .dz-bouncy > span,
+  .dz-wiggle-hover:hover,
+  .dz-marquee__track,
+  .dz-sparkle,
+  .dz-pop {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------- motion */
+
+.dz-bouncy {
+  display: inline-block;
+  white-space: pre-wrap;
+}
+
+.dz-bouncy > span {
+  display: inline-block;
+  animation: dz-bounce var(--dz-bounce-duration) var(--dz-ease-bounce) infinite;
+  animation-delay: calc(var(--dz-i, 0) * var(--dz-bounce-stagger));
+  will-change: transform;
+}
+
+/* Bounce once when the element is hovered or focused instead of forever. Use this
+   for anything that sits next to reading copy. */
+.dz-bouncy--hover > span { animation-play-state: paused; }
+.dz-bouncy--hover:hover > span,
+.dz-bouncy--hover:focus-visible > span { animation-play-state: running; }
+
+.dz-wiggle-hover:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
+
+.dz-sparkle {
+  display: inline-block;
+  color: var(--aqua);
+  animation: dz-twinkle 1.6s ease-in-out infinite;
+}
+.dz-sparkle:nth-of-type(2n) { animation-delay: 0.4s; color: var(--sunshine); }
+.dz-sparkle:nth-of-type(3n) { animation-delay: 0.8s; color: var(--hotpink); }
+
+.dz-pop { animation: dz-pop 240ms var(--dz-ease-bounce) both; }
+
+/* -------------------------------------------------------------------- focus */
+
+/* The ring is drawn outside a gap filled with the element's own ground, so it never
+   lands on a bright fill — see the `focus` token's note. */
+.dz-btn:focus-visible,
+.dz-tag:focus-visible,
+.dz-nav__link:focus-visible,
+.dz-seg__btn:focus-visible,
+.dz-row:focus-visible,
+.dz-link:focus-visible {
+  outline: var(--stroke-2) solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------- button */
+
+.dz-btn {
+  --dz-btn-fill: var(--hotpink);
+  --dz-btn-fill-hover: var(--hotpink-strong);
+  --dz-btn-ink: var(--on-hotpink);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: var(--stroke-2) solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--dz-btn-fill);
+  color: var(--dz-btn-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-gel), var(--shadow-sticker);
+  transition: transform 120ms var(--dz-ease-bounce), box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.dz-btn:hover { background: var(--dz-btn-fill-hover); transform: translate(-1px, -1px); }
+
+.dz-btn:active {
+  transform: translate(var(--dz-press-shift), var(--dz-press-shift));
+  box-shadow: var(--shadow-gel), var(--shadow-pressed);
+}
+
+.dz-btn[disabled],
+.dz-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-sticker);
+}
+
+.dz-btn--orange {
+  --dz-btn-fill: var(--orange);
+  --dz-btn-fill-hover: var(--orange-strong);
+  --dz-btn-ink: var(--on-orange);
+}
+
+.dz-btn--cocoa {
+  --dz-btn-fill: var(--cocoa);
+  --dz-btn-fill-hover: var(--cocoa);
+  --dz-btn-ink: var(--on-cocoa);
+}
+
+/* No fill, no gloss — for the secondary action in a pair. */
+.dz-btn--ghost {
+  --dz-btn-fill: var(--surface-raised);
+  --dz-btn-fill-hover: var(--orange-soft);
+  --dz-btn-ink: var(--ink);
+  box-shadow: var(--shadow-sticker);
+}
+.dz-btn--ghost:active { box-shadow: var(--shadow-pressed); }
+
+.dz-btn--sm { padding: var(--space-2) var(--space-3); font-size: 13px; border-radius: var(--radius-sm); }
+.dz-btn--lg { padding: var(--space-4) var(--space-6); font-size: 18px; border-radius: var(--radius-lg); }
+
+/* ---------------------------------------------------------------------- tag */
+
+.dz-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 5px var(--space-3);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.dz-tag--pink { background: var(--hotpink-soft); }
+.dz-tag--orange { background: var(--orange-soft); }
+.dz-tag--aqua { background: var(--aqua-soft); }
+.dz-tag--sunshine { background: var(--sunshine); color: var(--on-sunshine); }
+
+.dz-tag--selected {
+  background: var(--hotpink);
+  color: var(--on-hotpink);
+  box-shadow: var(--shadow-pressed);
+}
+
+/* Status flavours always carry their word — see the leaf and cherry token notes. */
+.dz-tag--ready { background: var(--leaf); color: var(--on-leaf); }
+.dz-tag--stopped { background: var(--cherry); color: var(--on-cherry); }
+
+/* ------------------------------------------------------------------- window */
+
+.dz-window {
+  border: var(--stroke-2) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sticker-lg);
+  overflow: hidden;
+}
+
+.dz-window__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--stroke-2) solid var(--outline);
+  background: var(--cocoa-soft);
+  color: var(--cocoa);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.dz-window__lights { display: inline-flex; gap: 5px; flex: none; }
+
+.dz-window__light {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--hotpink);
+}
+.dz-window__light:nth-child(2) { background: var(--sunshine); }
+.dz-window__light:nth-child(3) { background: var(--aqua); }
+
+.dz-window__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dz-window__body { padding: var(--space-5); }
+
+.dz-window__media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-bottom: var(--stroke-2) solid var(--outline);
+}
+
+.dz-window__heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dz-window__text {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-muted);
+}
+
+/* ------------------------------------------------------------------ list row */
+
+.dz-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--stroke-hair) solid transparent;
+  border-bottom-color: var(--hairline);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 120ms ease, transform 120ms var(--dz-ease-bounce);
+}
+
+.dz-row:hover {
+  background: var(--orange-soft);
+  border-color: var(--outline);
+  transform: translateX(3px);
+}
+
+.dz-row__thumb {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  object-fit: cover;
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--cocoa-soft);
+}
+
+.dz-row__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.dz-row:hover .dz-row__title { color: var(--hotpink); }
+
+.dz-row__meta {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-muted);
+  text-transform: lowercase;
+}
+
+/* ---------------------------------------------------------------------- nav */
+
+.dz-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border: var(--stroke-2) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sticker);
+}
+
+.dz-nav__brand {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.dz-nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dz-nav__link {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  border: var(--stroke-1) solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.dz-nav__link:hover { background: var(--orange-soft); color: var(--orange-deep); }
+
+.dz-nav__link[aria-current] {
+  background: var(--hotpink);
+  border-color: var(--outline);
+  color: var(--on-hotpink);
+  font-weight: 700;
+  box-shadow: var(--shadow-pressed);
+}
+
+/* --------------------------------------------------------- segmented control */
+
+.dz-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  /* The bevelled well: light edge top-left, dark edge bottom-right. */
+  box-shadow: inset 2px 2px 0 var(--chrome-lo), inset -2px -2px 0 var(--chrome-hi);
+}
+
+.dz-seg__btn {
+  padding: 5px var(--space-3);
+  border: var(--stroke-1) solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dz-seg__btn[aria-pressed="true"] {
+  background: var(--surface-raised);
+  border-color: var(--outline);
+  color: var(--hotpink);
+  box-shadow: var(--shadow-gel);
+}
+
+/* ------------------------------------------------------------------ marquee */
+
+.dz-marquee {
+  display: flex;
+  overflow: hidden;
+  border: var(--stroke-2) solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--sunshine);
+  color: var(--on-sunshine);
+  box-shadow: var(--shadow-sticker);
+}
+
+.dz-marquee__track {
+  display: flex;
+  flex: none;
+  gap: var(--space-6);
+  padding: var(--space-2) 0;
+  padding-inline-end: var(--space-6);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 22px;
+  animation: dz-marquee var(--dz-marquee-duration, 24s) linear infinite;
+}
+
+.dz-marquee:hover .dz-marquee__track,
+.dz-marquee:focus-within .dz-marquee__track { animation-play-state: paused; }
+
+.dz-marquee--pink { background: var(--hotpink); color: var(--on-hotpink); }
+.dz-marquee--aqua { background: var(--aqua); color: var(--on-aqua); }
+
+/* ------------------------------------------------------------------- footer */
+
+.dz-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--stroke-2) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.dz-footer__links { display: flex; gap: var(--space-4); }
+
+.dz-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-xs);
+  background: var(--surface-raised);
+  color: var(--aqua-deep);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* --------------------------------------------------------------------- link */
+
+.dz-link {
+  color: var(--hotpink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.dz-link:hover { color: var(--hotpink-strong); }
+.dz-link:visited { color: var(--visited); }

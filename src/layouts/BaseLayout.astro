@@ -2,6 +2,11 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import ThemeBoot from '../components/ThemeBoot.astro';
+// Preload the two text faces so the display type doesn't swap in after first paint. The ?url
+// import gives the hashed path Vite emits for the same file the fontsource CSS references.
+import displayFont from '@fontsource-variable/baloo-2/files/baloo-2-latin-wght-normal.woff2?url';
+import bodyFont from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
 
 interface Props {
   title: string;
@@ -16,17 +21,28 @@ const { title, description = "Izzy Bennett's personal website — resume, recipe
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <ThemeBoot />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={displayFont} />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={bodyFont} />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <title>{title} · Izzy Bennett</title>
   </head>
-  <body class="flex min-h-screen flex-col bg-white text-neutral-800 dark:bg-neutral-950 dark:text-neutral-200">
+  <body class="flex min-h-screen flex-col">
     <Nav />
-    <main class="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
+    <main class="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
       <slot />
     </main>
     <Footer />
   </body>
 </html>
+
+<script>
+  // Dizzy's behaviour bundle: a classic IIFE that assigns window.Dizzy (typed by
+  // src/dizzy/index.d.ts). init() starts every [data-dz-bounce] and [data-dz-marquee] on the
+  // page; both are idempotent, so this is safe to run once per full page load.
+  import '../dizzy/bundle.js';
+  Dizzy.init();
+</script>

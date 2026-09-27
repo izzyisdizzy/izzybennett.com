@@ -1,0 +1,44 @@
+---
+/**
+ * Stamps <html data-theme="daylight|afterglow"> before first paint so there is no theme flash:
+ * the stored choice if there is one, otherwise the OS preference (and it keeps following the
+ * OS until the visitor picks). Also owns the theme-color meta, which the toggle updates.
+ *
+ * Goes in <head>. Inline on purpose — a module script would run after the stylesheet paints.
+ * Every layout that imports global.css must include it (BaseLayout, and the two standalone
+ * editors that skip BaseLayout).
+ */
+import tokens from '../dizzy/tokens.json';
+import { THEME_KEY } from '../scripts/theme';
+
+const surface = tokens.color.tokens.find((token) => token.name === 'surface')!.value;
+---
+
+<meta name="theme-color" content={surface.daylight} />
+<script is:inline define:vars={{ THEME_KEY, surface }}>
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function stored() {
+      try {
+        var value = localStorage.getItem(THEME_KEY);
+        return value === 'daylight' || value === 'afterglow' ? value : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function apply(theme) {
+      root.dataset.theme = theme;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', surface[theme]);
+    }
+
+    apply(stored() || (media.matches ? 'afterglow' : 'daylight'));
+    // No explicit choice yet: keep tracking the OS if it flips while the page is open.
+    media.addEventListener('change', function (event) {
+      if (!stored()) apply(event.matches ? 'afterglow' : 'daylight');
+    });
+  })();
+</script>
