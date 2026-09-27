@@ -17,64 +17,68 @@ const categories = categoryValues.filter((category) =>
   recipes.some((recipe) => recipe.data.category === category)
 );
 const filters = ['', ...categories];
+const countLabel = (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`;
 ---
 
 <BaseLayout title="Recipes" description="An archive of Izzy Bennett's recipes.">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Recipes</h1>
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="display-xl" data-dz-bounce="hover">Recipes</h1>
+      <p class="body-l mt-2 text-ink-muted">An archive of everything I cook.</p>
+    </div>
 
     <!-- Auth controls. Visibility is CSS-gated off <html data-auth> (see global.css + the session
          script below): `.auth-when-out` shows signed-out, `.auth-only` shows signed-in. Sign-in
          kicks off GitHub OAuth on the Worker and returns to /recipes/ (see the return_to param). -->
-    <div class="flex items-center gap-3">
-      <a href={`${RECIPE_API}/login?return_to=/recipes/`}
-        class="auth-when-out rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+    <div class="flex flex-wrap items-center gap-3">
+      <a href={`${RECIPE_API}/login?return_to=/recipes/`} class="auth-when-out dz-btn dz-btn--ghost dz-btn--sm">
         Sign in with GitHub
       </a>
-      <a href="/upload"
-        class="auth-only rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700">
-        + Add new recipe
-      </a>
-      <span class="auth-only text-sm text-green-600 dark:text-green-500">✓ Signed in</span>
-      <button type="button" id="signout-btn" data-api={RECIPE_API}
-        class="auth-only rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+      <span class="auth-only dz-tag dz-tag--ready">✓ Signed in</span>
+      <a href="/upload" class="auth-only dz-btn dz-btn--sm">+ Add recipe</a>
+      <button type="button" id="signout-btn" data-api={RECIPE_API} class="auth-only dz-btn dz-btn--ghost dz-btn--sm">
         Sign out
       </button>
     </div>
   </div>
-  <p class="mt-2 text-neutral-600 dark:text-neutral-400">An archive</p>
 
-  <div class="mt-6">
+  <div class="mt-8">
     <label for="recipe-search" class="sr-only">Search recipes</label>
     <input
       type="search"
       id="recipe-search"
       placeholder="Search recipes, ingredients, steps…"
       autocomplete="off"
-      class="w-full rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
+      class="iz-field"
     />
   </div>
 
-  <div id="recipe-filters" class="mt-4 flex flex-wrap gap-2">
-    {filters.map((filter) => (
-      <button
-        type="button"
-        data-filter={filter}
-        class="rounded-full border border-neutral-300 px-3 py-1 text-sm capitalize text-neutral-600 transition-colors hover:border-accent-600 hover:text-accent-600 aria-pressed:border-accent-600 aria-pressed:bg-accent-600 aria-pressed:text-white dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-accent-100 dark:hover:text-accent-100 dark:aria-pressed:border-accent-600 dark:aria-pressed:bg-accent-600 dark:aria-pressed:text-white"
-        aria-pressed={filter === '' ? 'true' : 'false'}
-      >
-        {filter || 'All'}
-      </button>
-    ))}
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <div id="recipe-filters" class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+      {filters.map((filter) => (
+        <button
+          type="button"
+          data-filter={filter}
+          class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
+          aria-pressed={filter === '' ? 'true' : 'false'}
+        >
+          {filter || 'All'}
+        </button>
+      ))}
+    </div>
+    <!-- Updated by the filter script; a status region, so the new count is announced politely. -->
+    <span id="recipe-count" class="dz-counter" role="status">{countLabel(recipes.length)}</span>
   </div>
 
-  <div id="recipe-grid" class="mt-6 flex flex-col border-t border-neutral-200 dark:border-neutral-800">
+  <div id="recipe-grid" class="mt-6 flex flex-col gap-1">
     {recipes.map((recipe) => <RecipeCard recipe={recipe} editHref={`/upload?edit=${recipe.id}`} />)}
   </div>
 
-  <p id="recipe-no-results" hidden class="mt-6 text-neutral-500 dark:text-neutral-500">
-    No recipes match your search.
-  </p>
+  <div id="recipe-no-results" class="iz-well mt-6 px-6 py-10 text-center" hidden>
+    <p class="h3"><span class="dz-sparkle" aria-hidden="true">✦</span> No recipes match</p>
+    <p class="body-s mt-2 text-ink-muted">Try a different word, or clear the filters.</p>
+    <button type="button" id="recipe-clear" class="dz-btn dz-btn--ghost dz-btn--sm mt-4">Clear filters</button>
+  </div>
 </BaseLayout>
 
 <script>
@@ -84,6 +88,8 @@ const filters = ['', ...categories];
   );
   const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-recipe-card]'));
   const noResults = document.getElementById('recipe-no-results');
+  const count = document.getElementById('recipe-count');
+  const clear = document.getElementById('recipe-clear');
 
   let activeCategory = '';
 
@@ -101,19 +107,27 @@ const filters = ['', ...categories];
     }
 
     if (noResults) noResults.hidden = visible !== 0;
+    if (count) count.textContent = `${visible} ${visible === 1 ? 'recipe' : 'recipes'}`;
+  }
+
+  function selectFilter(button: HTMLButtonElement) {
+    activeCategory = button.dataset.filter ?? '';
+    for (const other of filterButtons) {
+      const on = other === button;
+      other.setAttribute('aria-pressed', String(on));
+      other.classList.toggle('dz-tag--selected', on);
+    }
+    applyFilters();
   }
 
   input?.addEventListener('input', applyFilters);
+  for (const button of filterButtons) button.addEventListener('click', () => selectFilter(button));
 
-  for (const button of filterButtons) {
-    button.addEventListener('click', () => {
-      activeCategory = button.dataset.filter ?? '';
-      for (const other of filterButtons) {
-        other.setAttribute('aria-pressed', other === button ? 'true' : 'false');
-      }
-      applyFilters();
-    });
-  }
+  clear?.addEventListener('click', () => {
+    if (input) input.value = '';
+    selectFilter(filterButtons[0]);
+    input?.focus();
+  });
 </script>
 
 <script>

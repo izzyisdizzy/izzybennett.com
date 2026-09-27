@@ -17,8 +17,8 @@
 @import "../dizzy/bundle.css" layer(components);
 @import "./site.css" layer(components);
 
-/* Recipe page + card styles (ingredient popovers, inline amounts), and the @source lines that
-   register the engine's components with Tailwind — node_modules is never scanned otherwise. */
+/* Recipe page + index row styles (v2: on Dizzy tokens and dz- classes), popovers, inline amounts,
+   the upload typeahead, and the @source lines that register the engine with Tailwind. */
 @import "@izzy/recipe-engine/styles/recipes.css";
 /* `.auth-only` / `.auth-when-out`, gated off <html data-auth> by the applyAuthState() helper in
    @izzy/auth-client. A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
@@ -41,8 +41,8 @@
 }
 
 @theme inline {
-  /* Bridge for the pinned @izzy/recipe-engine v1.x, whose popovers and badges read the old
-     --color-accent-* tokens. Goes away when the engine moves onto Dizzy tokens. */
+  /* Bridge for the not-yet-migrated /upload and /update-menu, whose class strings still use the
+     old accent-* palette. Goes away with their restyle (and the dark variant above with it). */
   --color-accent-50: var(--hotpink-soft);
   --color-accent-100: var(--hotpink);
   --color-accent-600: var(--hotpink);
@@ -75,42 +75,4 @@
     outline: var(--stroke-2) solid var(--focus);
     outline-offset: 2px;
   }
-}
-
-/* The pinned @izzy/recipe-engine v1.x colours its popovers and the /upload typeahead under
-   @media (prefers-color-scheme: dark), which the theme toggle cannot reach. These rules key the
-   same selectors on data-theme instead (ThemeBoot always stamps it), on Dizzy tokens, and out-
-   specify the engine's own rules. Goes away with the engine v2 restyle. */
-[data-theme="daylight"] .ing-ref-btn,
-[data-theme="afterglow"] .ing-ref-btn {
-  border-bottom-color: var(--hotpink);
-}
-[data-theme="daylight"] .ing-ref-btn:hover,
-[data-theme="daylight"] .ing-ref-btn:focus-visible,
-[data-theme="afterglow"] .ing-ref-btn:hover,
-[data-theme="afterglow"] .ing-ref-btn:focus-visible {
-  color: var(--hotpink-strong);
-}
-[data-theme="daylight"] .ing-pop,
-[data-theme="afterglow"] .ing-pop,
-[data-theme="daylight"] .ing-ta-list,
-[data-theme="afterglow"] .ing-ta-list {
-  border-color: var(--outline);
-  background: var(--surface-raised);
-  color: var(--ink);
-  box-shadow: var(--shadow-soft);
-}
-[data-theme="daylight"] .ing-pop-group,
-[data-theme="afterglow"] .ing-pop-group,
-[data-theme="daylight"] .ing-ta-grams,
-[data-theme="afterglow"] .ing-ta-grams,
-[data-theme="daylight"] .ing-ta-ghost,
-[data-theme="afterglow"] .ing-ta-ghost {
-  color: var(--ink-muted);
-}
-[data-theme="daylight"] .ing-ta-opt:hover,
-[data-theme="daylight"] .ing-ta-opt[aria-selected="true"],
-[data-theme="afterglow"] .ing-ta-opt:hover,
-[data-theme="afterglow"] .ing-ta-opt[aria-selected="true"] {
-  background: var(--hotpink-soft);
 }
