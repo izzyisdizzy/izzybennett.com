@@ -28,14 +28,12 @@ const parsed = parseMenu(page?.body ?? '');
 const menuTitle = page?.data.title ?? "Izzy's Cafe";
 const initialItems = Object.fromEntries(SECTIONS.map((h) => [h, sectionItems(parsed, h)]));
 
-// Shared class strings, mirrored from /upload so the two editors look like one system.
-const rowInput =
-  'min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
-const sectionHeading = 'text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-500';
-const addBtn =
-  'rounded-md px-2 py-1 text-sm font-medium text-accent-600 hover:bg-accent-50 dark:text-accent-100 dark:hover:bg-neutral-900';
-const removeBtn =
-  'shrink-0 rounded-lg border border-neutral-300 px-3 text-neutral-400 hover:border-red-400 hover:text-red-500 dark:border-neutral-700';
+// Shared class strings, mirrored from /upload so the two editors look like one system. Colour,
+// type and shape come from Dizzy (site.css / bundle.css); the Tailwind utilities are layout only.
+const rowInput = 'iz-field min-w-0 flex-1';
+const sectionHeading = 'label';
+const addBtn = 'dz-btn dz-btn--ghost dz-btn--sm';
+const removeBtn = 'dz-btn dz-btn--ghost dz-btn--sm shrink-0';
 ---
 
 <!doctype html>
@@ -52,21 +50,19 @@ const removeBtn =
   <body class="min-h-screen">
     <main class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <header class="flex items-baseline justify-between gap-3">
-        <h1 class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Update the menu</h1>
-        <a href="/order/" class="text-sm text-accent-600 hover:underline dark:text-accent-100">← Order</a>
+        <h1 class="display-l">Update the menu</h1>
+        <a href="/order/" class="dz-link body-s shrink-0">← Order</a>
       </header>
-      <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-500">Tweak the items, hit save, and it goes live in a minute or two — on the order form, the JSON feed, and the sign.</p>
+      <p class="body-s mt-2 text-ink-muted">Tweak the items, hit save, and it goes live in a minute or two — on the order form, the JSON feed, and the sign.</p>
 
       <!-- Auth bar. Sign-in kicks off GitHub OAuth on the Worker; on return the page holds
            only an opaque session id (never a GitHub token). -->
-      <div class="mt-4 flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900">
-        <span id="auth-state" class="text-sm text-neutral-500 dark:text-neutral-400">Checking sign-in…</span>
-        <a id="signin-btn" href={`${RECIPE_API}/login?return_to=/update-menu`}
-          class="ml-auto hidden rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+      <div class="iz-card mt-5 flex items-center gap-3 p-3">
+        <span id="auth-state" class="dz-tag">Checking sign-in…</span>
+        <a id="signin-btn" href={`${RECIPE_API}/login?return_to=/update-menu`} class="dz-btn dz-btn--sm ml-auto hidden">
           Sign in with GitHub
         </a>
-        <button type="button" id="signout-btn"
-          class="ml-auto hidden rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+        <button type="button" id="signout-btn" class="dz-btn dz-btn--ghost dz-btn--sm ml-auto hidden">
           Sign out
         </button>
       </div>
@@ -83,20 +79,19 @@ const removeBtn =
         ))}
 
         <!-- Preview -->
-        <details id="preview-details" class="rounded-lg border border-neutral-200 dark:border-neutral-800">
-          <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">Preview markdown</summary>
-          <div class="border-t border-neutral-200 p-3 dark:border-neutral-800">
-            <pre id="preview" class="max-h-80 overflow-auto whitespace-pre-wrap rounded bg-neutral-50 p-3 text-xs text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"></pre>
+        <details id="preview-details" class="iz-card">
+          <summary class="label cursor-pointer px-3 py-3">Preview markdown</summary>
+          <div class="border-t border-hairline p-3">
+            <pre id="preview" class="iz-well mono-s max-h-80 overflow-auto whitespace-pre-wrap p-3"></pre>
           </div>
         </details>
 
         <!-- Actions -->
-        <div class="sticky bottom-0 -mx-4 border-t border-neutral-200 bg-white/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 dark:border-neutral-800 dark:bg-neutral-950/90">
-          <button type="submit" id="save"
-            class="w-full rounded-lg bg-accent-600 px-4 py-3 text-center font-semibold text-white transition-colors hover:bg-accent-700 disabled:opacity-60">
+        <div class="sticky bottom-0 -mx-4 border-t border-hairline bg-surface px-4 py-3 sm:-mx-6 sm:px-6">
+          <button type="submit" id="save" class="dz-btn dz-btn--lg w-full justify-center disabled:opacity-60">
             Save menu 🚀
           </button>
-          <p id="status" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+          <p id="status" class="caption mt-2" role="status" aria-live="polite"></p>
         </div>
       </form>
     </main>
@@ -239,8 +234,7 @@ const removeBtn =
       function renderAuthState() {
         const signed = !!currentSession();
         authState.textContent = signed ? '✓ Signed in with GitHub' : 'Not signed in';
-        authState.className =
-          'text-sm ' + (signed ? 'text-green-600 dark:text-green-500' : 'text-neutral-500 dark:text-neutral-400');
+        authState.className = signed ? 'dz-tag dz-tag--ready' : 'dz-tag';
         signinBtn.classList.toggle('hidden', signed);
         signoutBtn.classList.toggle('hidden', !signed);
       }
@@ -262,10 +256,8 @@ const removeBtn =
       function setStatus(msg, kind = '') {
         statusEl.textContent = msg;
         statusEl.className =
-          'mt-2 text-sm ' +
-          (kind === 'ok' ? 'text-green-600 dark:text-green-500'
-            : kind === 'err' ? 'text-red-600 dark:text-red-400'
-            : 'text-neutral-500 dark:text-neutral-400');
+          'caption mt-2 ' +
+          (kind === 'ok' ? 'body-strong text-leaf' : kind === 'err' ? 'body-strong text-cherry' : 'text-ink-muted');
       }
 
       // ---- API (via the Worker) -------------------------------------------

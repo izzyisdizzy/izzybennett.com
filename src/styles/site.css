@@ -68,6 +68,10 @@
 }
 .iz-field::placeholder { color: var(--ink-muted); opacity: 0.7; }
 .iz-field:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+.iz-field[aria-invalid="true"] { border-color: var(--cherry); box-shadow: 0 0 0 1px var(--cherry); }
+
+/* A plain visible checkbox (the uploader's Draft toggle), tinted to the brand pink. */
+.iz-check { width: 16px; height: 16px; accent-color: var(--hotpink); }
 
 /* ---------------------------------------------------------- option picker */
 /* A window-shaped radio/checkbox for the order form. The real <input> sits inside the label
