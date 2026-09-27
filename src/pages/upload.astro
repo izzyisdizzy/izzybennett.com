@@ -7,7 +7,7 @@
 // GitHub Pages deploy. Backend: github.com/izzyisdizzy/auth-worker.
 import '../styles/global.css';
 import ThemeBoot from '../components/ThemeBoot.astro';
-import { categoryValues } from '@izzy/recipe-engine/schema';
+import { categoryValues, INGREDIENT_KEY } from '@izzy/recipe-engine/schema';
 // Unit tables shared with the recipe pages. UNIT_OPTIONS fills the item unit <select>; the
 // numeric tables are handed to the inline script (via define:vars) so its grams math uses the
 // exact same factors — see the compact re-implementations of normUnit/parseQty there.
@@ -21,31 +21,34 @@ const RECIPE_API = import.meta.env.PUBLIC_RECIPE_API ?? 'http://localhost:8787';
 // Canonical site origin (from astro.config `site`), used to build the "it's live at…" link.
 const SITE_ORIGIN = import.meta.env.SITE ?? 'https://izzybennett.com';
 
-// Shared class strings, hoisted so a styling tweak happens in one place instead of ~14.
-const labelCls = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300';
-const fieldInput =
-  'mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
-const rowInput =
-  'min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
+// The engine's ingredient-key pattern (lowercase words joined by hyphens), as source text:
+// define:vars serialises data as JSON, so a RegExp has to cross as a string and be rebuilt.
+const INGREDIENT_KEY_SOURCE = INGREDIENT_KEY.source;
+
+// Shared class strings, hoisted so a styling tweak happens in one place instead of ~14. Colour,
+// type and shape come from Dizzy (.label / .iz-field in site.css, dz-* in bundle.css); the
+// Tailwind utilities here are layout only.
+const labelCls = 'label mb-1 block';
+// "(optional)" / "min" asides inside a .label or section heading — undo its uppercase tracking.
+const hint = 'font-normal normal-case tracking-normal';
+const fieldInput = 'iz-field';
+const rowInput = 'iz-field min-w-0 flex-1';
 // The ingredient row's two flexible fields, name and detail. They use grow + an explicit basis
 // rather than rowInput's `flex-1`, because the `flex` shorthand resets flex-basis to 0 — which
 // would let the name field collapse to a few pixels instead of wrapping the row on a phone.
-// Its padding + border (px-3 py-2, 1px) are mirrored by .ing-ta-ghost in
-// @izzy/recipe-engine/styles/recipes.css — change one and the typeahead's ghost text misaligns.
-const itemInput =
-  'min-w-0 grow rounded-lg border border-neutral-300 bg-white px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
-// Narrow, non-flexing variant of rowInput for the qty box and unit <select> in an ingredient row.
-const cellInput =
-  'rounded-lg border border-neutral-300 bg-white px-2 py-2 text-neutral-900 placeholder:text-neutral-400 focus:border-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100';
-const sectionHeading = 'text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-500';
-const addBtn =
-  'rounded-md px-2 py-1 text-sm font-medium text-accent-600 hover:bg-accent-50 dark:text-accent-100 dark:hover:bg-neutral-900';
-const removeBtn =
-  'shrink-0 rounded-lg border border-neutral-300 px-3 text-neutral-400 hover:border-red-400 hover:text-red-500 dark:border-neutral-700';
+// The name field's padding + border come from .iz-field; the typeahead wrapper in tpl-item
+// hands the same values to .ing-ta-ghost (--ing-ta-ghost-padding / --ing-ta-ghost-border) —
+// change one without the other and the ghost text misaligns.
+const itemInput = 'iz-field min-w-0 grow';
+// Narrow, non-flexing variant for the qty box and unit <select> in an ingredient row. Tighter
+// side padding than .iz-field so "2 ¼" and "tbsp" fit the fixed widths.
+const cellInput = 'iz-field px-2';
+const sectionHeading = 'label';
+const addBtn = 'dz-btn dz-btn--ghost dz-btn--sm';
+const removeBtn = 'dz-btn dz-btn--ghost dz-btn--sm shrink-0';
 // Drag grip for reordering rows/groups. Only the grip is draggable, so the text inputs it
 // sits next to keep normal caret/selection behaviour (native DnD, no library).
-const dragHandle =
-  'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg leading-none text-neutral-300 hover:text-neutral-500 dark:text-neutral-600 dark:hover:text-neutral-400';
+const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg leading-none text-ink-muted hover:text-ink';
 ---
 
 <!doctype html>
@@ -62,28 +65,26 @@ const dragHandle =
   <body class="min-h-screen">
     <main class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <header class="flex items-baseline justify-between gap-3">
-        <h1 id="page-title" class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Add a recipe</h1>
-        <a href="/recipes/" class="text-sm text-accent-600 hover:underline dark:text-accent-100">← Recipes</a>
+        <h1 id="page-title" class="display-l">Add a recipe</h1>
+        <a href="/recipes/" class="dz-link body-s shrink-0">← Recipes</a>
       </header>
-      <p id="page-intro" class="mt-1 text-sm text-neutral-500 dark:text-neutral-500">Fill it in, hit publish, and it goes live in a minute or two.</p>
+      <p id="page-intro" class="body-s mt-2 text-ink-muted">Fill it in, hit publish, and it goes live in a minute or two.</p>
 
       <!-- Auth bar. Sign-in kicks off GitHub OAuth on the Worker; on return the page holds
            only an opaque session id (never a GitHub token). -->
-      <div class="mt-4 flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-900">
-        <span id="auth-state" class="text-sm text-neutral-500 dark:text-neutral-400">Checking sign-in…</span>
-        <a id="signin-btn" href={`${RECIPE_API}/login`}
-          class="ml-auto hidden rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+      <div class="iz-card mt-5 flex items-center gap-3 p-3">
+        <span id="auth-state" class="dz-tag">Checking sign-in…</span>
+        <a id="signin-btn" href={`${RECIPE_API}/login`} class="dz-btn dz-btn--sm ml-auto hidden">
           Sign in with GitHub
         </a>
-        <button type="button" id="signout-btn"
-          class="ml-auto hidden rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+        <button type="button" id="signout-btn" class="dz-btn dz-btn--ghost dz-btn--sm ml-auto hidden">
           Sign out
         </button>
       </div>
 
       <!-- Pick an existing recipe to edit it, or keep "New recipe" to add a fresh one.
            Populated from /recipes.json on load; selecting one switches the form to edit mode. -->
-      <div class="mt-4">
+      <div class="mt-5">
         <label for="recipe-picker" class={labelCls}>Load existing recipe</label>
         <select id="recipe-picker" class={fieldInput}>
           <option value="">➕ New recipe</option>
@@ -94,48 +95,56 @@ const dragHandle =
         <!-- Basics -->
         <section class="space-y-4">
           <div>
-            <label for="title" class={labelCls}>Title <span class="text-accent-600">*</span></label>
+            <label for="title" class={labelCls}>Title <span class="text-hotpink">*</span></label>
             <input id="title" name="title" type="text" required autocomplete="off" enterkeyhint="next" class={fieldInput} />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="category" class={labelCls}>Category <span class="text-accent-600">*</span></label>
+              <label for="category" class={labelCls}>Category <span class="text-hotpink">*</span></label>
               <select id="category" name="category" class={`${fieldInput} capitalize`}>
                 {categoryValues.map((c) => <option value={c}>{c}</option>)}
               </select>
             </div>
-            <div class="flex items-end pb-1">
-              <label class="inline-flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                <input id="draft" name="draft" type="checkbox"
-                  class="h-4 w-4 rounded border-neutral-300 text-accent-600 focus:ring-accent-600/30 dark:border-neutral-700 dark:bg-neutral-900" />
+            <div class="flex items-end pb-3">
+              <label class="body-s inline-flex items-center gap-2">
+                <input id="draft" name="draft" type="checkbox" class="iz-check" />
                 Draft (hidden)
               </label>
             </div>
           </div>
 
           <div>
-            <label for="description" class={labelCls}>Description <span class="text-neutral-400">(optional)</span></label>
+            <label for="description" class={labelCls}>Description <span class={hint}>(optional)</span></label>
             <input id="description" name="description" type="text" autocomplete="off" class={fieldInput} />
           </div>
 
           <div>
-            <label for="keywords" class={labelCls}>Keywords <span class="text-neutral-400">(comma-separated)</span></label>
+            <label for="keywords" class={labelCls}>Keywords <span class={hint}>(comma-separated)</span></label>
             <input id="keywords" name="keywords" type="text" autocomplete="off" placeholder="e.g. pie, apple, baking" class={fieldInput} />
           </div>
 
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div>
-              <label for="prepTime" class={labelCls}>Prep <span class="text-neutral-400">min</span></label>
+              <label for="prepTime" class={labelCls}>Prep <span class={hint}>min</span></label>
               <input id="prepTime" name="prepTime" type="number" min="0" step="1" inputmode="numeric" class={fieldInput} />
             </div>
             <div>
-              <label for="cookTime" class={labelCls}>Cook <span class="text-neutral-400">min</span></label>
+              <label for="cookTime" class={labelCls}>Cook <span class={hint}>min</span></label>
               <input id="cookTime" name="cookTime" type="number" min="0" step="1" inputmode="numeric" class={fieldInput} />
             </div>
             <div>
               <label for="servings" class={labelCls}>Servings</label>
               <input id="servings" name="servings" type="number" min="1" step="1" inputmode="numeric" class={fieldInput} />
+            </div>
+            <!-- Freeform display strings for the recipe's meta strip (engine v2 `yield` / `oven`). -->
+            <div>
+              <label for="yield" class={labelCls}>Yield</label>
+              <input id="yield" name="yield" type="text" autocomplete="off" placeholder="8 scones" class={fieldInput} />
+            </div>
+            <div>
+              <label for="oven" class={labelCls}>Oven</label>
+              <input id="oven" name="oven" type="text" autocomplete="off" placeholder="400°F / 200°C" class={fieldInput} />
             </div>
           </div>
         </section>
@@ -143,7 +152,7 @@ const dragHandle =
         <!-- Tools -->
         <section>
           <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Tools <span class="normal-case font-normal text-neutral-400">(optional)</span></h2>
+            <h2 class={sectionHeading}>Tools <span class={hint}>(optional)</span></h2>
             <button type="button" data-action="add-tool" class={addBtn}>+ Add</button>
           </div>
           <div id="tools-list" class="mt-2 space-y-2"></div>
@@ -152,21 +161,23 @@ const dragHandle =
         <!-- Ingredients -->
         <section>
           <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Ingredients <span class="text-accent-600">*</span></h2>
+            <h2 class={sectionHeading}>Ingredients <span class="text-hotpink">*</span></h2>
             <button type="button" data-action="add-group" class={addBtn}>+ Group</button>
           </div>
-          <p class="mt-1 text-xs text-neutral-400">Group names are optional — leave blank for a plain list.</p>
+          <!-- One line on purpose: HTML compression drops whitespace at a line break next to a tag. -->
+          <p class="caption mt-1">Group names are optional — leave blank for a plain list. A <b>key</b> is the handle steps use to point at an ingredient, as <code>[[key]]</code>; leave it blank to use the name. <b>Grams</b> overrides the conversion for amounts the density list can't do ("2 medium apples").</p>
           <div id="ingredients-list" class="mt-2 space-y-4"></div>
         </section>
 
         <!-- Steps -->
         <section>
           <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Steps <span class="text-accent-600">*</span></h2>
+            <h2 class={sectionHeading}>Steps <span class="text-hotpink">*</span></h2>
             <button type="button" data-action="add-step-group" class={addBtn}>+ Group</button>
           </div>
-          <p class="mt-1 text-xs text-neutral-400">
+          <p class="caption mt-1">
             Group names are optional — leave blank for a plain list. Markdown supported in steps — **bold**, *italic*, `code`, [links](url).
+            Point at an ingredient with <code>[[key]]</code> or <code>[[key|the words to show]]</code>.
           </p>
           <div id="steps-list" class="mt-2 space-y-4"></div>
         </section>
@@ -174,32 +185,30 @@ const dragHandle =
         <!-- Notes -->
         <section>
           <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Notes <span class="normal-case font-normal text-neutral-400">(optional)</span></h2>
+            <h2 class={sectionHeading}>Notes <span class={hint}>(optional)</span></h2>
             <button type="button" data-action="add-note" class={addBtn}>+ Add</button>
           </div>
           <div id="notes-list" class="mt-2 space-y-2"></div>
         </section>
 
         <!-- Preview -->
-        <details id="preview-details" class="rounded-lg border border-neutral-200 dark:border-neutral-800">
-          <summary class="cursor-pointer px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">Preview markdown</summary>
-          <div class="border-t border-neutral-200 p-3 dark:border-neutral-800">
-            <pre id="preview" class="max-h-80 overflow-auto whitespace-pre-wrap rounded bg-neutral-50 p-3 text-xs text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">Fill in the form to see the generated file.</pre>
-            <button type="button" id="copy-md" class={`mt-2 ${addBtn}`}>Copy markdown</button>
+        <details id="preview-details" class="iz-card">
+          <summary class="label cursor-pointer px-3 py-3">Preview markdown</summary>
+          <div class="border-t border-hairline p-3">
+            <pre id="preview" class="iz-well mono-s max-h-80 overflow-auto whitespace-pre-wrap p-3">Fill in the form to see the generated file.</pre>
+            <button type="button" id="copy-md" class={`mt-3 ${addBtn}`}>Copy markdown</button>
           </div>
         </details>
 
         <!-- Actions -->
-        <div class="sticky bottom-0 -mx-4 border-t border-neutral-200 bg-white/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 dark:border-neutral-800 dark:bg-neutral-950/90">
-          <button type="submit" id="publish"
-            class="w-full rounded-lg bg-accent-600 px-4 py-3 text-center font-semibold text-white transition-colors hover:bg-accent-700 disabled:opacity-60">
+        <div class="sticky bottom-0 -mx-4 border-t border-hairline bg-surface px-4 py-3 sm:-mx-6 sm:px-6">
+          <button type="submit" id="publish" class="dz-btn dz-btn--lg w-full justify-center disabled:opacity-60">
             Publish 🚀
           </button>
-          <button type="button" id="delete-recipe"
-            class="mt-2 hidden w-full rounded-lg border border-red-300 px-4 py-2.5 text-center font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40">
+          <button type="button" id="delete-recipe" class="dz-btn dz-btn--ghost mt-2 hidden w-full justify-center text-cherry disabled:opacity-60">
             Delete recipe
           </button>
-          <p id="status" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+          <p id="status" class="caption mt-2" role="status" aria-live="polite"></p>
         </div>
       </form>
     </main>
@@ -223,10 +232,10 @@ const dragHandle =
     </template>
 
     <template id="tpl-group">
-      <div data-unit="group" class="rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
+      <div data-unit="group" class="iz-card p-3">
         <div class="flex items-center gap-2">
           <span data-drag-handle draggable="true" aria-label="Drag to reorder group" class={dragHandle}>⠿</span>
-          <input type="text" data-field="group" placeholder="Group name (optional), e.g. Pie Crust" autocomplete="off" class={`${rowInput} text-sm font-medium`} />
+          <input type="text" data-field="group" placeholder="Group name (optional), e.g. Pie Crust" autocomplete="off" class={`${rowInput} body-strong`} />
           <button type="button" data-action="remove" aria-label="Remove group" class={removeBtn}>✕</button>
         </div>
         <div class="items-list mt-2 space-y-2"></div>
@@ -234,12 +243,13 @@ const dragHandle =
       </div>
     </template>
 
-    <!-- One ingredient: qty + unit + name + detail, with a grams prompt that appears when the
-         unit is a volume the ingredient's density isn't known for yet (see updateItemRow).
+    <!-- One ingredient: qty + unit + name + detail, then an always-visible line for the
+         optional key and grams override, then a grams prompt that appears when the unit is a
+         volume the ingredient's density isn't known for yet (see updateItemRow).
          `detail` is the prep note ("softened") and is kept out of `name` so `name` stays a
          clean density-lookup key. -->
     <template id="tpl-item">
-      <div data-unit="item-row" class="space-y-1.5">
+      <div data-unit="item-row" class="space-y-2">
         <div class="flex flex-wrap items-center gap-2">
           <span data-drag-handle draggable="true" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
           <input type="text" data-field="item-qty" inputmode="text" placeholder="2 ¼" autocomplete="off" aria-label="Quantity" class={`${cellInput} w-16 shrink-0 text-center`} />
@@ -249,32 +259,48 @@ const dragHandle =
           </select>
           <!-- The name field autocompletes over the ingredients whose densities are already
                known (@izzy/recipe-engine/ingredient-typeahead). The wrapper takes the row's
-               flex sizing so the field itself can host the overlays; .ing-ta-ghost in the
-               engine's styles/recipes.css must keep itemInput's padding and border or the
-               ghost text drifts out of line with what's typed. -->
-          <div data-typeahead class="relative flex min-w-0 grow basis-40">
+               flex sizing so the field itself can host the overlays. .ing-ta-ghost (engine
+               styles/recipes.css) reads its padding and border from the two variables set
+               here, which must equal .iz-field's (site.css) or the ghost text drifts out of
+               line with what's typed. -->
+          <div data-typeahead class="relative flex min-w-0 grow basis-32"
+            style="--ing-ta-ghost-padding: var(--space-3) var(--space-4); --ing-ta-ghost-border: var(--stroke-1);">
             <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="both" aria-label="Ingredient" class={`${itemInput} w-full`} />
             <span data-ta-ghost aria-hidden="true" hidden class="ing-ta-ghost"><span data-ta-typed></span><span data-ta-rest></span></span>
             <ul data-ta-list role="listbox" hidden class="ing-ta-list"></ul>
           </div>
-          <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${itemInput} basis-32`} />
+          <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${itemInput} basis-24`} />
           <button type="button" data-action="remove" aria-label="Remove" class={removeBtn}>✕</button>
         </div>
-        <div data-grams-prompt class="ml-8 hidden rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+        <!-- Engine-v2 item fields. `key` is the handle steps reference as [[key]] (its
+             placeholder shows the default, the slug of the name); `grams` overrides the
+             density conversion for this item and is written to the frontmatter — unlike the
+             prompt below, which grows the shared density list and never touches the file. -->
+        <div class="ml-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <label class="flex min-w-0 grow basis-48 items-center gap-2">
+            <span class="label shrink-0">Key</span>
+            <input type="text" data-field="item-key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Key (optional)" class={`${itemInput} mono`} />
+          </label>
+          <label class="flex items-center gap-2">
+            <span class="label shrink-0">Grams</span>
+            <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams-override" placeholder="auto" aria-label="Grams override (optional)" class={`${cellInput} w-24`} />
+          </label>
+        </div>
+        <div data-grams-prompt class="caption ml-6 hidden rounded-sm bg-orange-soft px-2.5 py-1.5 text-ink">
           <label class="flex flex-wrap items-center gap-1.5">
             <span>New ingredient — how many grams is <span data-grams-qty></span> <span data-grams-unit></span> of “<span data-grams-name></span>”?</span>
             <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams" placeholder="grams" aria-label="Grams" class={`${cellInput} w-24`} />
           </label>
-          <span class="mt-0.5 block text-amber-600 dark:text-amber-300/70">Saved to the shared list so future recipes convert it automatically.</span>
+          <span class="mt-0.5 block text-ink-muted">Saved to the shared list so future recipes convert it automatically.</span>
         </div>
       </div>
     </template>
 
     <template id="tpl-step-group">
-      <div data-unit="step-group" class="rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
+      <div data-unit="step-group" class="iz-card p-3">
         <div class="flex items-center gap-2">
           <span data-drag-handle draggable="true" aria-label="Drag to reorder group" class={dragHandle}>⠿</span>
-          <input type="text" data-field="step-group" placeholder="Group name (optional), e.g. Make the crust" autocomplete="off" class={`${rowInput} text-sm font-medium`} />
+          <input type="text" data-field="step-group" placeholder="Group name (optional), e.g. Make the crust" autocomplete="off" class={`${rowInput} body-strong`} />
           <button type="button" data-action="remove" aria-label="Remove group" class={removeBtn}>✕</button>
         </div>
         <div class="steps-items mt-2 space-y-2"></div>
@@ -282,7 +308,7 @@ const dragHandle =
       </div>
     </template>
 
-    <script define:vars={{ RECIPE_API, SESSION_KEY, SITE_ORIGIN, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS }}>
+    <script define:vars={{ RECIPE_API, SESSION_KEY, SITE_ORIGIN, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS, INGREDIENT_KEY_SOURCE }}>
       // ---- Config ---------------------------------------------------------
       // RECIPE_API and SESSION_KEY (from @izzy/auth-client) are injected from the frontmatter above.
       // The browser only ever holds the opaque session id under SESSION_KEY — never a GitHub token.
@@ -314,6 +340,26 @@ const dragHandle =
       // 120 g/cup instead of asking for its real ~96.
       const densityKey = (name) =>
         String(name ?? '').toLowerCase().replace(/\([^)]*\)/g, ' ').split(',')[0].replace(/\s+/g, ' ').trim();
+      // ---- Ingredient keys + [[key]] step references -----------------------
+      // Compact mirrors of the engine's ingredientKey and REF_SYNTAX (@izzy/recipe-engine
+      // src/ingredients.ts), so /upload can refuse a reference the site build would fail on.
+      // The key pattern itself crosses from the schema via define:vars, so it can't drift.
+      const INGREDIENT_KEY_RE = new RegExp(INGREDIENT_KEY_SOURCE);
+      // An explicit key wins; otherwise the slug of the name, with parentheticals, a trailing
+      // comma-note and accents dropped ("Crème fraîche (full fat)" → "creme-fraiche").
+      const ingredientKeyOf = (item) =>
+        item.key ||
+        String(item.name ?? '')
+          .replace(/\([^)]*\)/g, ' ')
+          .split(',')[0]
+          .normalize('NFKD')
+          .replace(/[̀-ͯ]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      // [[key]] / [[key|display text]]; the key part excludes | and ].
+      const REF_SYNTAX = /\[\[\s*([^\]|]+?)\s*(?:\|\s*([^\]]+?)\s*)?\]\]/g;
+
       function parseQty(qty) {
         if (qty == null) return null;
         const s = String(qty).trim();
@@ -393,7 +439,8 @@ const dragHandle =
 
       // The item builders take an optional value so add mode (no value) and edit-mode
       // rehydration (value from data) share the one call — see fillGroups. `value` is a
-      // { name, qty?, unit?, detail? } object (a bare string is tolerated as the name, defensively).
+      // { name, qty?, unit?, detail?, key?, grams? } object (a bare string is tolerated as the
+      // name, defensively).
       function addItem(itemsList, value) {
         const row = makeItemRow();
         itemsList.appendChild(row);
@@ -404,17 +451,13 @@ const dragHandle =
             set('item-name', value.name);
             set('item-qty', value.qty);
             set('item-detail', value.detail);
+            set('item-key', value.key);
+            if (typeof value.grams === 'number') set('item-grams-override', value.grams);
             setUnit(row, value.unit);
-            // Engine-v2 item fields the form has no inputs for yet. They ride on the row itself
-            // (so they follow it through drag-reorder) and are written back on save — dropping
-            // a `key` would orphan the step's [[key]] reference and fail the site build.
-            const keep = {};
-            if (value.key) keep.key = value.key;
-            if (typeof value.grams === 'number') keep.grams = value.grams;
-            if (Object.keys(keep).length) row.dataset.keep = JSON.stringify(keep);
           }
-          updateItemRow(row);
         }
+        // Always, not just on rehydration: it also stamps the Key field's default placeholder.
+        updateItemRow(row);
         return row;
       }
 
@@ -430,19 +473,26 @@ const dragHandle =
 
       // Show/hide a row's grams prompt and, when grams are entered, capture the derived ratio.
       // "Needs grams" = a volume unit with a parseable qty and a name the shared list doesn't
-      // know yet. Weight units convert without a ratio; count/no-unit items never convert.
+      // know yet, and no grams override — the recipe page uses the override for this item, so
+      // a ratio would be noise. Weight units convert without a ratio; count/no-unit items never
+      // convert. Also keeps the Key field's placeholder showing the key the name defaults to.
       function updateItemRow(row) {
         const nameEl = row.querySelector('[data-field="item-name"]');
         const qtyEl = row.querySelector('[data-field="item-qty"]');
         const unitEl = row.querySelector('[data-field="item-unit"]');
         const gramsEl = row.querySelector('[data-field="item-grams"]');
+        const overrideEl = row.querySelector('[data-field="item-grams-override"]');
         const prompt = row.querySelector('[data-grams-prompt]');
         const name = (nameEl.value ?? '').trim();
         const nameKey = densityKey(name);
         const unit = unitEl.value;
         const qtyNum = parseQty(qtyEl.value);
 
-        const needs = isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities);
+        row.querySelector('[data-field="item-key"]').placeholder = ingredientKeyOf({ name }) || 'auto';
+
+        const needs =
+          isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities) &&
+          !overrideEl.value.trim();
         prompt.classList.toggle('hidden', !needs);
         if (needs) {
           row.querySelector('[data-grams-qty]').textContent = qtyEl.value.trim();
@@ -517,6 +567,8 @@ const dragHandle =
         if (row) updateItemRow(row);
       };
       form.addEventListener('input', (e) => {
+        // Editing a field validate() flagged clears the flag; the next publish re-checks.
+        e.target.removeAttribute?.('aria-invalid');
         maybeUpdateItemRow(e.target);
         formDirty = true;
         refreshPreview();
@@ -585,8 +637,7 @@ const dragHandle =
       function renderAuthState() {
         const signed = !!currentSession();
         authState.textContent = signed ? '✓ Signed in with GitHub' : 'Not signed in';
-        authState.className =
-          'text-sm ' + (signed ? 'text-green-600 dark:text-green-500' : 'text-neutral-500 dark:text-neutral-400');
+        authState.className = signed ? 'dz-tag dz-tag--ready' : 'dz-tag';
         signinBtn.classList.toggle('hidden', signed);
         signoutBtn.classList.toggle('hidden', !signed);
       }
@@ -610,10 +661,8 @@ const dragHandle =
       function setStatus(msg, kind = '') {
         statusEl.textContent = msg;
         statusEl.className =
-          'mt-2 text-sm ' +
-          (kind === 'ok' ? 'text-green-600 dark:text-green-500'
-            : kind === 'err' ? 'text-red-600 dark:text-red-400'
-            : 'text-neutral-500 dark:text-neutral-400');
+          'caption mt-2 ' +
+          (kind === 'ok' ? 'body-strong text-leaf' : kind === 'err' ? 'body-strong text-cherry' : 'text-ink-muted');
       }
 
       // ---- Read form into a recipe object ---------------------------------
@@ -638,8 +687,9 @@ const dragHandle =
       }
 
       // Item collectors for readGroups. Steps are trimmed strings from one field; ingredients are
-      // { name, qty?, unit? } objects read per row (nameless rows dropped). The grams field is
-      // deliberately NOT read — grams live in the shared density list, never in the frontmatter.
+      // { name, qty?, unit?, detail?, key?, grams? } objects read per row (nameless rows dropped).
+      // The density prompt's field (item-grams) is deliberately NOT read — those ratios live in
+      // the shared density list, never in the frontmatter. `grams` here is the per-item override.
       const collectStringItems = (itemField) => (groupEl) =>
         Array.from(groupEl.querySelectorAll(`[data-field="${itemField}"]`))
           .map((el) => el.value.trim())
@@ -652,15 +702,16 @@ const dragHandle =
           const qty = (rowEl.querySelector('[data-field="item-qty"]')?.value ?? '').trim();
           const unit = (rowEl.querySelector('[data-field="item-unit"]')?.value ?? '').trim();
           const detail = (rowEl.querySelector('[data-field="item-detail"]')?.value ?? '').trim();
+          const key = (rowEl.querySelector('[data-field="item-key"]')?.value ?? '').trim();
+          const grams = (rowEl.querySelector('[data-field="item-grams-override"]')?.value ?? '').trim();
           const item = { name };
           if (qty) item.qty = qty;
           if (unit) item.unit = unit;
           if (detail) item.detail = detail;
-          // Carried-through key/grams (see addItem). Malformed JSON can't happen from our own
-          // writes, but a bad value must never block a save.
-          if (rowEl.dataset.keep) {
-            try { Object.assign(item, JSON.parse(rowEl.dataset.keep)); } catch { /* ignore */ }
-          }
+          if (key) item.key = key;
+          // Kept as a number whenever it parses, even ≤ 0, so validate() can reject it by name
+          // instead of it silently vanishing from the file.
+          if (grams && Number.isFinite(Number(grams))) item.grams = Number(grams);
           items.push(item);
         }
         return items;
@@ -672,11 +723,6 @@ const dragHandle =
         return Number.isFinite(n) ? n : undefined;
       };
 
-      // Engine-v2 recipe fields the form has no inputs for yet (yield, oven). Set from the loaded
-      // recipe in fillForm, cleared for a new one, and written back unchanged by toMarkdown, so
-      // editing a recipe here never silently drops them.
-      let keptFields = {};
-
       function readForm() {
         return {
           title: val('#title'),
@@ -686,8 +732,8 @@ const dragHandle =
           prepTime: numOrUndef('#prepTime'),
           cookTime: numOrUndef('#cookTime'),
           servings: numOrUndef('#servings'),
-          yield: keptFields.yield,
-          oven: keptFields.oven,
+          yield: val('#yield') || undefined,
+          oven: val('#oven') || undefined,
           tools: listVals('#tools-list', 'tool'),
           ingredients: readGroups('#ingredients-list', 'group', collectIngredientItems),
           steps: readGroups('#steps-list', 'step-group', collectStringItems('step')),
@@ -709,6 +755,7 @@ const dragHandle =
           r.title || r.description ||
           (r.keywords && r.keywords.length) ||
           r.prepTime !== undefined || r.cookTime !== undefined || r.servings !== undefined ||
+          r.yield || r.oven ||
           (r.tools && r.tools.length) ||
           (r.steps && r.steps.length) ||
           (r.notes && r.notes.length) ||
@@ -832,6 +879,61 @@ const dragHandle =
             return `${name} must be a whole number (${min} or more).`;
           }
         }
+        return validateItemFields() ?? validateStepRefs(r);
+      }
+
+      // Per-row checks for the item key + grams override, mirroring the schema (INGREDIENT_KEY,
+      // grams > 0). Read from the DOM rather than the recipe object so the offending field can
+      // be flagged (aria-invalid, cleared on its next input) and focused.
+      function validateItemFields() {
+        for (const row of $('#ingredients-list').querySelectorAll('[data-unit="item-row"]')) {
+          const name = row.querySelector('[data-field="item-name"]').value.trim();
+          if (!name) continue; // nameless rows are dropped on save, so their extras don't matter
+          const keyEl = row.querySelector('[data-field="item-key"]');
+          const key = keyEl.value.trim();
+          if (key && !INGREDIENT_KEY_RE.test(key)) {
+            flagField(keyEl);
+            return `Key “${key}” for “${name}” must be lowercase words joined by hyphens, e.g. "glaze-lemon".`;
+          }
+          const gramsEl = row.querySelector('[data-field="item-grams-override"]');
+          // A number input reports '' for unparseable text, so badInput is the only way to see it.
+          if (gramsEl.validity.badInput || (gramsEl.value.trim() && !(Number(gramsEl.value) > 0))) {
+            flagField(gramsEl);
+            return `Grams for “${name}” must be a positive number (or blank to convert automatically).`;
+          }
+        }
+        return null;
+      }
+      function flagField(el) {
+        el.setAttribute('aria-invalid', 'true');
+        el.focus();
+      }
+
+      // Every [[key]] in a step must name exactly one ingredient — the site build fails on an
+      // unknown or ambiguous reference (lookupRef in the engine), so catch it before committing.
+      function validateStepRefs(r) {
+        const keys = new Map();
+        for (const g of r.ingredients) {
+          for (const it of g.items) {
+            const k = ingredientKeyOf(it);
+            if (k) keys.set(k, [...(keys.get(k) ?? []), it.name]);
+          }
+        }
+        let n = 0;
+        for (const g of r.steps) {
+          for (const step of g.items) {
+            n++;
+            for (const [, key] of step.matchAll(REF_SYNTAX)) {
+              const hits = keys.get(key) ?? [];
+              if (hits.length === 0) {
+                return `Step ${n} references [[${key}]], but no ingredient has that key. Keys in this recipe: ${[...keys.keys()].sort().join(', ') || '(none)'}.`;
+              }
+              if (hits.length > 1) {
+                return `Step ${n}: [[${key}]] matches ${hits.length} ingredients — give one of them a distinct key and reference that.`;
+              }
+            }
+          }
+        }
         return null;
       }
 
@@ -953,7 +1055,7 @@ const dragHandle =
             const link = document.createElement('a');
             link.href = `${SITE_ORIGIN}/recipes/${slug}/`;
             link.textContent = link.href;
-            link.className = 'underline';
+            link.className = 'dz-link';
             statusEl.appendChild(link);
           }
 
@@ -1104,10 +1206,9 @@ const dragHandle =
         setVal('#prepTime', r.prepTime);
         setVal('#cookTime', r.cookTime);
         setVal('#servings', r.servings);
+        setVal('#yield', r.yield);
+        setVal('#oven', r.oven);
         $('#draft').checked = !!r.draft;
-        keptFields = {};
-        if (r.yield) keptFields.yield = r.yield;
-        if (r.oven) keptFields.oven = r.oven;
 
         // Rebuild the dynamic lists from data, reusing the same row builders as add mode.
         fillList('#tools-list', 'tool', r.tools);
@@ -1148,7 +1249,6 @@ const dragHandle =
 
       function enterAddMode() {
         clearPending();
-        keptFields = {}; // a new recipe inherits nothing from the one it replaced
         editingSlug = null;
         picker.value = '';
         setAddChrome();
@@ -1200,7 +1300,7 @@ const dragHandle =
         const discard = document.createElement('button');
         discard.type = 'button';
         discard.textContent = 'Discard';
-        discard.className = 'underline';
+        discard.className = 'dz-link';
         discard.addEventListener('click', () => { clearDraft(); enterAddMode(); });
         statusEl.appendChild(discard);
       }
