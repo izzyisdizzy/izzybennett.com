@@ -69,11 +69,18 @@
   will-change: transform;
 }
 
-/* Bounce once when the element is hovered or focused instead of forever. Use this
-   for anything that sits next to reading copy. */
-.dz-bouncy--hover > span { animation-play-state: paused; }
-.dz-bouncy--hover:hover > span,
-.dz-bouncy--hover:focus-visible > span { animation-play-state: running; }
+/* Local patch (izzybennett.com): bounce in single waves instead of forever. `--hover`
+   waves while hovered or focused; `--once` also waves once on load. bundle.js adds
+   `.dz-bouncing` for each wave and removes it when the last letter lands, so leaving
+   mid-wave lets it finish rather than freezing letters mid-air. Upstream Dizzy pauses
+   an infinite loop via animation-play-state. Use these next to reading copy. */
+.dz-bouncy--hover > span,
+.dz-bouncy--once > span { animation: none; }
+.dz-bouncy--hover.dz-bouncing > span,
+.dz-bouncy--once.dz-bouncing > span {
+  animation: dz-bounce var(--dz-bounce-duration) var(--dz-ease-bounce) 1;
+  animation-delay: calc(var(--dz-i, 0) * var(--dz-bounce-stagger));
+}
 
 .dz-wiggle-hover:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
 

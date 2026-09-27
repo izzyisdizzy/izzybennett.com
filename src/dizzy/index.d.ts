@@ -10,8 +10,11 @@ declare namespace Dizzy {
   interface BouncifyOptions {
     /** Text to split. Defaults to the element's current textContent. */
     text?: string;
-    /** `"hover"` bounces only while hovered or focused; `"always"` (default) loops. */
-    trigger?: 'always' | 'hover';
+    /**
+     * `"always"` (default) loops. `"hover"` bounces in waves while hovered or focused, and a
+     * wave in progress finishes after the pointer leaves. `"once"` is `"hover"` plus one wave on load.
+     */
+    trigger?: 'always' | 'hover' | 'once';
     /** Per-character delay, e.g. `"90ms"`. Defaults to the `--dz-bounce-stagger` value. */
     stagger?: string;
   }
