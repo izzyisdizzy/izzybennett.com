@@ -31,12 +31,12 @@
   box-shadow: var(--shadow-sticker-lg);
 }
 
-/* A plain card — a window without the title bar — for panels that are documents, not apps. */
+/* A plain card — a window without the title bar — for panels that are documents, not apps.
+   Flat: its outline separates it (see "shadows" below). */
 .iz-card {
   border: var(--stroke-1) solid var(--outline);
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-sticker);
 }
 
 /* Sunken, bevelled well for receipts, meta strips, empty states and code. */
@@ -90,11 +90,10 @@
   line-height: 20px;
   text-align: left;
   cursor: pointer;
-  box-shadow: var(--shadow-sticker);
-  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  transition: background-color 120ms ease;
 }
-.iz-option:hover { background: var(--orange-soft); transform: translate(-1px, -1px); }
-.iz-option:has(:checked) { background: var(--hotpink-soft); box-shadow: var(--shadow-pressed); transform: translate(3px, 3px); }
+.iz-option:hover { background: var(--orange-soft); }
+.iz-option:has(:checked) { background: var(--hotpink-soft); }
 .iz-option:has(:focus-visible) { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
 .iz-option__check {
   display: inline-flex;
@@ -135,7 +134,7 @@
 }
 .iz-mnav > summary::-webkit-details-marker { display: none; }
 .iz-mnav > summary:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
-.iz-mnav[open] > summary { background: var(--hotpink); color: var(--on-hotpink); box-shadow: var(--shadow-pressed); }
+.iz-mnav[open] > summary { background: var(--hotpink); color: var(--on-hotpink); }
 .iz-mnav__sheet {
   position: absolute;
   right: 0;
@@ -209,6 +208,93 @@
 }
 .iz-prose blockquote { padding-left: var(--space-4); border-left: var(--stroke-2) solid var(--hotpink); color: var(--ink-muted); }
 .iz-prose hr { height: var(--stroke-hair); border: 0; background: var(--hairline); }
+
+/* ---------------------------------------------------------------- shadows */
+/* Fewer shadows than the stock component sheet: only the hero frame, filled buttons and things
+   that float (the mobile nav sheet, popovers) keep one. Everything else sits flat on its
+   outline. Overrides bundle.css, which stays as vendored; same layer, later import, so these
+   win at equal specificity. With no offset shadow to land on, the hover/press nudges on ghost
+   buttons read as jitter, so those go too. */
+.dz-nav,
+.dz-window,
+.dz-marquee,
+.dz-btn--ghost,
+.dz-btn--ghost:active,
+.dz-btn--ghost[disabled],
+.dz-btn--ghost[aria-disabled="true"],
+.dz-tag--selected,
+.dz-nav__link[aria-current] { box-shadow: none; }
+.dz-btn--ghost:hover,
+.dz-btn--ghost:active { transform: none; }
+
+/* ----------------------------------------------------------- button burst */
+/* Pixels in the button's own colours pop out and fall when a button is released. Pure CSS:
+   while :active they snap to the button's edge with no transition; on release `scale` eases
+   out fast (the pop) while `translate` eases in (gravity), and the fade lags so they're seen
+   falling. Two layers break up the uniformity: ::after holds the heavier pixels, which drop
+   further and faster and drift right; ::before holds lighter ones, which fall short, slower and
+   drift left. Positions are deliberately lopsided; sizes, shapes and colours mixed. Nothing
+   plays on load or hover, only after a press. Ghost buttons use hot pink, as their fill is the
+   page ground. */
+.dz-btn {
+  position: relative;
+  --dz-burst: var(--dz-btn-fill);
+  --dz-burst-2: var(--dz-btn-fill-hover);
+}
+.dz-btn--ghost { --dz-burst: var(--hotpink); --dz-burst-2: var(--hotpink-strong); }
+/* At rest the layers sit invisibly in their fallen position, which still counts as scrollable
+   overflow: a full-width button on a phone would make the page scroll sideways. Clip the
+   viewport horizontally (on <html>, so it doesn't propagate from <body> and stop vertical
+   scrolling; `clip` rather than `hidden` so the sticky nav still sticks). Vertically the drop
+   lands inside main's bottom padding and the footer, so nothing below needs clipping. */
+html { overflow-x: clip; }
+.dz-btn::before,
+.dz-btn::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  pointer-events: none;
+  opacity: 0;
+}
+.dz-btn::after {
+  background:
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 3% 58% / 6px 6px no-repeat,
+    linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 97% 38% / 5px 5px no-repeat,
+    linear-gradient(var(--sunshine), var(--sunshine)) 41% 2% / 4px 4px no-repeat,
+    radial-gradient(circle, var(--dz-burst) 0 3px, transparent 3.5px) 64% 99% / 7px 7px no-repeat,
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 17% 9% / 3px 3px no-repeat,
+    linear-gradient(var(--outline), var(--outline)) 83% 91% / 3px 3px no-repeat,
+    radial-gradient(circle, var(--sunshine) 0 2.5px, transparent 3px) 91% 4% / 6px 6px no-repeat,
+    linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 26% 96% / 5px 5px no-repeat;
+  scale: 1.22;
+  translate: 10px 64px;
+  transition:
+    scale 130ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    translate 420ms cubic-bezier(0.55, 0, 0.85, 0.4),
+    opacity 420ms cubic-bezier(0.7, 0, 1, 0.6);
+}
+.dz-btn::before {
+  background:
+    linear-gradient(var(--sunshine), var(--sunshine)) 8% 27% / 3px 3px no-repeat,
+    radial-gradient(circle, var(--dz-burst-2) 0 2px, transparent 2.5px) 55% 0% / 5px 5px no-repeat,
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 74% 12% / 4px 4px no-repeat,
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 99% 73% / 2px 2px no-repeat,
+    radial-gradient(circle, var(--sunshine) 0 1.5px, transparent 2px) 45% 100% / 4px 4px no-repeat,
+    linear-gradient(var(--outline), var(--outline)) 0% 88% / 2px 2px no-repeat,
+    linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 33% 45% / 3px 3px no-repeat;
+  scale: 1.35;
+  translate: -12px 34px;
+  transition:
+    scale 160ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    translate 540ms cubic-bezier(0.45, 0, 0.8, 0.5),
+    opacity 540ms cubic-bezier(0.6, 0, 1, 0.7);
+}
+.dz-btn:active::before,
+.dz-btn:active::after { opacity: 1; scale: 0.92; translate: 0 0; transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dz-btn::before,
+  .dz-btn::after { display: none; }
+}
 
 /* ------------------------------------------------------------- tag buttons */
 /* A dz-tag used as a toggle (the recipe category filters). */
