@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Projects · Izzy Bennett</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+</style>
+</helmet>
+<div class="iz-page" data-theme="{{theme}}" data-shadows="{{shadows}}" data-retro="{{retro}}" data-ground="{{ground}}" data-night="{{night}}" style="width: 1280px; height: 1000px; padding: 40px 64px 64px; display: flex; flex-direction: column; gap: 32px;">
+
+  <nav class="dz-nav" aria-label="Main">
+    <a class="dz-nav__brand dz-wiggle-hover" href="Main.dc.html">Izzy Bennett</a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+    <ul class="dz-nav__links">
+      <li><a class="dz-nav__link" href="Recipes.dc.html">Recipes</a></li>
+      <li><a class="dz-nav__link" href="Cafe.dc.html">Cafe</a></li>
+      <li><a class="dz-nav__link" aria-current="page" href="Projects.dc.html">Projects</a></li>
+      <li><a class="dz-nav__link" href="Resume.dc.html">Resume</a></li>
+    </ul>
+    <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}"><sc-if value="{{isLight}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if><sc-if value="{{isDark}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if></button>
+    </div>
+  </nav>
+
+  <header style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px;">
+    <h1 class="display-xl"><span data-dz-bounce="once" tabindex="0">Projects</span></h1>
+    <p class="body-l" style="color: var(--ink-muted); max-width: 640px;">Things I've built.</p>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding-right: 8px; padding-bottom: 8px;">
+    <article class="dz-window iz-project-card">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+        <span class="dz-window__title">dizzyos.exe</span>
+      </div>
+      <div class="dz-window__media" aria-hidden="true" style="line-height: 0;">
+        <svg class="iz-art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="var(--cocoa-soft)"></rect><g fill="var(--hotpink)"><rect x="36" y="52" width="52" height="52" rx="10"></rect><rect x="176" y="192" width="52" height="52" rx="10"></rect></g><g fill="var(--orange)"><rect x="106" y="52" width="52" height="52" rx="10"></rect><rect x="246" y="122" width="52" height="52" rx="10"></rect></g><g fill="var(--aqua)"><rect x="246" y="52" width="52" height="52" rx="10"></rect><rect x="36" y="192" width="52" height="52" rx="10"></rect></g><g fill="var(--sunshine)"><rect x="106" y="122" width="52" height="52" rx="10"></rect><rect x="316" y="192" width="52" height="52" rx="10"></rect></g></svg>
+      </div>
+      <div class="dz-window__body">
+        <h3 class="dz-window__heading"><a class="dz-link" href="Project.dc.html">dizzyos</a></h3>
+        <p class="dz-window__text">An LED matrix sign in the kitchen that reads the cafe menu straight off this site's JSON feed.</p>
+        <p class="mono-s" style="margin-top: 12px; color: var(--ink-muted);">Python · Raspberry Pi</p>
+      </div>
+    </article>
+
+    <article class="dz-window iz-project-card">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+        <span class="dz-window__title">izzybennett.com</span>
+      </div>
+      <div class="dz-window__media" aria-hidden="true" style="line-height: 0;">
+        <svg class="iz-art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="var(--hotpink-soft)"></rect><rect x="40" y="40" width="320" height="48" rx="24" fill="var(--surface-raised)" stroke="var(--outline)" stroke-width="4"></rect><rect x="40" y="112" width="200" height="148" rx="24" fill="var(--sunshine)" stroke="var(--outline)" stroke-width="4"></rect><rect x="264" y="112" width="96" height="148" rx="24" fill="var(--orange)" stroke="var(--outline)" stroke-width="4"></rect></svg>
+      </div>
+      <div class="dz-window__body">
+        <h3 class="dz-window__heading"><a class="dz-link" href="Project.dc.html">izzybennett.com</a></h3>
+        <p class="dz-window__text">This site, basically a 2003 personal page with a 2026 stylesheet, plus the design system behind it.</p>
+        <p class="mono-s" style="margin-top: 12px; color: var(--ink-muted);">Astro · Tailwind</p>
+      </div>
+    </article>
+
+    <article class="dz-window iz-project-card">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+        <span class="dz-window__title">recipes.json</span>
+      </div>
+      <div class="dz-window__media" aria-hidden="true" style="line-height: 0;">
+        <svg class="iz-art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="var(--aqua-soft)"></rect><g fill="var(--aqua-deep)"><rect x="48" y="60" width="180" height="14" rx="7"></rect><rect x="72" y="96" width="240" height="14" rx="7"></rect><rect x="72" y="132" width="200" height="14" rx="7"></rect><rect x="72" y="168" width="260" height="14" rx="7"></rect><rect x="48" y="204" width="120" height="14" rx="7"></rect></g></svg>
+      </div>
+      <div class="dz-window__body">
+        <h3 class="dz-window__heading"><a class="dz-link" href="Project.dc.html">recipes.json</a></h3>
+        <p class="dz-window__text">The public feed every recipe and the cafe menu are published to, so anything in the house can read them.</p>
+        <p class="mono-s" style="margin-top: 12px; color: var(--ink-muted);">JSON · open feed</p>
+      </div>
+    </article>
+  </div>
+
+  <footer class="dz-footer" style="margin-top: auto; justify-content: center; text-align: center; padding: 10px 24px;">
+    <p>© Izzy Bennett 2026 · me@izzybennett.com</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["daylight","afterglow"],"default":"daylight","section":"Theme"},"shadows":{"editor":"enum","options":["fewer","full"],"default":"fewer","section":"Theme"},"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"ground":{"editor":"enum","options":["seaglass","sage","cream","blush","lavender"],"default":"seaglass","section":"Theme"},"night":{"editor":"enum","options":["neon-purple","espresso","neon-green"],"default":"neon-purple","section":"Theme"},"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    if (window.Dizzy) window.Dizzy.init(document);
+  }
+  curTheme() {
+    return (this.state && this.state.theme) || this.props.theme || 'daylight';
+  }
+  renderVals() {
+    return { theme: this.curTheme(), isDark: this.curTheme() === 'afterglow', isLight: this.curTheme() !== 'afterglow', themeToggleLabel: this.curTheme() === 'afterglow' ? 'Switch to light mode' : 'Switch to dark mode', toggleTheme: () => this.setState({ theme: this.curTheme() === 'afterglow' ? 'daylight' : 'afterglow' }), shadows: this.props.shadows ?? 'fewer', retro: this.props.retro ?? 'on', ground: this.props.ground ?? 'seaglass', night: this.props.night ?? 'neon-purple' };
+  }
+}
+</script>
+</body>
+</html>

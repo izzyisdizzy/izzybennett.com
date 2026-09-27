@@ -49,6 +49,11 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `ThemeBoot.astro` (stored choice in `localStorage['izzy-theme']`, else the OS)
   and flipped by `ThemeToggle.astro`. Tailwind is for layout; colour, type and
   shape come from Dizzy classes.
+- `docs/design/flows/` — a read-only snapshot of the "izzybennett.com flows"
+  design canvas (the canvas itself is private): every board as `.dc.html`, plus
+  its `site.css`, `iz-bounce.js` and `canvas.json`. Its `README.md` maps the
+  boards and says which tweak values ship. Excluded from Tailwind's class scan by
+  `@source not` in `global.css`, so it can never change the built CSS.
 - `src/pages/` — routes. Note the JSON endpoints: `izzys-cafe.json.ts`,
   `recipes.json.ts`, `densities.json.ts`.
 - `src/lib/izzys-cafe-content.test.ts` — asserts the *live* menu content's shape
@@ -88,6 +93,30 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   running on the Pi behind a Cloudflare Tunnel at `orders.izzybennett.com`,
   backing `/order` and the `/orders` kitchen queue. CORS is locked to the site
   origin; there is deliberately no auth.
+
+### Dizzy redesign roadmap
+
+The site is being moved onto the Dizzy design system one milestone at a time,
+each a GitHub issue. The design reference for all of them is
+`docs/design/flows/` — read its `README.md` before starting a milestone. Only the
+canvas defaults ship (sea glass light, neon purple dark, fewer shadows, Retro on);
+the other tweak options were exploration and are not to be built.
+
+| Milestone | Issue | Scope |
+| :-- | :-- | :-- |
+| M6 | #71 (done) | `/upload` + `/update-menu` on Dizzy, inputs for `yield`/`oven`/`key`/`grams` |
+| M7 | #72 | Remove scaffolding, settle open questions, a11y + motion pass |
+| M8 | #77 | Snapshot the flows canvas into `docs/design/flows/` |
+| M9 | #78 | Re-value tokens to sea glass / neon purple |
+| M10 | #79 | Retro chrome: tight radii, chunky strokes, bevels, striped window bars |
+| M11 | #80 | Retro type, neon title glow, blinking cursor, CRT overlay |
+| M12 | #81 | Every boxed surface in a Dizzy window |
+| M13 | #82 | Canvas motion: burst on press, bounce once, pops, sparkles |
+| M14 | #83 | Rewrite visible em-dash copy |
+| M15 | #84 | Adopt recipe-engine v2.1.0 on the recipe page |
+
+Order: M8 → M9 → M10–M15 by their stated dependencies, and **M7 lands last**,
+after M15 — its a11y and motion pass covers everything the later milestones add.
 
 ### Build / run / test
 

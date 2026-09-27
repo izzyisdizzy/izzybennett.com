@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dizzyos (phone) · Izzy Bennett</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+.fact{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--hairline)}
+.fact:last-child{border-bottom:0}
+</style>
+</helmet>
+<div class="iz-page" data-theme="{{theme}}" data-shadows="{{shadows}}" data-retro="{{retro}}" data-ground="{{ground}}" data-night="{{night}}" style="width: 390px; height: 1460px; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 24px;">
+
+  <nav class="dz-nav" aria-label="Main" style="padding: 8px 12px 8px 16px;">
+    <a class="dz-nav__brand dz-wiggle-hover" href="Main-m.dc.html" style="font-size: 20px;">Izzy Bennett</a>
+    <div style="display: flex; align-items: center; gap: 8px;">
+    <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}"><sc-if value="{{isLight}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if><sc-if value="{{isDark}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if></button>
+    <details class="iz-mnav">
+      <summary>Menu <span aria-hidden="true">▾</span></summary>
+      <ul class="iz-mnav__sheet">
+        <li><a class="dz-nav__link" href="Recipes-m.dc.html">Recipes</a></li>
+        <li><a class="dz-nav__link" href="Cafe-m.dc.html">Cafe</a></li>
+        <li><a class="dz-nav__link" aria-current="page" href="Projects-m.dc.html">Projects</a></li>
+        <li><a class="dz-nav__link" href="Resume-m.dc.html">Resume</a></li>
+      </ul>
+    </details>
+    </div>
+  </nav>
+
+  <p class="body-s"><a class="dz-link" href="Projects-m.dc.html">← All projects</a></p>
+
+  <header style="display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; gap: 10px;">
+      <span class="dz-tag dz-tag--aqua">Hardware</span>
+      <span class="dz-tag dz-tag--ready"><span aria-hidden="true">✓</span> Running</span>
+    </div>
+    <h1 class="display-l"><span data-dz-bounce="once" tabindex="0">dizzyos</span></h1>
+    <p class="body" style="text-wrap: pretty;">A little LED matrix that hangs above the espresso machine. Every few minutes it fetches <span class="mono">izzys-cafe.json</span> from this site and scrolls whatever the cafe is serving that day. That way the menu on the wall and the menu online never disagree.</p>
+    <div style="display: flex; flex-direction: column; gap: 12px; padding-right: 6px;">
+      <a class="dz-btn" href="https://github.com/izzyisdizzy" style="justify-content: center;">View the code</a>
+      <a class="dz-btn dz-btn--ghost" href="Cafe-m.dc.html" style="justify-content: center;">See what it's showing</a>
+    </div>
+  </header>
+
+  <article class="dz-window" style="margin-right: 8px;">
+    <div class="dz-window__bar">
+      <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+      <span class="dz-window__title">dizzyos.exe · live</span>
+    </div>
+    <div class="dz-window__media" aria-hidden="true" style="line-height: 0; aspect-ratio: 16 / 9;">
+      <svg class="iz-art" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" font-family="'Space Mono', 'Courier New', monospace"><rect width="640" height="360" fill="var(--surface-sunken)"></rect><rect x="40" y="48" width="560" height="264" rx="18" fill="var(--cocoa)"></rect><text x="68" y="84" fill="var(--sunshine)" font-size="17" letter-spacing="2">NEXT TRAINS · 14:52</text><text x="572" y="84" fill="var(--on-cocoa)" font-size="17" text-anchor="end" opacity="0.7">✦ dizzyos</text><line x1="60" y1="104" x2="580" y2="104" stroke="var(--on-cocoa)" stroke-opacity="0.25" stroke-width="2"></line><g><circle cx="90" cy="148" r="22" fill="var(--hotpink)"></circle><text x="90" y="156" fill="var(--on-hotpink)" font-size="23" font-weight="700" text-anchor="middle">A</text><text x="134" y="156" fill="var(--on-cocoa)" font-size="23">Downtown</text><text x="572" y="156" fill="var(--sunshine)" font-size="23" font-weight="700" text-anchor="end">2 min</text></g><g><circle cx="90" cy="210" r="22" fill="var(--orange)"></circle><text x="90" y="218" fill="var(--on-orange)" font-size="23" font-weight="700" text-anchor="middle">C</text><text x="134" y="218" fill="var(--on-cocoa)" font-size="23">Uptown</text><text x="572" y="218" fill="var(--sunshine)" font-size="23" font-weight="700" text-anchor="end">7 min</text></g><g><circle cx="90" cy="272" r="22" fill="var(--aqua)"></circle><text x="90" y="280" fill="var(--on-aqua)" font-size="23" font-weight="700" text-anchor="middle">E</text><text x="134" y="280" fill="var(--on-cocoa)" font-size="23">Downtown</text><text x="572" y="280" fill="var(--sunshine)" font-size="23" font-weight="700" text-anchor="end">12 min</text></g></svg>
+    </div>
+    <div class="dz-window__body" style="padding: 20px;">
+      <p class="dz-window__text">The sign in timetable mode: the next trains at the stop down the block.</p>
+    </div>
+  </article>
+
+  <section style="display: flex; flex-direction: column; gap: 8px;">
+    <h2 class="h2" style="font-size: 22px;">How it works</h2>
+    <p class="body">The site publishes the cafe menu as a small JSON feed. A Python script on a Raspberry Pi polls it, diffs it against the last copy, and pushes any change to the 64×32 panel. If the site is unreachable it keeps showing the last menu it saw, with a small ✕ in the corner so I know.</p>
+  </section>
+
+  <aside class="dz-window" style="margin-right: 6px;">
+    <div class="dz-window__bar">
+      <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+      <span class="dz-window__title">facts.txt</span>
+    </div>
+    <div class="dz-window__body" style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+    <h2 class="h3">Facts</h2>
+    <dl style="margin: 0; display: flex; flex-direction: column;">
+      <div class="fact"><dt class="body-s" style="color: var(--ink-muted);">Stack</dt><dd class="mono-s" style="margin: 0;">Python · Raspberry Pi</dd></div>
+      <div class="fact"><dt class="body-s" style="color: var(--ink-muted);">Panel</dt><dd class="mono-s" style="margin: 0;">64×32 RGB matrix</dd></div>
+      <div class="fact"><dt class="body-s" style="color: var(--ink-muted);">Reads from</dt><dd class="mono-s" style="margin: 0;">izzys-cafe.json</dd></div>
+      <div class="fact"><dt class="body-s" style="color: var(--ink-muted);">Refreshes</dt><dd class="mono-s" style="margin: 0;">every 5 min</dd></div>
+      <div class="fact"><dt class="body-s" style="color: var(--ink-muted);">Started</dt><dd class="mono-s" style="margin: 0;">[YEAR]</dd></div>
+    </dl>
+    </div>
+  </aside>
+
+  <footer class="dz-footer" style="margin-top: auto; flex-direction: column; align-items: center; gap: 8px; justify-content: center; text-align: center; padding: 10px 24px;">
+    <p>© Izzy Bennett 2026 · me@izzybennett.com</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["daylight","afterglow"],"default":"daylight","section":"Theme"},"shadows":{"editor":"enum","options":["fewer","full"],"default":"fewer","section":"Theme"},"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"ground":{"editor":"enum","options":["seaglass","sage","cream","blush","lavender"],"default":"seaglass","section":"Theme"},"night":{"editor":"enum","options":["neon-purple","espresso","neon-green"],"default":"neon-purple","section":"Theme"},"$preview":{"width":390,"height":1460}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    if (window.Dizzy) window.Dizzy.init(document);
+  }
+  curTheme() {
+    return (this.state && this.state.theme) || this.props.theme || 'daylight';
+  }
+  renderVals() {
+    return { theme: this.curTheme(), isDark: this.curTheme() === 'afterglow', isLight: this.curTheme() !== 'afterglow', themeToggleLabel: this.curTheme() === 'afterglow' ? 'Switch to light mode' : 'Switch to dark mode', toggleTheme: () => this.setState({ theme: this.curTheme() === 'afterglow' ? 'daylight' : 'afterglow' }), shadows: this.props.shadows ?? 'fewer', retro: this.props.retro ?? 'on', ground: this.props.ground ?? 'seaglass', night: this.props.night ?? 'neon-purple' };
+  }
+}
+</script>
+</body>
+</html>

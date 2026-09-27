@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Background options · Izzy Bennett</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+</style>
+</helmet>
+<div class="iz-page" data-theme="daylight" data-shadows="fewer" data-retro="off" data-ground="seaglass" style="width: 1280px; height: 1300px; padding: 48px 56px; display: flex; flex-direction: column; gap: 28px;">
+  <header style="display: flex; flex-direction: column; gap: 8px;">
+    <h1 class="display-l">Background options</h1>
+    <p class="body-l" style="color: var(--ink-muted); max-width: 820px;">The page colour behind everything. Sea glass is the light-mode default and neon purple the dark-mode default. Try the others with the Ground switch under Theme, and the dark ones with the Night switch in dark mode.</p>
+  </header>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;">
+    <section class="iz-page" data-theme="daylight" data-shadows="fewer" data-retro="{{retro}}" data-ground="cream" aria-label="Cream" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Cream</h2><span class="mono-s" style="color: var(--ink-muted);">#FFF4E3</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="daylight" data-shadows="fewer" data-retro="{{retro}}" data-ground="seaglass" aria-label="Sea glass (light default)" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Sea glass (light default)</h2><span class="mono-s" style="color: var(--ink-muted);">#EBF2F1</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="daylight" data-shadows="fewer" data-retro="{{retro}}" data-ground="sage" aria-label="Soft sage" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Soft sage</h2><span class="mono-s" style="color: var(--ink-muted);">#E6EBE0</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="daylight" data-shadows="fewer" data-retro="{{retro}}" data-ground="blush" aria-label="Pale blush" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Pale blush</h2><span class="mono-s" style="color: var(--ink-muted);">#F9EDEF</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="daylight" data-shadows="fewer" data-retro="{{retro}}" data-ground="lavender" aria-label="Neon lavender" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Neon lavender</h2><span class="mono-s" style="color: var(--ink-muted);">#ECDCFF</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="afterglow" data-shadows="fewer" data-retro="{{retro}}" data-ground="cream" aria-label="Espresso (dark)" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Espresso (dark)</h2><span class="mono-s" style="color: var(--ink-muted);">#1B1210</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="afterglow" data-shadows="fewer" data-retro="{{retro}}" data-ground="cream" data-night="neon-purple" aria-label="Neon purple (dark default)" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Neon purple (dark default)</h2><span class="mono-s" style="color: var(--ink-muted);">#1A0F2E</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+    <section class="iz-page" data-theme="afterglow" data-shadows="fewer" data-retro="{{retro}}" data-ground="cream" data-night="neon-green" aria-label="Neon green (dark)" style="position: relative; border: 2px solid var(--outline); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;"><h2 class="h3">Neon green (dark)</h2><span class="mono-s" style="color: var(--ink-muted);">#0C1A12</span></div>
+      <div class="dz-nav" style="padding: 8px 14px;"><a class="dz-nav__brand" href="Main.dc.html" style="font-size: 18px;">Izzy Bennett</a><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html" style="font-size: 13px;">Recipes</a></div>
+      <div class="dz-window"><div class="dz-window__bar"><span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span><span class="dz-window__title">recipes/</span></div><div class="dz-window__body" style="padding: 14px 16px;"><p class="body-s" style="font-weight: 700;">Raspberry Lemon Scones</p><p class="caption">dessert · 40 min</p></div></div>
+      <div class="iz-well" style="padding: 10px 14px;"><p class="mono-s">iced cardamom latte · oat</p></div>
+      <div style="display: flex; gap: 10px;"><a class="dz-btn dz-btn--sm" href="Recipes.dc.html">Browse</a><a class="dz-btn dz-btn--sm dz-btn--ghost" href="Resume.dc.html">Resume</a></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"$preview":{"width":1280,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { retro: this.props.retro ?? 'on' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,574 @@
+/* izzybennett.com flows — Dizzy token variables (both themes) plus the few page-level
+   helpers the components leave to the page. Values copied from the Dizzy tokens.json. */
+
+:root, [data-theme="daylight"] {
+  --surface: #fff4e3; --surface-raised: #fffdf8; --surface-sunken: #ffe0c2;
+  --ink: #3b1d0e; --ink-muted: #7a4525; --hairline: #edcfae; --outline: #3b1d0e;
+  --hotpink: #c60063; --hotpink-strong: #a80055; --hotpink-soft: #ffd9ec; --on-hotpink: #fff2f8;
+  --orange: #ff7a1a; --orange-strong: #e05e00; --orange-deep: #9c3d00; --orange-soft: #ffe0c4; --on-orange: #2a1409;
+  --cocoa: #6b3b1e; --cocoa-soft: #e8d3bf; --on-cocoa: #fff4e3;
+  --sunshine: #ffc93c; --on-sunshine: #3b1d0e;
+  --aqua: #00a3b4; --aqua-deep: #00697a; --aqua-soft: #c9f2f6; --on-aqua: #08262b;
+  --visited: #8a3ea8; --leaf: #12694a; --on-leaf: #f2fff8; --cherry: #b8102b; --on-cherry: #fff4f4;
+  --focus: #00697a; --gloss-hi: #ffffffa6; --gloss-lo: #0000001f; --chrome-hi: #fffaf2; --chrome-lo: #d9b48c;
+  --shadow-sticker: 4px 4px 0 #3b1d0e; --shadow-sticker-lg: 7px 7px 0 #3b1d0e; --shadow-pressed: 1px 1px 0 #3b1d0e;
+  --shadow-gel: inset 0 2px 0 #ffffffa6, inset 0 -4px 0 #0000001f;
+  --shadow-soft: 0 10px 24px rgba(59, 29, 14, 0.18);
+  --font-display: "Baloo 2", "Trebuchet MS", Verdana, sans-serif;
+  --font-body: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Space Mono", "Courier New", ui-monospace, monospace;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+  --radius-xs: 6px; --radius-sm: 10px; --radius-md: 16px; --radius-lg: 24px; --radius-xl: 36px; --radius-pill: 999px;
+  --stroke-hair: 1px; --stroke-1: 2px; --stroke-2: 3px; --stroke-3: 5px;
+}
+
+[data-theme="afterglow"] {
+  --surface: #1b1210; --surface-raised: #2a1c17; --surface-sunken: #120b09;
+  --ink: #ffeede; --ink-muted: #d3a98d; --hairline: #43302a; --outline: #ffeede;
+  --hotpink: #ff5fae; --hotpink-strong: #ff8cc6; --hotpink-soft: #4d0f30; --on-hotpink: #2b0413;
+  --orange: #ff9647; --orange-strong: #ffb571; --orange-deep: #ffb073; --orange-soft: #4a2408; --on-orange: #2b1200;
+  --cocoa: #c98a5e; --cocoa-soft: #3a2820; --on-cocoa: #1b1210;
+  --sunshine: #ffd166; --on-sunshine: #2b1d00;
+  --aqua: #4fd8e6; --aqua-deep: #7fe6f0; --aqua-soft: #0f3a40; --on-aqua: #08262b;
+  --visited: #dda3f2; --leaf: #5fd39b; --on-leaf: #06261a; --cherry: #ff6b72; --on-cherry: #2b0508;
+  --focus: #5ee7f2; --gloss-hi: #ffffff2e; --gloss-lo: #00000047; --chrome-hi: #55403a; --chrome-lo: #0e0906;
+  --shadow-sticker: 4px 4px 0 #0b0605; --shadow-sticker-lg: 7px 7px 0 #0b0605; --shadow-pressed: 1px 1px 0 #0b0605;
+  --shadow-gel: inset 0 2px 0 #ffffff2e, inset 0 -4px 0 #00000047;
+  --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* Page ground and type defaults. */
+.iz-page {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 26px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.iz-page *, .iz-page *::before, .iz-page *::after { box-sizing: border-box; }
+.iz-page p { margin: 0; }
+.iz-page h1, .iz-page h2, .iz-page h3 { margin: 0; font-family: var(--font-display); color: var(--ink); }
+
+/* Type styles, named as the tokens are. */
+.display-xxl { font-family: var(--font-display); font-size: 72px; line-height: 68px; font-weight: 800; letter-spacing: -0.02em; }
+.display-xl { font-family: var(--font-display); font-size: 52px; line-height: 50px; font-weight: 800; letter-spacing: -0.01em; }
+.display-l { font-family: var(--font-display); font-size: 38px; line-height: 40px; font-weight: 700; }
+.h1 { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 700; }
+.h2 { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; }
+.h3 { font-family: var(--font-display); font-size: 19px; line-height: 24px; font-weight: 600; }
+.body-l { font-size: 18px; line-height: 29px; }
+.body-s { font-size: 14px; line-height: 22px; }
+.caption { font-size: 12px; line-height: 18px; color: var(--ink-muted); }
+.label { font-size: 12px; line-height: 14px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-muted); }
+.mono { font-family: var(--font-mono); font-size: 14px; line-height: 22px; }
+.mono-s { font-family: var(--font-mono); font-size: 12px; line-height: 18px; }
+.counter { font-family: var(--font-mono); font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; }
+
+/* A hero block: the loudest frame in the system. */
+.iz-hero {
+  border: var(--stroke-3) solid var(--outline);
+  border-radius: var(--radius-xl);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sticker-lg);
+}
+
+/* A plain card (a window without the title bar) for panels that are documents, not apps. */
+.iz-card {
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sticker);
+}
+
+/* Form field — the system has no input component, so this follows its shape rules. */
+.iz-field {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 20px;
+  min-height: 44px;
+}
+.iz-field:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+
+/* Picker option — a WindowCard-shaped radio for the cafe menu. */
+.iz-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+.iz-option:hover { background: var(--orange-soft); transform: translate(-1px, -1px); }
+.iz-option[aria-pressed="true"] { background: var(--hotpink-soft); box-shadow: var(--shadow-pressed); transform: translate(3px, 3px); }
+.iz-option:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+.iz-option__check { width: 22px; height: 22px; flex: none; border: var(--stroke-1) solid var(--outline); border-radius: var(--radius-pill); background: var(--surface-raised); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--on-hotpink); }
+.iz-option[aria-pressed="true"] .iz-option__check { background: var(--hotpink); }
+
+/* Sunken well for a receipt or code block. */
+.iz-well {
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  box-shadow: inset 2px 2px 0 var(--chrome-lo), inset -2px -2px 0 var(--chrome-hi);
+}
+
+/* Mobile nav: the details/summary sheet the Nav card asks for under 640px. */
+.iz-mnav { position: relative; }
+.iz-mnav summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.iz-mnav summary::-webkit-details-marker { display: none; }
+.iz-mnav summary:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+.iz-mnav[open] summary { background: var(--hotpink); color: var(--on-hotpink); box-shadow: var(--shadow-pressed); }
+.iz-mnav__sheet {
+  position: absolute; right: 0; top: 52px; z-index: 5;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  min-width: 200px; padding: var(--space-3);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+  list-style: none; margin: 0;
+}
+.iz-mnav__sheet .dz-nav__link { display: block; min-height: 44px; line-height: 28px; }
+
+/* Placeholder art — flat blocks in brand colours where a photo would go. */
+.iz-art { display: block; width: 100%; height: 100%; }
+
+/* Timeline rule for the resume. */
+.iz-rule { height: var(--stroke-hair); background: var(--hairline); border: 0; margin: 0; }
+
+/* Shadows tweak, "fewer": only the hero, filled buttons and floating layers (menu sheet,
+   amount sticker) keep a drop shadow; everything else is separated by its outline alone. */
+.iz-page[data-shadows="fewer"] .dz-nav,
+.iz-page[data-shadows="fewer"] .dz-window,
+.iz-page[data-shadows="fewer"] .dz-marquee,
+.iz-page[data-shadows="fewer"] .iz-card,
+.iz-page[data-shadows="fewer"] .iz-option,
+.iz-page[data-shadows="fewer"] .dz-btn--ghost,
+.iz-page[data-shadows="fewer"] .dz-tag--selected,
+.iz-page[data-shadows="fewer"] .dz-nav__link[aria-current],
+.iz-page[data-shadows="fewer"] .iz-mnav[open] summary { box-shadow: none; }
+/* With no offset shadow to land on, the press and hover nudges read as jitter. */
+.iz-page[data-shadows="fewer"] .iz-option:hover,
+.iz-page[data-shadows="fewer"] .iz-option[aria-pressed="true"],
+.iz-page[data-shadows="fewer"] .dz-btn--ghost:hover,
+.iz-page[data-shadows="fewer"] .dz-btn--ghost:active,
+.iz-page[data-shadows="fewer"] .dz-btn--ghost[aria-pressed="true"] { transform: none; }
+
+/* Button burst: pixels in the button's own colours pop out and fall when a button is pressed. Two layers break up the uniformity: ::after holds the heavier pixels,
+   which drop further and faster and drift right; ::before holds lighter ones, which fall short,
+   slower and drift left. Positions are deliberately lopsided and sizes, shapes (squares and
+   dots) and colours mixed. Nothing plays on load or hover, only after a press. Ghost buttons
+   use hot pink, as their fill is the page ground. */
+.dz-btn {
+  position: relative;
+  --dz-burst: var(--dz-btn-fill);
+  --dz-burst-2: var(--dz-btn-fill-hover);
+}
+.dz-btn--ghost { --dz-burst: var(--hotpink); --dz-burst-2: var(--hotpink-strong); }
+.iz-option { position: relative; --dz-burst: var(--hotpink); --dz-burst-2: var(--orange); }
+.dz-btn::before,
+.dz-btn::after,
+.iz-option::before,
+.iz-option::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  pointer-events: none;
+  opacity: 0;
+}
+.dz-btn::after,
+.iz-option::after {
+  background:
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 3% 58% / 6px 6px no-repeat,
+    linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 97% 38% / 5px 5px no-repeat,
+    linear-gradient(var(--sunshine), var(--sunshine)) 41% 2% / 4px 4px no-repeat,
+    radial-gradient(circle, var(--dz-burst) 0 3px, transparent 3.5px) 64% 99% / 7px 7px no-repeat,
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 17% 9% / 3px 3px no-repeat,
+    linear-gradient(var(--outline), var(--outline)) 83% 91% / 3px 3px no-repeat,
+    radial-gradient(circle, var(--sunshine) 0 2.5px, transparent 3px) 91% 4% / 6px 6px no-repeat,
+    linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 26% 96% / 5px 5px no-repeat;
+}
+.dz-btn::before,
+.iz-option::before {
+  background:
+    linear-gradient(var(--sunshine), var(--sunshine)) 8% 27% / 3px 3px no-repeat,
+    radial-gradient(circle, var(--dz-burst-2) 0 2px, transparent 2.5px) 55% 0% / 5px 5px no-repeat,
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 74% 12% / 4px 4px no-repeat,
+    linear-gradient(var(--dz-burst), var(--dz-burst)) 99% 73% / 2px 2px no-repeat,
+    radial-gradient(circle, var(--sunshine) 0 1.5px, transparent 2px) 45% 100% / 4px 4px no-repeat,
+    linear-gradient(var(--outline), var(--outline)) 0% 88% / 2px 2px no-repeat,
+    linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 33% 45% / 3px 3px no-repeat;
+}
+/* The burst plays the moment the button is pressed (iz-bounce.js adds .iz-burst on pointer-down)
+   and runs to the end on its own: a quick upward pop, then gravity pulls the pixels down. */
+.iz-burst::after { animation: iz-burst-a 320ms both; }
+.iz-burst::before { animation: iz-burst-b 380ms both; }
+@keyframes iz-burst-a {
+  0% { opacity: 1; scale: 0.92; translate: 0 0; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  25% { opacity: 1; scale: 1.22; translate: 4px -8px; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  100% { opacity: 0; scale: 1.24; translate: 10px 64px; }
+}
+@keyframes iz-burst-b {
+  0% { opacity: 1; scale: 0.92; translate: 0 0; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  28% { opacity: 1; scale: 1.35; translate: -5px -6px; animation-timing-function: cubic-bezier(0.45, 0, 0.8, 0.6); }
+  100% { opacity: 0; scale: 1.36; translate: -12px 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dz-btn::before,
+  .dz-btn::after,
+  .iz-option::before,
+  .iz-option::after { display: none; }
+}
+
+/* Retro tweak, "on": leans the flows into 80s–90s computer retro-futurism. A faint CRT screen
+   (fine scanlines, a soft vignette); harder corners and
+   chunkier strokes; raised bevels on panels (an inset bevel, not a drop shadow, so it sits
+   with the Shadows tweak); striped window chrome; terminal-style mono for nav, buttons and
+   labels; neon glow with an RGB split on display type; a blinking cursor on the home name. */
+.iz-page[data-retro="on"] {
+  --radius-xs: 2px; --radius-sm: 3px; --radius-md: 4px; --radius-lg: 6px; --radius-xl: 8px;
+  --stroke-1: 3px; --stroke-2: 4px; --stroke-3: 6px;
+  --retro-line: rgba(59, 29, 14, 0.03);
+  --retro-vignette: rgba(59, 29, 14, 0.07);
+  --retro-bevel: inset 3px 3px 0 var(--chrome-hi), inset -3px -3px 0 var(--chrome-lo);
+  position: relative;
+}
+.iz-page[data-retro="on"][data-theme="afterglow"] {
+  --retro-line: rgba(0, 0, 0, 0.14);
+  --retro-vignette: rgba(0, 0, 0, 0.3);
+}
+/* The CRT: drawn over everything, never catches a click. Kept faint (fine scanlines and a soft
+   vignette, no grid or dither) so long text stays easy to read. */
+.iz-page[data-retro="on"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, var(--retro-line) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at center, transparent 65%, var(--retro-vignette) 100%);
+}
+
+/* Raised bevels on the panels. Hero and the full-shadows mode keep their drop shadow too. */
+.iz-page[data-retro="on"] .dz-nav,
+.iz-page[data-retro="on"] .dz-window,
+.iz-page[data-retro="on"] .iz-card,
+.iz-page[data-retro="on"] .dz-footer { box-shadow: var(--retro-bevel); }
+.iz-page[data-retro="on"] .iz-hero { box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
+.iz-page[data-retro="on"][data-shadows="full"] .dz-nav,
+.iz-page[data-retro="on"][data-shadows="full"] .iz-card { box-shadow: var(--retro-bevel), var(--shadow-sticker); }
+.iz-page[data-retro="on"][data-shadows="full"] .dz-window { box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
+
+/* Striped title bars, with the title on a solid patch so it stays readable. */
+.iz-page[data-retro="on"] .dz-window__bar {
+  background: repeating-linear-gradient(to bottom, var(--cocoa-soft) 0 2px, var(--surface-raised) 2px 4px);
+}
+.iz-page[data-retro="on"] .dz-window__title {
+  flex: none;
+  max-width: 70%;
+  margin-inline: auto;
+  padding: 0 var(--space-2);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Terminal type: mono, uppercase, tracked. */
+.iz-page[data-retro="on"] .dz-nav__link,
+.iz-page[data-retro="on"] .dz-btn,
+.iz-page[data-retro="on"] .iz-mnav summary,
+.iz-page[data-retro="on"] .label,
+.iz-page[data-retro="on"] .caption,
+.iz-page[data-retro="on"] .dz-row__meta,
+.iz-page[data-retro="on"] .dz-footer {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.iz-page[data-retro="on"] .dz-nav__link { font-size: 13px; }
+.iz-page[data-retro="on"] .dz-btn { font-size: 14px; }
+.iz-page[data-retro="on"] .dz-btn--lg { font-size: 16px; }
+.iz-page[data-retro="on"] .dz-btn--sm { font-size: 12px; }
+
+/* Neon display type: a tight glow in the text's own colour plus an aqua/pink RGB split. */
+.iz-page[data-retro="on"] .display-xxl,
+.iz-page[data-retro="on"] .display-xl,
+.iz-page[data-retro="on"] .display-l {
+  text-shadow:
+    -2px 0 0 color-mix(in srgb, var(--aqua) 70%, transparent),
+    2px 0 0 color-mix(in srgb, var(--hotpink) 55%, transparent),
+    0 0 14px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+/* A blinking block cursor after the home hero's name. */
+.iz-page[data-retro="on"] .iz-hero h1::after,
+.iz-page[data-retro="on"] .iz-hero-window h1::after {
+  content: "▌";
+  margin-left: 0.06em;
+  color: var(--aqua);
+  animation: iz-cursor-blink 1s steps(1) infinite;
+}
+@keyframes iz-cursor-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .iz-page[data-retro="on"] .iz-hero h1::after,
+  .iz-page[data-retro="on"] .iz-hero-window h1::after { animation: none; }
+}
+
+/* Link buttons keep their own ink on hover and press. Each artboard's helmet sets a global
+   `a:hover` colour, which outranks .dz-btn's colour; on the pink button that colour matched
+   the hover fill and the label vanished. */
+.iz-page a.dz-btn:hover,
+.iz-page a.dz-btn:active { color: var(--dz-btn-ink); }
+
+/* Shading: tonal depth rather than drop shadows. Panels catch light at the top and fall into
+   shade at the bottom; filled buttons get a stronger gel curve. Gradients only, laid over each
+   element's own fill, so hover and pressed colours still show through. */
+.iz-page .iz-hero,
+.iz-page .iz-card,
+.iz-page .dz-nav,
+.iz-page .dz-window__body,
+.iz-page .dz-footer,
+.iz-page .iz-option,
+.iz-page .iz-mnav__sheet {
+  background-image: linear-gradient(to bottom,
+    color-mix(in srgb, var(--chrome-hi) 80%, transparent) 0%,
+    transparent 38%,
+    color-mix(in srgb, var(--chrome-lo) 40%, transparent) 100%);
+}
+.iz-page .iz-well {
+  background-image: linear-gradient(to bottom,
+    color-mix(in srgb, var(--chrome-lo) 45%, transparent) 0%,
+    transparent 45%);
+}
+.iz-page .dz-btn:not(.dz-btn--ghost) {
+  background-image: linear-gradient(to bottom,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.06) 48%,
+    rgba(0, 0, 0, 0.1) 52%,
+    rgba(0, 0, 0, 0.22) 100%);
+}
+.iz-page .dz-btn--ghost {
+  background-image: linear-gradient(to bottom, transparent 40%, color-mix(in srgb, var(--chrome-lo) 50%, transparent));
+}
+.iz-page .dz-tag {
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent 55%, rgba(0, 0, 0, 0.06));
+}
+
+/* Light/dark toggle in the nav: a square ghost button showing the mode you'd switch to. */
+.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding: 0 var(--space-2); }
+.iz-theme-toggle svg { display: block; }
+
+/* Title bounces run as single waves (iz-bounce.js adds these classes): no loop by default,
+   one pass of the Dizzy bounce per wave, each letter staggered as before. */
+.iz-bounce-wave > span { animation: none; }
+.iz-bounce-wave.iz-bouncing > span {
+  animation: dz-bounce var(--dz-bounce-duration) var(--dz-ease-bounce) 1;
+  animation-delay: calc(var(--dz-i, 0) * var(--dz-bounce-stagger));
+}
+
+/* Ground tweak: alternative page colours for light mode (dark mode keeps its espresso ground).
+   Each carries a whole neutral family, not just the page: raised panels, sunken wells,
+   hairlines, window title bars and swatches (cocoa-soft), and the bevel and shading tones
+   (chrome-hi/lo), so nothing beige is left behind. Ink and the accents stay put. */
+.iz-page[data-ground="seaglass"]:not([data-theme="afterglow"]) { --surface: #ebf2f1; --surface-raised: #f8fbfb; --surface-sunken: #dce7e6; --hairline: #d4e1e0; --cocoa-soft: #d9e5e4; --chrome-hi: #ffffff; --chrome-lo: #b4c8c7; }
+.iz-page[data-ground="sage"]:not([data-theme="afterglow"]) { --surface: #e6ebe0; --surface-raised: #f6f8f3; --surface-sunken: #d6dfcc; --hairline: #cdd6c2; --cocoa-soft: #d3dcc8; --chrome-hi: #fbfcf9; --chrome-lo: #aebb9f; }
+.iz-page[data-ground="blush"]:not([data-theme="afterglow"]) { --surface: #f9edef; --surface-raised: #fef9fa; --surface-sunken: #f1dde0; --hairline: #ebd5d9; --cocoa-soft: #efd8dc; --chrome-hi: #ffffff; --chrome-lo: #d9b3b9; }
+.iz-page[data-ground="lavender"]:not([data-theme="afterglow"]) { --surface: #ecdcff; --surface-raised: #faf5ff; --surface-sunken: #dfc8ff; --hairline: #d8bffc; --cocoa-soft: #e1cbff; --chrome-hi: #fdfaff; --chrome-lo: #b192e6; }
+
+/* List rows pop out of the list on hover as one piece: the whole row springs up and grows
+   (overshooting, then settling), takes an outline and a hard sticker shadow, and sits above
+   its neighbours. Nothing inside moves on its own; the end sparkle only fades in. */
+.iz-page .dz-row {
+  position: relative;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 200ms ease, transform 280ms var(--dz-ease-bounce);
+}
+.iz-page .dz-row:hover {
+  z-index: 2;
+  border-color: var(--outline);
+  box-shadow: var(--shadow-sticker);
+  transform: translateY(-5px) scale(1.03);
+  animation: iz-row-pop 420ms var(--dz-ease-bounce);
+}
+@keyframes iz-row-pop {
+  0% { transform: none; }
+  55% { transform: translateY(-9px) scale(1.055); }
+  100% { transform: translateY(-5px) scale(1.03); }
+}
+.iz-page .dz-row::after {
+  content: "✦";
+  flex: none;
+  color: var(--hotpink);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.iz-page .dz-row:hover::after { opacity: 1; }
+
+/* Tags wiggle on hover, like the nav name. */
+.iz-page button.dz-tag:hover,
+.iz-page a.dz-tag:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
+
+/* Sparkles: one twinkles after each page title, two flank the footer line. */
+.iz-page header h1::after,
+.iz-page aside h1::after {
+  content: "✦";
+  display: inline-block;
+  margin-left: 0.22em;
+  font-size: 0.42em;
+  vertical-align: 0.9em;
+  color: var(--aqua);
+  text-shadow: none;
+  animation: dz-twinkle 1.8s ease-in-out infinite;
+}
+.iz-page .dz-footer p::before,
+.iz-page .dz-footer p::after {
+  content: "✦";
+  display: inline-block;
+  margin: 0 10px;
+  color: var(--hotpink);
+  animation: dz-twinkle 2.2s ease-in-out infinite;
+}
+.iz-page .dz-footer p::after { color: var(--aqua); animation-delay: 1.1s; }
+
+/* Windows rise into place when a page opens, and their lights blink in turn on hover. */
+.iz-page .dz-window { animation: iz-rise 560ms var(--dz-ease-bounce) both; }
+@keyframes iz-rise { from { transform: translateY(16px) scale(0.985); } }
+.iz-page .dz-window:hover .dz-window__light { animation: iz-light 900ms ease-in-out infinite; }
+.iz-page .dz-window:hover .dz-window__light:nth-child(2) { animation-delay: 150ms; }
+.iz-page .dz-window:hover .dz-window__light:nth-child(3) { animation-delay: 300ms; }
+@keyframes iz-light { 50% { transform: scale(1.35); filter: brightness(1.25); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .iz-page .dz-row,
+  .iz-page .dz-row:hover,
+  .iz-page .dz-row::after { transition: none; transform: none; }
+  .iz-page .dz-row:hover,
+  .iz-page button.dz-tag:hover,
+  .iz-page a.dz-tag:hover,
+  .iz-page header h1::after,
+  .iz-page aside h1::after,
+  .iz-page .dz-footer p::before,
+  .iz-page .dz-footer p::after,
+  .iz-page .dz-window,
+  .iz-page .dz-window:hover .dz-window__light { animation: none; }
+}
+
+/* Picking an option (cafe drink or milk): the card squashes and springs back and its check pops
+   in. (Pressing also sets off the pixel burst, shared with the buttons.) Runs each time an option becomes the pressed one. */
+.iz-page .iz-option { position: relative; }
+.iz-page .iz-option[aria-pressed="true"] { animation: iz-pick 460ms var(--dz-ease-bounce); }
+.iz-page .iz-option[aria-pressed="true"] .iz-option__check { animation: iz-check-pop 520ms var(--dz-ease-bounce); }
+@keyframes iz-pick { 0% { transform: scale(1); } 30% { transform: scale(0.95); } 65% { transform: scale(1.04); } 100% { transform: scale(1); } }
+@keyframes iz-check-pop { 0% { transform: scale(0) rotate(-90deg); } 70% { transform: scale(1.3) rotate(10deg); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .iz-page .iz-option[aria-pressed="true"],
+  .iz-page .iz-option[aria-pressed="true"] .iz-option__check { animation: none; }
+}
+
+/* Cafe options lift and tilt on hover, springing back when the pointer leaves. */
+.iz-page .iz-option { transition: background-color 120ms ease, transform 240ms var(--dz-ease-bounce); }
+.iz-page .iz-option:hover { transform: translateY(-3px) rotate(-1deg) scale(1.03); }
+@media (prefers-reduced-motion: reduce) {
+  .iz-page .iz-option, .iz-page .iz-option:hover { transition: none; transform: none; }
+}
+
+/* Kitchen tickets: flat cards inside the column windows (no title bar, so no window-in-a-
+   window). The ones that can move along are buttons. */
+.iz-ticket { display: block; width: 100%; padding: 0; text-align: left; font: inherit; color: inherit; border: var(--stroke-1) solid var(--hairline); border-radius: var(--radius-md); background: var(--surface-raised); }
+button.iz-ticket { cursor: pointer; }
+button.iz-ticket:hover { border-color: var(--outline); }
+.iz-ticket__body { display: block; padding: 12px 14px 14px; }
+.iz-ticket__line { display: block; }
+.iz-ticket:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+/* Movable tickets wiggle on hover, like the live kitchen page (beats the window rise-in). */
+.iz-page button.iz-ticket:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
+@media (prefers-reduced-motion: reduce) {
+  .iz-page button.iz-ticket:hover { animation: none; }
+}
+
+/* Option picks show as a filled circle, no glyph: the ring fills hot pink when chosen. */
+.iz-page .iz-option__check { font-size: 0; }
+
+/* Night tweak: alternative dark-mode grounds (light mode ignores it). Each is a full dark set:
+   page, panels, wells, hairlines, title bars and swatches, bevel tones, plus the outline and
+   muted ink tinted to match so the neon reads as one scheme. Accents stay the Dizzy neons. */
+.iz-page[data-night="neon-purple"][data-theme="afterglow"] { --surface: #1a0f2e; --surface-raised: #26174a; --surface-sunken: #110a20; --hairline: #3a2766; --cocoa-soft: #2e1d58; --chrome-hi: #4b3585; --chrome-lo: #0b0616; --outline: #eadbff; --ink-muted: #cbb6ee; }
+.iz-page[data-night="neon-green"][data-theme="afterglow"] { --surface: #0c1a12; --surface-raised: #13281c; --surface-sunken: #07110b; --hairline: #1f4230; --cocoa-soft: #173524; --chrome-hi: #2c5c40; --chrome-lo: #040a06; --outline: #d8ffe6; --ink-muted: #a9d9bb; }
+
+/* Full-scheme retint. The Ground and Night sets above swap the neutral surfaces; these swap
+   everything else that was still the original beige-and-brown: ink and outlines, muted text,
+   the cocoa accent (buttons, title-bar text, sign art), the peach hover/soft tint (row and nav
+   hovers, the "Main" tag and swatch), and text on the yellow tag. Cream and espresso are the
+   original beige and brown schemes, so they keep their own values. */
+.iz-page[data-ground="seaglass"]:not([data-theme="afterglow"]) { --ink: #14302e; --ink-muted: #3f5f5c; --outline: #14302e; --cocoa: #2f5a57; --on-cocoa: #eef6f5; --orange-soft: #d2ecea; --on-sunshine: #14302e; }
+.iz-page[data-ground="sage"]:not([data-theme="afterglow"]) { --ink: #1f2a17; --ink-muted: #4b5a3e; --outline: #1f2a17; --cocoa: #3e5530; --on-cocoa: #f2f6ee; --orange-soft: #dde8d2; --on-sunshine: #1f2a17; }
+.iz-page[data-ground="blush"]:not([data-theme="afterglow"]) { --ink: #3a1119; --ink-muted: #7a3d49; --outline: #3a1119; --cocoa: #6e2a38; --on-cocoa: #fdf2f4; --orange-soft: #f6dade; --on-sunshine: #3a1119; }
+.iz-page[data-ground="lavender"]:not([data-theme="afterglow"]) { --ink: #24123f; --ink-muted: #5a3f86; --outline: #24123f; --cocoa: #4a2f7a; --on-cocoa: #f7f1ff; --orange-soft: #e2cfff; --on-sunshine: #24123f; }
+.iz-page[data-night="neon-purple"][data-theme="afterglow"] { --ink: #f1e8ff; --cocoa: #b48cf0; --on-cocoa: #1a0f2e; --orange-soft: #3b2366; }
+.iz-page[data-night="neon-green"][data-theme="afterglow"] { --ink: #e6fff0; --cocoa: #7fd9a4; --on-cocoa: #0c1a12; --orange-soft: #1d3d2b; }
+
+/* Shadows and the CRT overlay take their colour from the scheme instead of hard-coded brown. */
+.iz-page:not([data-theme="afterglow"]):not([data-ground="cream"]) {
+  --shadow-sticker: 4px 4px 0 var(--outline);
+  --shadow-sticker-lg: 7px 7px 0 var(--outline);
+  --shadow-pressed: 1px 1px 0 var(--outline);
+  --shadow-soft: 0 10px 24px color-mix(in srgb, var(--outline) 18%, transparent);
+  --retro-line: color-mix(in srgb, var(--outline) 3%, transparent);
+  --retro-vignette: color-mix(in srgb, var(--outline) 7%, transparent);
+}
+.iz-page[data-theme="afterglow"]:not([data-night="espresso"]) {
+  --shadow-sticker: 4px 4px 0 var(--chrome-lo);
+  --shadow-sticker-lg: 7px 7px 0 var(--chrome-lo);
+  --shadow-pressed: 1px 1px 0 var(--chrome-lo);
+  --shadow-soft: 0 12px 28px color-mix(in srgb, var(--chrome-lo) 70%, transparent);
+  --retro-line: color-mix(in srgb, var(--chrome-lo) 30%, transparent);
+  --retro-vignette: color-mix(in srgb, var(--chrome-lo) 55%, transparent);
+}
+
+/* Project cards pop on hover: the window lifts, tilts a touch and grows, with a hard sticker
+   shadow, and its artwork zooms slightly inside the frame. Uses the individual translate /
+   rotate / scale properties so it composes with the windows' rise-in animation. */
+.iz-page .iz-project-card { transition: translate 280ms var(--dz-ease-bounce), rotate 280ms var(--dz-ease-bounce), scale 280ms var(--dz-ease-bounce), box-shadow 200ms ease; }
+.iz-page .iz-project-card:hover { translate: 0 -6px; rotate: -0.6deg; scale: 1.02; box-shadow: var(--shadow-sticker-lg); }
+.iz-page .iz-project-card .iz-art { transition: scale 420ms ease; }
+.iz-page .iz-project-card:hover .iz-art { scale: 1.06; }
+@media (prefers-reduced-motion: reduce) {
+  .iz-page .iz-project-card, .iz-page .iz-project-card .iz-art { transition: none; }
+  .iz-page .iz-project-card:hover { translate: none; rotate: none; scale: none; }
+  .iz-page .iz-project-card:hover .iz-art { scale: none; }
+}

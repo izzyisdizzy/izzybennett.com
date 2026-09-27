@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kitchen · Izzy's Cafe</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+</style>
+</helmet>
+<div class="iz-page" data-theme="{{theme}}" data-shadows="{{shadows}}" data-retro="{{retro}}" data-ground="{{ground}}" data-night="{{night}}" style="width: 1280px; height: 1000px; padding: 40px 64px 64px; display: flex; flex-direction: column; gap: 32px;">
+
+  <nav class="dz-nav" aria-label="Main">
+    <a class="dz-nav__brand dz-wiggle-hover" href="Main.dc.html">Izzy Bennett</a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+    <ul class="dz-nav__links">
+      <li><a class="dz-nav__link" href="Recipes.dc.html">Recipes</a></li>
+      <li><a class="dz-nav__link" aria-current="page" href="Cafe.dc.html">Cafe</a></li>
+      <li><a class="dz-nav__link" href="Projects.dc.html">Projects</a></li>
+      <li><a class="dz-nav__link" href="Resume.dc.html">Resume</a></li>
+    </ul>
+    <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}"><sc-if value="{{isLight}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if><sc-if value="{{isDark}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if></button>
+    </div>
+  </nav>
+
+  <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h1 class="display-xl"><span data-dz-bounce="once" tabindex="0">Kitchen</span></h1>
+      <p class="body-s" style="color: var(--ink-muted);">Tap a card to move it along. Auto-refreshes.</p>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+      <a class="dz-link body-s" href="Cafe.dc.html">← Order</a>
+      <span class="{{metaCls}}">{{metaLabel}}</span>
+      <button type="button" class="{{kitchenCls}}" onClick="{{toggleKitchen}}">{{kitchenLabel}}</button>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start;">
+      <section class="dz-window" aria-label="New orders">
+        <div class="dz-window__bar">
+          <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+          <span class="dz-window__title">new</span>
+          <span class="dz-counter">{{count.new}}</span>
+        </div>
+        <div class="dz-window__body" style="padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+          <sc-for list="{{colNew}}" as="o" hint-placeholder-count="2">
+            <button type="button" class="iz-ticket dz-wiggle-hover" onClick="{{o.advance}}" aria-label="{{o.label}}" title="{{o.hint}}">
+                            <span class="iz-ticket__body">
+                <span class="mono-s iz-ticket__line" style="color: var(--aqua-deep);">{{o.num}}</span>
+                <span class="h3 iz-ticket__line">{{o.title}}</span>
+                <span class="body-s iz-ticket__line" style="color: var(--ink-muted);">{{o.bits}}</span>
+                <span class="body-strong iz-ticket__line" style="color: var(--hotpink); margin-top: 6px;">{{o.name}}</span>
+                <sc-if value="{{o.hasNotes}}" hint-placeholder-val="{{false}}"><span class="body-s iz-ticket__line" style="color: var(--ink-muted); font-style: italic;">{{o.notes}}</span></sc-if>
+              </span>
+            </button>
+          </sc-for>
+          <sc-if value="{{empty.new}}" hint-placeholder-val="{{false}}"><p class="caption" style="padding: 8px 4px;">Nothing here.</p></sc-if>
+        </div>
+      </section>
+      <section class="dz-window" aria-label="Making">
+        <div class="dz-window__bar">
+          <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+          <span class="dz-window__title">making</span>
+          <span class="dz-counter">{{count.making}}</span>
+        </div>
+        <div class="dz-window__body" style="padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+          <sc-for list="{{colMaking}}" as="o" hint-placeholder-count="2">
+            <button type="button" class="iz-ticket dz-wiggle-hover" onClick="{{o.advance}}" aria-label="{{o.label}}" title="{{o.hint}}">
+                            <span class="iz-ticket__body">
+                <span class="mono-s iz-ticket__line" style="color: var(--aqua-deep);">{{o.num}}</span>
+                <span class="h3 iz-ticket__line">{{o.title}}</span>
+                <span class="body-s iz-ticket__line" style="color: var(--ink-muted);">{{o.bits}}</span>
+                <span class="body-strong iz-ticket__line" style="color: var(--hotpink); margin-top: 6px;">{{o.name}}</span>
+                <sc-if value="{{o.hasNotes}}" hint-placeholder-val="{{false}}"><span class="body-s iz-ticket__line" style="color: var(--ink-muted); font-style: italic;">{{o.notes}}</span></sc-if>
+              </span>
+            </button>
+          </sc-for>
+          <sc-if value="{{empty.making}}" hint-placeholder-val="{{false}}"><p class="caption" style="padding: 8px 4px;">Nothing here.</p></sc-if>
+        </div>
+      </section>
+      <section class="dz-window" aria-label="Done">
+        <div class="dz-window__bar">
+          <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+          <span class="dz-window__title">done</span>
+          <span class="dz-counter">{{count.done}}</span>
+        </div>
+        <div class="dz-window__body" style="padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: flex-end;"><button type="button" class="dz-btn dz-btn--ghost dz-btn--sm" onClick="{{clearDone}}">Clear all</button></div>
+          <sc-for list="{{colDone}}" as="o" hint-placeholder-count="1">
+            <article class="iz-ticket">
+                            <div class="iz-ticket__body">
+                <p class="mono-s" style="color: var(--aqua-deep);">{{o.num}}</p>
+                <p class="h3">{{o.title}}</p>
+                <p class="body-s" style="color: var(--ink-muted);">{{o.bits}}</p>
+                <p class="body-strong" style="color: var(--hotpink); margin-top: 6px;">{{o.name}}</p>
+                <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm" onClick="{{o.archive}}" style="margin-top: 12px;">Archive</button>
+              </div>
+            </article>
+          </sc-for>
+          <sc-if value="{{empty.done}}" hint-placeholder-val="{{false}}"><p class="caption" style="padding: 8px 4px;">Nothing here.</p></sc-if>
+        </div>
+      </section>
+  </div>
+
+  <footer class="dz-footer" style="margin-top: auto; justify-content: center; text-align: center; padding: 10px 24px;">
+    <p>© Izzy Bennett 2026 · me@izzybennett.com</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["daylight","afterglow"],"default":"daylight","section":"Theme"},"shadows":{"editor":"enum","options":["fewer","full"],"default":"fewer","section":"Theme"},"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"ground":{"editor":"enum","options":["seaglass","sage","cream","blush","lavender"],"default":"seaglass","section":"Theme"},"night":{"editor":"enum","options":["neon-purple","espresso","neon-green"],"default":"neon-purple","section":"Theme"},"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    // Sample queue. #000042 is the order from the "Order confirmed" board.
+    this.state = {
+      kitchenOpen: true,
+      orders: [
+        { id: 45, temp: 'Iced', drink: 'Cardamom latte', milk: 'Oat', syrups: '', name: 'Sam', notes: '', status: 'new' },
+        { id: 44, temp: 'Hot', drink: 'Americano', milk: '', syrups: '', name: 'Priya', notes: 'extra hot please', status: 'new' },
+        { id: 43, temp: 'Iced', drink: 'Cold brew', milk: 'Whole', syrups: 'Vanilla', name: 'Jo', notes: '', status: 'making' },
+        { id: 42, temp: 'Hot', drink: 'Cardamom latte', milk: 'Oat', syrups: '', name: '[YOUR NAME]', notes: '', status: 'done' }
+      ]
+    };
+    this.toggleKitchen = () => this.setState({ kitchenOpen: !this.state.kitchenOpen });
+    this.clearDone = () => this.setState({ orders: this.state.orders.filter((o) => o.status !== 'done') });
+  }
+  componentDidMount() {
+    if (window.Dizzy) window.Dizzy.init(document);
+  }
+  curTheme() {
+    return (this.state && this.state.theme) || this.props.theme || 'daylight';
+  }
+  renderVals() {
+    const NEXT = { new: 'making', making: 'done' };
+    const s = this.state;
+    const setStatus = (id, status) => this.setState({ orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)) });
+    const view = (o) => {
+      const num = 'Order #' + String(o.id).padStart(6, '0');
+      const title = o.temp + ' ' + o.drink;
+      const bits = [o.milk, o.syrups].filter(Boolean).join(' · ');
+      const next = NEXT[o.status];
+      return {
+        num, title, bits, name: o.name, notes: o.notes, hasNotes: !!o.notes,
+        hint: next ? 'Move to ' + next : '',
+        label: [num, title, bits, o.name, o.notes].filter(Boolean).join(', ') + (next ? ', move to ' + next : ''),
+        advance: () => next && setStatus(o.id, next),
+        archive: () => setStatus(o.id, 'archived')
+      };
+    };
+    const col = (status) => s.orders.filter((o) => o.status === status).map(view);
+    const cols = { new: col('new'), making: col('making'), done: col('done') };
+    return {
+      theme: this.curTheme(), isDark: this.curTheme() === 'afterglow', isLight: this.curTheme() !== 'afterglow', themeToggleLabel: this.curTheme() === 'afterglow' ? 'Switch to light mode' : 'Switch to dark mode', toggleTheme: () => this.setState({ theme: this.curTheme() === 'afterglow' ? 'daylight' : 'afterglow' }), shadows: this.props.shadows ?? 'fewer', retro: this.props.retro ?? 'on', ground: this.props.ground ?? 'seaglass', night: this.props.night ?? 'neon-purple',
+      colNew: cols.new, colMaking: cols.making, colDone: cols.done,
+      count: { new: cols.new.length, making: cols.making.length, done: cols.done.length },
+      empty: { new: !cols.new.length, making: !cols.making.length, done: !cols.done.length },
+      clearDone: this.clearDone,
+      toggleKitchen: this.toggleKitchen,
+      kitchenLabel: s.kitchenOpen ? 'Close kitchen' : 'Open kitchen',
+      kitchenCls: 'dz-btn dz-btn--sm' + (s.kitchenOpen ? ' dz-btn--cocoa' : ''),
+      metaLabel: s.kitchenOpen ? 'open · live' : 'closed',
+      metaCls: 'dz-tag' + (s.kitchenOpen ? ' dz-tag--ready' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

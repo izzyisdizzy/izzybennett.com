@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Raspberry Lemon Scones · Izzy Bennett</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+.step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--hairline)}
+.step:last-child{border-bottom:0}
+.ing{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--hairline)}
+.ing:last-child{border-bottom:0}
+.iz-ing{position:relative;display:inline;padding:0 3px;margin:0;border:0;border-bottom:2px dotted var(--hotpink);border-radius:4px 4px 0 0;background:transparent;color:var(--ink);font:inherit;cursor:pointer;transition:background-color 120ms ease}
+.iz-ing:hover,.iz-ing:focus-visible{background:var(--hotpink-soft);border-bottom-style:solid}
+.iz-ing:focus-visible{outline:var(--stroke-2) solid var(--focus);outline-offset:2px}
+.iz-ing::after{content:attr(data-amount);position:absolute;left:0;bottom:calc(100% + 8px);z-index:3;padding:2px 8px;border:var(--stroke-1) solid var(--outline);border-radius:var(--radius-xs);background:var(--sunshine);color:var(--on-sunshine);font-family:var(--font-mono);font-size:13px;line-height:18px;white-space:nowrap;box-shadow:var(--shadow-sticker);opacity:0;pointer-events:none;transition:opacity 120ms ease}
+.iz-ing:hover::after,.iz-ing:focus-visible::after{opacity:1}
+.iz-ing[aria-pressed="true"]::after{display:none}
+.iz-ing__amt{font-family:var(--font-mono);font-size:0.88em;font-weight:700;color:var(--orange-deep)}
+.dz-btn[aria-pressed="true"]{background:var(--hotpink-soft);box-shadow:var(--shadow-pressed);transform:translate(3px,3px)}
+</style>
+</helmet>
+<div class="iz-page" data-theme="{{theme}}" data-shadows="{{shadows}}" data-retro="{{retro}}" data-ground="{{ground}}" data-night="{{night}}" style="width: 1280px; height: 1500px; padding: 40px 64px 64px; display: flex; flex-direction: column; gap: 32px;">
+
+  <nav class="dz-nav" aria-label="Main">
+    <a class="dz-nav__brand dz-wiggle-hover" href="Main.dc.html">Izzy Bennett</a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+    <ul class="dz-nav__links">
+      <li><a class="dz-nav__link" aria-current="page" href="Recipes.dc.html">Recipes</a></li>
+      <li><a class="dz-nav__link" href="Cafe.dc.html">Cafe</a></li>
+      <li><a class="dz-nav__link" href="Projects.dc.html">Projects</a></li>
+      <li><a class="dz-nav__link" href="Resume.dc.html">Resume</a></li>
+    </ul>
+    <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}"><sc-if value="{{isLight}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if><sc-if value="{{isDark}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if></button>
+    </div>
+  </nav>
+
+  <p class="body-s" style="padding-top: 8px;"><a class="dz-link" href="Recipes.dc.html">← All recipes</a></p>
+
+  <header style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <a class="dz-tag dz-tag--pink" href="Recipes.dc.html">Dessert</a>
+      <span class="dz-tag dz-tag--sunshine">★ New</span>
+    </div>
+    <h1 class="display-l"><span data-dz-bounce="once" tabindex="0">Raspberry Lemon Scones</span></h1>
+    <p class="body-l" style="max-width: 620px; text-wrap: pretty;">Craggy, barely sweet, and very lemony. I make these when the raspberries at the market are about a day past their best. The oven doesn't mind.</p>
+    <p class="mono" style="color: var(--ink-muted);">makes 8 · 40 min · oven 425°F / 220°C</p>
+    <div style="display: flex; gap: 16px; padding-top: 8px;">
+      <button class="dz-btn" type="button">Share recipe</button>
+      <button class="dz-btn dz-btn--cocoa" type="button">Print recipe</button>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 48px; align-items: start;">
+    <aside class="dz-window">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+        <span class="dz-window__title">ingredients.txt</span>
+      </div>
+      <div class="dz-window__body" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <h2 class="h2">Ingredients</h2>
+        <div class="dz-seg" role="group" aria-label="Ingredient units">
+          <button class="dz-seg__btn" type="button" data-value="us" aria-pressed="{{isUs}}" onClick="{{pickUs}}" style="min-height: 34px;">US</button>
+          <button class="dz-seg__btn" type="button" data-value="grams" aria-pressed="{{isGrams}}" onClick="{{pickGrams}}" style="min-height: 34px;">Grams</button>
+        </div>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
+        <sc-for list="{{ingredients}}" as="i" hint-placeholder-count="8">
+          <li class="ing"><span>{{i.name}}</span><span class="mono" style="flex: none; color: var(--ink);">{{i.amount}}</span></li>
+        </sc-for>
+      </ul>
+      </div>
+    </aside>
+
+    <section class="dz-window">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+        <span class="dz-window__title">steps.txt</span>
+      </div>
+      <div class="dz-window__body" style="padding: 24px 28px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <h2 class="h2">Steps</h2>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="dz-btn dz-btn--sm dz-btn--ghost" type="button" aria-pressed="{{showAmounts}}" onClick="{{toggleAmounts}}" style="min-height: 34px;">{{amountsLabel}}</button>
+          <div class="dz-seg" role="group" aria-label="Units in steps">
+            <button class="dz-seg__btn" type="button" data-value="us" aria-pressed="{{isUs}}" onClick="{{pickUs}}" style="min-height: 34px;">US</button>
+            <button class="dz-seg__btn" type="button" data-value="grams" aria-pressed="{{isGrams}}" onClick="{{pickGrams}}" style="min-height: 34px;">Grams</button>
+          </div>
+        </div>
+      </div>
+      <p class="caption">Hover an underlined ingredient for its amount, or click it to keep the amount shown.</p>
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
+        <li class="step"><span class="counter" style="color: var(--aqua-deep); flex: none; width: 32px; padding-top: 6px;">01</span><p class="body-l">Heat the oven to <span class="mono">{{ovenTemp}}</span>. Line a sheet pan. Zest the <button type="button" class="iz-ing" data-amount="{{amt.lemon}}" aria-pressed="{{on.lemon}}" onClick="{{toggle.lemon}}"><span class="iz-ing__amt">{{shown.lemon}}</span>lemon</button> into the <button type="button" class="iz-ing" data-amount="{{amt.sugar}}" aria-pressed="{{on.sugar}}" onClick="{{toggle.sugar}}"><span class="iz-ing__amt">{{shown.sugar}}</span>sugar</button> and rub it in with your fingers until it smells like a lemon drop.</p></li>
+        <li class="step"><span class="counter" style="color: var(--aqua-deep); flex: none; width: 32px; padding-top: 6px;">02</span><p class="body-l">Whisk the <button type="button" class="iz-ing" data-amount="{{amt.flour}}" aria-pressed="{{on.flour}}" onClick="{{toggle.flour}}"><span class="iz-ing__amt">{{shown.flour}}</span>flour</button>, lemon sugar, <button type="button" class="iz-ing" data-amount="{{amt.bakingPowder}}" aria-pressed="{{on.bakingPowder}}" onClick="{{toggle.bakingPowder}}"><span class="iz-ing__amt">{{shown.bakingPowder}}</span>baking powder</button> and <button type="button" class="iz-ing" data-amount="{{amt.salt}}" aria-pressed="{{on.salt}}" onClick="{{toggle.salt}}"><span class="iz-ing__amt">{{shown.salt}}</span>salt</button>. Grate in the <button type="button" class="iz-ing" data-amount="{{amt.butter}}" aria-pressed="{{on.butter}}" onClick="{{toggle.butter}}"><span class="iz-ing__amt">{{shown.butter}}</span>cold butter</button> and toss until it looks like damp sand with a few pea-sized bits left.</p></li>
+        <li class="step"><span class="counter" style="color: var(--aqua-deep); flex: none; width: 32px; padding-top: 6px;">03</span><p class="body-l">Pour in the <button type="button" class="iz-ing" data-amount="{{amt.cream}}" aria-pressed="{{on.cream}}" onClick="{{toggle.cream}}"><span class="iz-ing__amt">{{shown.cream}}</span>cream</button> and stir just until it holds together. Fold in the <button type="button" class="iz-ing" data-amount="{{amt.raspberries}}" aria-pressed="{{on.raspberries}}" onClick="{{toggle.raspberries}}"><span class="iz-ing__amt">{{shown.raspberries}}</span>raspberries</button>. A few will burst, and that's the point.</p></li>
+        <li class="step"><span class="counter" style="color: var(--aqua-deep); flex: none; width: 32px; padding-top: 6px;">04</span><p class="body-l">Pat into a rough 8-inch round, cut into 8 wedges and space them out on the pan. Brush the tops with a little more cream.</p></li>
+        <li class="step"><span class="counter" style="color: var(--aqua-deep); flex: none; width: 32px; padding-top: 6px;">05</span><p class="body-l">Bake 18–22 minutes, until the edges are deep gold. Cool 10 minutes, then eat one standing at the counter.</p></li>
+      </ol>
+      </div>
+    </section>
+  </div>
+
+  <footer class="dz-footer" style="margin-top: auto; justify-content: center; text-align: center; padding: 10px 24px;">
+    <p>© Izzy Bennett 2026 · me@izzybennett.com</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["daylight","afterglow"],"default":"daylight","section":"Theme"},"shadows":{"editor":"enum","options":["fewer","full"],"default":"fewer","section":"Theme"},"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"ground":{"editor":"enum","options":["seaglass","sage","cream","blush","lavender"],"default":"seaglass","section":"Theme"},"night":{"editor":"enum","options":["neon-purple","espresso","neon-green"],"default":"neon-purple","section":"Theme"},"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { units: 'us', showAmounts: false, peek: {} };
+    this.pickUs = () => this.setState({ units: 'us' });
+    this.pickGrams = () => this.setState({ units: 'grams' });
+    this.toggleAmounts = () => this.setState({ showAmounts: !this.state.showAmounts, peek: {} });
+  }
+  componentDidMount() {
+    if (window.Dizzy) window.Dizzy.init(document);
+  }
+  curTheme() {
+    return (this.state && this.state.theme) || this.props.theme || 'daylight';
+  }
+  renderVals() {
+    const grams = this.state.units === 'grams';
+    const list = [
+      { key: 'flour', name: 'All-purpose flour', us: '2 ¼ cups', g: '281 g' },
+      { key: 'sugar', name: 'Sugar', us: '⅓ cup', g: '67 g' },
+      { key: 'bakingPowder', name: 'Baking powder', us: '1 tbsp', g: '12 g' },
+      { key: 'salt', name: 'Salt', us: '½ tsp', g: '3 g' },
+      { key: 'butter', name: 'Cold butter', us: '½ cup', g: '113 g' },
+      { key: 'cream', name: 'Heavy cream', us: '¾ cup', g: '180 g' },
+      { key: 'raspberries', name: 'Raspberries', us: '1 cup', g: '125 g' },
+      { key: 'lemon', name: 'Lemon, zested', us: '1', g: '1' }
+    ];
+    const all = this.state.showAmounts;
+    const peek = this.state.peek;
+    const amt = {}, shown = {}, on = {}, toggle = {};
+    list.forEach((i) => {
+      const a = grams ? i.g : i.us;
+      const isOn = all || !!peek[i.key];
+      amt[i.key] = a;
+      on[i.key] = isOn;
+      shown[i.key] = isOn ? a + ' ' : '';
+      toggle[i.key] = () => this.setState({ peek: { ...peek, [i.key]: !peek[i.key] } });
+    });
+    return {
+      theme: this.curTheme(), isDark: this.curTheme() === 'afterglow', isLight: this.curTheme() !== 'afterglow', themeToggleLabel: this.curTheme() === 'afterglow' ? 'Switch to light mode' : 'Switch to dark mode', toggleTheme: () => this.setState({ theme: this.curTheme() === 'afterglow' ? 'daylight' : 'afterglow' }), shadows: this.props.shadows ?? 'fewer', retro: this.props.retro ?? 'on', ground: this.props.ground ?? 'seaglass', night: this.props.night ?? 'neon-purple',
+      isUs: !grams,
+      isGrams: grams,
+      pickUs: this.pickUs,
+      pickGrams: this.pickGrams,
+      ingredients: list.map((i) => ({ name: i.name, amount: grams ? i.g : i.us })),
+      ovenTemp: grams ? '220°C' : '425°F',
+      showAmounts: all,
+      toggleAmounts: this.toggleAmounts,
+      amountsLabel: all ? 'Hide amounts' : 'Show amounts',
+      amt, shown, on, toggle
+    };
+  }
+}
+</script>
+</body>
+</html>
