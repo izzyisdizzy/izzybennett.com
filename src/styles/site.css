@@ -111,6 +111,8 @@
   font-weight: 700;
 }
 .iz-option:has(:checked) .iz-option__check { background: var(--hotpink); }
+/* Checkboxes get a squarer mark than radios, so "pick any" reads differently from "pick one". */
+.iz-option:has(input[type="checkbox"]) .iz-option__check { border-radius: var(--radius-xs); }
 .iz-option:has(:checked) .iz-option__check::after { content: "✓"; }
 
 /* -------------------------------------------------------------- mobile nav */

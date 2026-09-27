@@ -13,37 +13,46 @@ const ORDER_API = import.meta.env.PUBLIC_ORDER_API || (import.meta.env.DEV ? 'ht
 const RECIPE_API = import.meta.env.PUBLIC_RECIPE_API || (import.meta.env.DEV ? 'http://localhost:8787' : '');
 
 const columns = [
-  { status: 'new', label: 'New', accent: 'border-accent-500' },
-  { status: 'making', label: 'Making', accent: 'border-amber-500' },
-  { status: 'done', label: 'Done', accent: 'border-green-500' },
+  { status: 'new', label: 'New' },
+  { status: 'making', label: 'Making' },
+  { status: 'done', label: 'Done' },
 ];
-const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400';
 ---
 
 <BaseLayout title="Orders" description="Live kitchen queue for Izzy's home cafe.">
-  <div class="flex items-center justify-between gap-3">
-    <h1 class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Kitchen 🧑‍🍳</h1>
-    <div class="flex items-center gap-3">
-      <a href="/order/" class="shrink-0 text-sm text-accent-600 hover:underline dark:text-accent-100">← Order</a>
-      <span id="orders-meta" class="text-sm text-neutral-400"></span>
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="display-xl">Kitchen 🧑‍🍳</h1>
+      <p class="body-s mt-2 text-ink-muted">Tap a card to move it along. Auto-refreshes.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <a href="/order/" class="dz-link body-s">← Order</a>
+      <span id="orders-meta" class="dz-tag"></span>
       <button type="button" id="kitchen-toggle" data-order-api={ORDER_API} data-recipe-api={RECIPE_API}
-        class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50">
+        class="dz-btn dz-btn--ghost dz-btn--sm">
         …
       </button>
     </div>
   </div>
-  <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-500">Tap a card to move it along. Auto-refreshes.</p>
 
-  <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
     {columns.map((col) => (
-      <section class:list={['rounded-xl border-t-4 bg-neutral-50 p-3 dark:bg-neutral-900/40', col.accent]}>
-        <div class="flex items-center justify-between">
-          <h2 class={colHeadCls}>{col.label} <span data-count={col.status} class="ml-1 text-neutral-400">0</span></h2>
-          {col.status === 'done' && (
-            <button type="button" id="clear-done" class="text-xs font-medium text-neutral-500 hover:text-red-500">Clear</button>
-          )}
+      <section class="dz-window" aria-labelledby={`col-${col.status}`}>
+        <div class="dz-window__bar">
+          <span class="dz-window__lights" aria-hidden="true">
+            <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
+          </span>
+          <h2 id={`col-${col.status}`} class="dz-window__title">{col.label.toLowerCase()}</h2>
+          <span data-count={col.status} class="dz-counter">0</span>
         </div>
-        <div data-column={col.status} class="mt-3 space-y-2"></div>
+        <div class="p-3">
+          {col.status === 'done' && (
+            <div class="mb-2 flex justify-end">
+              <button type="button" id="clear-done" class="dz-btn dz-btn--ghost dz-btn--sm">Clear all</button>
+            </div>
+          )}
+          <div data-column={col.status} class="space-y-3"></div>
+        </div>
       </section>
     ))}
   </div>
@@ -87,22 +96,17 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
       toggle.disabled = true;
       toggle.textContent = 'Admin only';
       toggle.title = 'You can add recipes, but not open or close the kitchen.';
-      toggle.className =
-        'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ' +
-        'border-neutral-300 text-neutral-400 dark:border-neutral-700 dark:text-neutral-500';
+      toggle.className = 'dz-btn dz-btn--ghost dz-btn--sm';
     }
 
-    // Reflect open/closed state onto the toggle button (red "Close" when open, green "Open" when closed).
+    // Reflect open/closed state onto the toggle button. The label always names the action, so the
+    // colour (cocoa to close, pink to open) is never the only signal.
     function renderKitchen(open) {
       kitchenOpen = open;
       if (adminDenied) return; // keep the denied state; the poll must not resurrect the button
       toggle.disabled = false; // real state is known now — clickable
       toggle.textContent = open ? 'Close kitchen' : 'Open kitchen';
-      toggle.className =
-        'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ' +
-        (open
-          ? 'border-red-300 text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40'
-          : 'border-green-400 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950/40');
+      toggle.className = `dz-btn dz-btn--sm ${open ? 'dz-btn--cocoa' : ''}`;
     }
 
     // Order server unreachable or unconfigured: show a clearly-disabled "offline" control instead of
@@ -110,9 +114,7 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
     function renderKitchenUnavailable() {
       toggle.disabled = true;
       toggle.textContent = 'Kitchen offline';
-      toggle.className =
-        'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ' +
-        'border-neutral-300 text-neutral-400 dark:border-neutral-700 dark:text-neutral-500';
+      toggle.className = 'dz-btn dz-btn--ghost dz-btn--sm';
     }
 
     toggle.addEventListener('click', async () => {
@@ -154,57 +156,54 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
     }
 
     // Build one order card. Uses textContent throughout — name/notes are user input and must never
-    // be parsed as markup.
+    // be parsed as markup. A card that can advance IS a button (keyboard- and screen-reader-
+    // operable, "Move to making" in its label), so its lines are spans — a <button> takes
+    // phrasing content only.
     function card(order) {
-      const el = document.createElement('article');
-      el.className =
-        'rounded-lg border border-neutral-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900';
+      const next = NEXT[order.status];
+      const el = document.createElement(next ? 'button' : 'article');
+      el.className = 'iz-card block w-full p-4 text-left';
 
-      const drink = document.createElement('div');
-      drink.className = 'font-semibold text-neutral-900 dark:text-neutral-100';
+      // Each line is also collected for the button's accessible name: textContent would run the
+      // block spans together ("#000001Iced MatchaOat"), so the label joins them with commas.
+      const spoken: string[] = [];
+      const line = (cls: string, text: string) => {
+        const span = document.createElement('span');
+        span.className = `block ${cls}`;
+        span.textContent = text;
+        el.appendChild(span);
+        spoken.push(text);
+      };
+
+      line('mono-s text-aqua-deep', `Order #${String(order.id).padStart(6, '0')}`);
       // Prefix with the hot/iced choice, e.g. "Iced Latte". Older orders may lack it — fall back to
       // just the drink name.
-      drink.textContent = order.temperature ? `${order.temperature} ${order.drink}` : order.drink;
-      el.appendChild(drink);
+      line('h3 mt-1', order.temperature ? `${order.temperature} ${order.drink}` : order.drink);
 
       const bits = [];
       if (order.milk) bits.push(order.milk);
       if (order.syrups && order.syrups.length) bits.push(order.syrups.join(', '));
-      if (bits.length) {
-        const sub = document.createElement('div');
-        sub.className = 'mt-0.5 text-sm text-neutral-600 dark:text-neutral-400';
-        sub.textContent = bits.join(' · ');
-        el.appendChild(sub);
-      }
+      if (bits.length) line('body-s mt-1 text-ink-muted', bits.join(' · '));
+      if (order.name) line('body-strong mt-2 text-hotpink', order.name);
+      if (order.notes) line('body-s mt-1 italic text-ink-muted', order.notes);
 
-      if (order.name) {
-        const who = document.createElement('div');
-        who.className = 'mt-1 text-sm font-medium text-accent-600 dark:text-accent-100';
-        who.textContent = order.name;
-        el.appendChild(who);
-      }
-
-      if (order.notes) {
-        const notes = document.createElement('div');
-        notes.className = 'mt-1 text-sm italic text-neutral-500 dark:text-neutral-400';
-        notes.textContent = order.notes;
-        el.appendChild(notes);
-      }
-
-      const next = NEXT[order.status];
       if (next) {
-        el.classList.add('cursor-pointer', 'transition-colors', 'hover:border-accent-400');
-        el.title = `Move to ${next}`;
-        el.addEventListener('click', async () => {
-          el.style.opacity = '0.5';
+        const btn = el as HTMLButtonElement; // created as a <button> when `next` is set
+        btn.type = 'button';
+        btn.classList.add('cursor-pointer', 'dz-wiggle-hover');
+        btn.title = `Move to ${next}`;
+        btn.setAttribute('aria-label', `${spoken.join(', ')} — move to ${next}`);
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
           try { await patchStatus(order.id, next); await refresh(); }
-          catch { el.style.opacity = '1'; }
+          catch { btn.style.opacity = '1'; btn.disabled = false; }
         });
       } else {
         // Done cards can be archived individually.
         const archive = document.createElement('button');
         archive.type = 'button';
-        archive.className = 'mt-2 text-xs text-neutral-400 hover:text-red-500';
+        archive.className = 'dz-btn dz-btn--ghost dz-btn--sm mt-3';
         archive.textContent = 'Archive';
         archive.addEventListener('click', async () => {
           try { await patchStatus(order.id, 'archived'); await refresh(); } catch { /* keep it visible */ }
@@ -240,11 +239,11 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
       else if (!hasResolved) renderKitchenUnavailable(); // never reached the server — show offline, not "…"
       if (ordersRes && ordersRes.ok) {
         render(await ordersRes.json());
-        meta.textContent = 'live';
-        meta.className = 'text-sm text-green-600 dark:text-green-500';
+        meta.textContent = '● live';
+        meta.className = 'dz-tag dz-tag--ready';
       } else {
         meta.textContent = 'offline — retrying';
-        meta.className = 'text-sm text-red-500';
+        meta.className = 'dz-tag dz-tag--stopped';
       }
     }
 
@@ -261,7 +260,7 @@ const colHeadCls = 'text-xs font-semibold uppercase tracking-wide text-neutral-5
       // Show the offline toggle and a clear board note instead of hammering same-origin 404s.
       renderKitchenUnavailable();
       meta.textContent = 'not configured';
-      meta.className = 'text-sm text-neutral-400';
+      meta.className = 'dz-tag';
     } else {
       // Poll only while the tab is visible — a kitchen screen left open shouldn't hammer the Pi
       // when it's in the background.
