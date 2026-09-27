@@ -163,6 +163,7 @@ const columns = [
       const next = NEXT[order.status];
       const el = document.createElement(next ? 'button' : 'article');
       el.className = 'iz-card block w-full p-4 text-left';
+      el.dataset.orderId = String(order.id); // lets render() put focus back after a rebuild
 
       // Each line is also collected for the button's accessible name: textContent would run the
       // block spans together ("#000001Iced MatchaOat"), so the label joins them with commas.
@@ -193,11 +194,14 @@ const columns = [
         btn.classList.add('cursor-pointer', 'dz-wiggle-hover');
         btn.title = `Move to ${next}`;
         btn.setAttribute('aria-label', `${spoken.join(', ')} — move to ${next}`);
+        // In-flight guard via aria-disabled, not `disabled`: disabling the focused button would
+        // push focus to <body>, and render() could no longer put it back on this order.
         btn.addEventListener('click', async () => {
-          btn.disabled = true;
+          if (btn.getAttribute('aria-disabled') === 'true') return;
+          btn.setAttribute('aria-disabled', 'true');
           btn.style.opacity = '0.5';
           try { await patchStatus(order.id, next); await refresh(); }
-          catch { btn.style.opacity = '1'; btn.disabled = false; }
+          catch { btn.style.opacity = '1'; btn.removeAttribute('aria-disabled'); }
         });
       } else {
         // Done cards can be archived individually.
@@ -215,9 +219,24 @@ const columns = [
 
     // Last-rendered orders, so "Clear done" can archive from known state without re-fetching.
     let lastOrders = [];
+    // The JSON of the last render. The poll runs every few seconds and usually returns the same
+    // board; rebuilding it anyway would throw away the card a keyboard user has focused.
+    let lastRendered = '';
 
     function render(orders) {
       lastOrders = orders;
+      const snapshot = JSON.stringify(orders);
+      if (snapshot === lastRendered) return;
+      lastRendered = snapshot;
+
+      // The board did change: note which order (and which control on it) has focus, rebuild, then
+      // put focus back on the same order — in its new column if it just moved. A card that moved
+      // to "done" is no longer a button, so focus lands on its Archive button instead.
+      const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const focusedCard = focused?.closest<HTMLElement>('[data-order-id]');
+      const focusedId = focusedCard?.dataset.orderId;
+      const onArchive = !!focusedCard && focused !== focusedCard;
+
       const byStatus = { new: [], making: [], done: [] };
       for (const o of orders) if (byStatus[o.status]) byStatus[o.status].push(o);
       for (const status of Object.keys(byStatus)) {
@@ -225,6 +244,12 @@ const columns = [
         const count = document.querySelector(`[data-count="${status}"]`);
         col.replaceChildren(...byStatus[status].map(card));
         if (count) count.textContent = String(byStatus[status].length);
+      }
+
+      if (focusedId) {
+        const same = document.querySelector<HTMLElement>(`[data-order-id="${focusedId}"]`);
+        const target = same instanceof HTMLButtonElement && !onArchive ? same : same?.querySelector<HTMLElement>('button');
+        target?.focus();
       }
     }
 
