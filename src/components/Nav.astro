@@ -12,7 +12,10 @@ const currentPath = Astro.url.pathname;
 const isCurrent = (href: string) => currentPath.startsWith(href);
 ---
 
-<header class="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6 sm:pt-6">
+<!-- Sticky, on the page ground, so the nav (and the theme toggle) stay reachable on long recipe
+     pages. The bottom padding covers the card's sticker shadow so content scrolls under, not
+     through, it. -->
+<header class="iz-no-print sticky top-0 z-10 mx-auto w-full max-w-3xl bg-surface px-4 pt-4 pb-2 sm:px-6 sm:pt-6">
   <nav class="dz-nav" aria-label="Main">
     <a href="/" class="dz-nav__brand dz-wiggle-hover whitespace-nowrap">Izzy Bennett</a>
 

@@ -4,17 +4,12 @@
  * night — see .iz-theme-toggle in site.css), persists the choice, and reports state through
  * aria-pressed ("afterglow is on"). ThemeBoot.astro must have stamped data-theme already.
  */
-import tokens from '../dizzy/tokens.json';
-
-const surface = tokens.color.tokens.find((token) => token.name === 'surface')!.value;
 ---
 
 <button
   type="button"
   class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle"
   data-theme-toggle
-  data-surface-daylight={surface.daylight}
-  data-surface-afterglow={surface.afterglow}
   aria-pressed="false"
   aria-label="Switch to the afterglow theme"
 >
@@ -26,26 +21,27 @@ const surface = tokens.color.tokens.find((token) => token.name === 'surface')!.v
   import { applyTheme, storeTheme, isTheme, type Theme } from '../scripts/theme';
 
   const root = document.documentElement;
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]'));
 
-  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
-    const surface: Record<Theme, string> = {
-      daylight: btn.dataset.surfaceDaylight ?? '',
-      afterglow: btn.dataset.surfaceAfterglow ?? '',
-    };
-
-    const sync = () => {
-      const dark = root.dataset.theme === 'afterglow';
+  const sync = () => {
+    const dark = root.dataset.theme === 'afterglow';
+    for (const btn of buttons) {
       btn.setAttribute('aria-pressed', String(dark));
       btn.setAttribute('aria-label', dark ? 'Switch to the daylight theme' : 'Switch to the afterglow theme');
-    };
-    sync();
+    }
+  };
+  sync();
 
+  // data-theme can change without a click — ThemeBoot re-stamps it when the OS preference flips
+  // and no choice is stored — so the button's reported state follows the attribute, not clicks.
+  new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
+  for (const btn of buttons) {
     btn.addEventListener('click', () => {
       const current = isTheme(root.dataset.theme) ? root.dataset.theme : 'daylight';
       const next: Theme = current === 'afterglow' ? 'daylight' : 'afterglow';
-      applyTheme(next, surface);
+      applyTheme(next);
       storeTheme(next);
-      sync();
     });
   }
 </script>

@@ -25,10 +25,21 @@
 @import "@izzy/auth-client/styles/auth.css";
 @plugin "@tailwindcss/typography";
 
-/* Legacy `dark:` utilities follow the Dizzy theme toggle instead of the OS while pages are still
-   being migrated, so toggling daylight on a dark OS cannot leave light text on a cream page.
-   Remove once no `dark:` variant remains in the site (and drop the accent bridge below with it). */
-@custom-variant dark (&:where([data-theme="afterglow"], [data-theme="afterglow"] *));
+/* Legacy `dark:` utilities follow the Dizzy theme instead of the OS while pages are still being
+   migrated, so toggling daylight on a dark OS cannot leave light text on a cream page. The second
+   branch mirrors the no-JS fallback in tokens.css: with nothing stamped on <html>, a dark OS gets
+   afterglow tokens, so the utilities must flip with them. Remove once no `dark:` variant remains
+   in the site (and drop the accent bridge below with it). */
+@custom-variant dark {
+  &:where([data-theme="afterglow"], [data-theme="afterglow"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="daylight"]), :root:not([data-theme="daylight"]) *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   /* Bridge for the pinned @izzy/recipe-engine v1.x, whose popovers and badges read the old
@@ -39,25 +50,68 @@
   --color-accent-700: var(--hotpink-strong);
 }
 
-html {
-  background: var(--surface);
+/* Element defaults go in the base layer so both the component layer (dz-btn:focus-visible,
+   iz-field) and utilities (focus:outline-none, font-mono on a heading) can still override them.
+   Unlayered, these would beat every layered rule regardless of specificity. */
+@layer base {
+  html {
+    background: var(--surface);
+  }
+
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 26px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+
+  /* Every focusable thing gets the system ring by default. */
+  :focus-visible {
+    outline: var(--stroke-2) solid var(--focus);
+    outline-offset: 2px;
+  }
 }
 
-body {
-  background: var(--surface);
+/* The pinned @izzy/recipe-engine v1.x colours its popovers and the /upload typeahead under
+   @media (prefers-color-scheme: dark), which the theme toggle cannot reach. These rules key the
+   same selectors on data-theme instead (ThemeBoot always stamps it), on Dizzy tokens, and out-
+   specify the engine's own rules. Goes away with the engine v2 restyle. */
+[data-theme="daylight"] .ing-ref-btn,
+[data-theme="afterglow"] .ing-ref-btn {
+  border-bottom-color: var(--hotpink);
+}
+[data-theme="daylight"] .ing-ref-btn:hover,
+[data-theme="daylight"] .ing-ref-btn:focus-visible,
+[data-theme="afterglow"] .ing-ref-btn:hover,
+[data-theme="afterglow"] .ing-ref-btn:focus-visible {
+  color: var(--hotpink-strong);
+}
+[data-theme="daylight"] .ing-pop,
+[data-theme="afterglow"] .ing-pop,
+[data-theme="daylight"] .ing-ta-list,
+[data-theme="afterglow"] .ing-ta-list {
+  border-color: var(--outline);
+  background: var(--surface-raised);
   color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 26px;
-  -webkit-font-smoothing: antialiased;
+  box-shadow: var(--shadow-soft);
 }
-
-h1, h2, h3 {
-  font-family: var(--font-display);
+[data-theme="daylight"] .ing-pop-group,
+[data-theme="afterglow"] .ing-pop-group,
+[data-theme="daylight"] .ing-ta-grams,
+[data-theme="afterglow"] .ing-ta-grams,
+[data-theme="daylight"] .ing-ta-ghost,
+[data-theme="afterglow"] .ing-ta-ghost {
+  color: var(--ink-muted);
 }
-
-/* Every focusable thing gets the system's ring; components that draw their own override it. */
-:focus-visible {
-  outline: var(--stroke-2) solid var(--focus);
-  outline-offset: 2px;
+[data-theme="daylight"] .ing-ta-opt:hover,
+[data-theme="daylight"] .ing-ta-opt[aria-selected="true"],
+[data-theme="afterglow"] .ing-ta-opt:hover,
+[data-theme="afterglow"] .ing-ta-opt[aria-selected="true"] {
+  background: var(--hotpink-soft);
 }

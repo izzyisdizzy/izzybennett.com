@@ -22,8 +22,15 @@
     var frag = document.createDocumentFragment();
     var index = 0;
 
-    for (var i = 0; i < text.length; i++) {
-      var ch = text.charAt(i);
+    /* Local patch (izzybennett.com): split by grapheme cluster, not UTF-16 code unit, so an
+       emoji or a combining accent bounces as one glyph instead of two broken halves. Upstream
+       Dizzy still uses charAt(i). */
+    var chars = typeof Intl !== 'undefined' && Intl.Segmenter
+      ? Array.prototype.map.call(Array.from(new Intl.Segmenter().segment(text)), function (s) { return s.segment; })
+      : Array.from(text);
+
+    for (var i = 0; i < chars.length; i++) {
+      var ch = chars[i];
       if (ch === ' ' || ch === '\n' || ch === '\t') {
         frag.appendChild(document.createTextNode(ch));
         continue;
