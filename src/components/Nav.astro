@@ -6,6 +6,7 @@ const navLinks = [
   { href: '/izzys-cafe/', label: 'Cafe' },
   { href: '/order/', label: 'Order' },
   { href: '/projects/', label: 'Projects' },
+  { href: '/resume/', label: 'Resume' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -29,9 +30,6 @@ const isCurrent = (href: string) => currentPath.startsWith(href);
           </a>
         </li>
       ))}
-      <li>
-        <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" class="dz-nav__link">Resume</a>
-      </li>
     </ul>
 
     <div class="flex items-center gap-2">
@@ -49,9 +47,6 @@ const isCurrent = (href: string) => currentPath.startsWith(href);
               </a>
             </li>
           ))}
-          <li>
-            <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" class="dz-nav__link">Resume</a>
-          </li>
         </ul>
       </details>
     </div>
