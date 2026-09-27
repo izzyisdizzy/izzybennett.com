@@ -57,15 +57,17 @@
   /* Local patch (izzybennett.com): drive `hover`/`once` bounces as single waves. Each wave
      adds .dz-bouncing and the last letter's animationend removes it, so a pointer that
      leaves mid-wave lets the wave finish; while still hovered or focused, it goes again.
-     Upstream Dizzy pauses an infinite loop instead, which freezes letters mid-bounce. */
+     Upstream Dizzy pauses an infinite loop instead, which freezes letters mid-bounce.
+     Reduced motion is checked per wave, not once, so toggling the OS setting applies live. */
   function replayOnHover(el, playNow) {
-    if (REDUCED()) return;
     var spans = el.querySelectorAll(':scope > span');
     var last = spans[spans.length - 1];
     if (!last) return;
 
     function start() {
-      if (el.classList.contains('dz-bouncing')) return;
+      // Under reduced motion the CSS guard sets animation: none, so no animationend would
+      // ever clear the class; don't set it at all.
+      if (REDUCED() || el.classList.contains('dz-bouncing')) return;
       void el.offsetWidth; // restart the keyframes even if the class was just removed
       el.classList.add('dz-bouncing');
     }
@@ -73,6 +75,11 @@
     last.addEventListener('animationend', function () {
       el.classList.remove('dz-bouncing');
       if (el.matches(':hover, :focus-visible')) start();
+    });
+    // A wave cut short (reduced motion switched on mid-wave, an ancestor hidden) fires
+    // animationcancel instead; clear the class so the next hover can start a fresh wave.
+    last.addEventListener('animationcancel', function () {
+      el.classList.remove('dz-bouncing');
     });
     el.addEventListener('mouseenter', start);
     el.addEventListener('focusin', start);
