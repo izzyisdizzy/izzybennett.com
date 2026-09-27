@@ -19,6 +19,16 @@ Two chained Adafruit 64×64 HUB75 panels make a 128×64 canvas, driven by a Rasp
 - **Weather** — current conditions from Open-Meteo.
 - **Subway** — live next-train times from the MTA's realtime feeds.
 
-Adding an app is a folder in `apps/` that implements `render()` plus a line in `config.yaml`; the launcher handles the rotation, the double-buffered frame loop and the transitions.
+Adding an app is a folder in `apps/` that implements `render()` plus a line in `config.yaml`; the launcher handles the rotation, the double-buffered frame loop and the transitions:
+
+```yaml
+launcher:
+  rotation:            # apps cycle in this order
+    - cafe_menu
+    - weather
+    - subway
+  default_dwell: 20    # seconds per app
+  transition: slide    # or crossfade, wipe, none…
+```
 
 Below is the feed the Cafe Menu app reads, fetched live from this site.

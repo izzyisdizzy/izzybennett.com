@@ -36,9 +36,11 @@ const barTitle = repo ? repo.replace(/^https:\/\/github\.com\//, '') : project.i
     <h2 class="dz-window__heading"><a href={href} class="hover:text-hotpink">{title}</a></h2>
     <p class="dz-window__text">{tagline}</p>
     <div class="mt-auto flex flex-wrap items-center gap-3 pt-5">
-      <a href={href} class="dz-btn dz-btn--sm">Read more</a>
+      <!-- Every card repeats these two labels, so give each an accessible name a links rotor
+           can tell apart. -->
+      <a href={href} class="dz-btn dz-btn--sm" aria-label={`Read more about ${title}`}>Read more</a>
       {repo && (
-        <a href={repo} class="dz-link body-s" target="_blank" rel="noopener noreferrer">GitHub →</a>
+        <a href={repo} class="dz-link body-s" target="_blank" rel="noopener noreferrer" aria-label={`${barTitle} on GitHub`}>GitHub →</a>
       )}
     </div>
   </div>

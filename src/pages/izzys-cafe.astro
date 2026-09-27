@@ -2,14 +2,16 @@
 import { getEntry, render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
+// Interim: the markdown body rendered through .iz-prose until the cafe milestone replaces this
+// page with the parsed menu board. Same prose styles as the project pages — one prose system.
 const page = await getEntry('pages', 'izzys-cafe');
 if (!page) throw new Error('Missing "izzys-cafe" entry in the pages collection');
 const { Content } = await render(page);
 ---
 
 <BaseLayout title={page.data.title}>
-  <article class="prose prose-neutral max-w-none dark:prose-invert">
-    <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">{page.data.title}</h1>
+  <h1 class="display-xl" data-dz-bounce="hover">{page.data.title}</h1>
+  <article class="iz-prose mt-6">
     <Content />
   </article>
 </BaseLayout>

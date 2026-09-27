@@ -1,5 +1,8 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+// `z` re-exported from astro:content is deprecated; astro/zod is the same instance the
+// content layer validates with (and what @izzy/recipe-engine's schema imports).
+import { z } from 'astro/zod';
 // The recipe schema lives in @izzy/recipe-engine. Astro caches the content store on this
 // file's own bytes, not its imports — so after bumping the engine, `.astro/` must be cleared
 // (the `prebuild` script does this) or builds keep serving data validated by the old schema.
@@ -27,7 +30,7 @@ const projects = defineCollection({
     z.object({
       title: z.string(),
       tagline: z.string(),
-      repo: z.string().url().optional(),
+      repo: z.url().optional(),
       icon: image().optional(),
       order: z.number().int(),
       links: z.array(z.object({ label: z.string(), href: z.string() })).default([]),

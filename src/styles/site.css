@@ -10,9 +10,10 @@
 .display-xl { font-family: var(--font-display); font-size: clamp(36px, 2.5vw + 26px, 52px); line-height: 0.97; font-weight: 800; letter-spacing: -0.01em; }
 .display-l { font-family: var(--font-display); font-size: clamp(30px, 1.5vw + 24px, 38px); line-height: 1.05; font-weight: 700; }
 .h1 { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 700; }
-.h2 { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; }
-.h3 { font-family: var(--font-display); font-size: 19px; line-height: 24px; font-weight: 600; }
-.body-l { font-size: 18px; line-height: 29px; }
+/* .iz-prose's headings and lead paragraph share these rules rather than restating them. */
+.h2, .iz-prose h2 { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; }
+.h3, .iz-prose h3 { font-family: var(--font-display); font-size: 19px; line-height: 24px; font-weight: 600; }
+.body-l, .iz-prose > p:first-child { font-size: 18px; line-height: 29px; }
 .body-strong { font-weight: 600; }
 .body-s { font-size: 14px; line-height: 22px; }
 .caption { font-size: 12px; line-height: 18px; color: var(--ink-muted); }
@@ -160,8 +161,8 @@
 [data-theme="afterglow"] .iz-theme-toggle__moon { display: none; }
 
 /* ------------------------------------------------------------- window art */
-/* Media slot for a window whose project has no icon: a flat brand-colour block, as the
-   system's placeholder-art note suggests. */
+/* Media slot for a window whose project has no icon: a flat brand-colour block with a single
+   glyph where a photo would go. */
 .iz-window-art {
   display: flex;
   align-items: center;
@@ -174,13 +175,15 @@
 }
 
 /* -------------------------------------------------------------------- prose */
-/* Rendered markdown (project pages) in Dizzy type. Bodies use inline code only; a fenced block
-   would arrive with the highlighter's own inline colours, which the theme can't reach. */
+/* Rendered markdown (project and cafe pages) in Dizzy type. Type sizes come from the grouped
+   .h2 / .h3 / .body-l rules above; only spacing lives here. */
 .iz-prose > * + * { margin-top: var(--space-4); }
-.iz-prose > p:first-child { font-size: 18px; line-height: 29px; }
-.iz-prose h2 { margin-top: var(--space-7); font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; }
-.iz-prose h3 { margin-top: var(--space-6); font-family: var(--font-display); font-size: 19px; line-height: 24px; font-weight: 600; }
-.iz-prose h2 + *, .iz-prose h3 + * { margin-top: var(--space-3); }
+.iz-prose h2 { margin-top: var(--space-7); }
+.iz-prose h3 { margin-top: var(--space-6); }
+.iz-prose h4 { margin-top: var(--space-5); font-family: var(--font-display); font-size: 17px; line-height: 22px; font-weight: 600; color: var(--orange-deep); }
+.iz-prose h2 + *, .iz-prose h3 + *, .iz-prose h4 + * { margin-top: var(--space-3); }
+/* Mirrors .dz-link in src/dizzy/bundle.css — markdown can't emit the class, so the five
+   declarations are restated here. Keep the two in step. */
 .iz-prose a { color: var(--hotpink); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .iz-prose a:hover { color: var(--hotpink-strong); }
 .iz-prose a:visited { color: var(--visited); }
@@ -191,8 +194,17 @@
 .iz-prose li + li { margin-top: var(--space-2); }
 .iz-prose li::marker { color: var(--hotpink); }
 .iz-prose code { padding: 1px 6px; border-radius: var(--radius-xs); background: var(--surface-sunken); font-family: var(--font-mono); font-size: 14px; }
-.iz-prose pre { padding: var(--space-4); border: var(--stroke-1) solid var(--outline); border-radius: var(--radius-sm); background: var(--surface-sunken) !important; color: var(--ink) !important; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 22px; }
+.iz-prose pre { padding: var(--space-4); border: var(--stroke-1) solid var(--outline); border-radius: var(--radius-sm); background: var(--surface-sunken); color: var(--ink); overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 22px; }
 .iz-prose pre code { padding: 0; background: none; }
+/* Fenced code: astro.config's shikiConfig sets a light + dark theme with defaultColor off, so
+   every token carries --shiki-light / --shiki-dark instead of a baked-in colour. Pick the pair
+   from data-theme, falling back to the OS the same way tokens.css does. The block's ground stays
+   the sunken well above, not the theme's own background. */
+.iz-prose pre span { color: var(--shiki-light); }
+[data-theme="afterglow"] .iz-prose pre span { color: var(--shiki-dark); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="daylight"]) .iz-prose pre span { color: var(--shiki-dark); }
+}
 .iz-prose blockquote { padding-left: var(--space-4); border-left: var(--stroke-2) solid var(--hotpink); color: var(--ink-muted); }
 .iz-prose hr { height: var(--stroke-hair); border: 0; background: var(--hairline); }
 

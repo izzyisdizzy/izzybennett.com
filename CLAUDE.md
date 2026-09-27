@@ -27,8 +27,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
 - `src/content/projects/*.md` — the projects. Frontmatter (`title`, `tagline`,
   `repo`, `icon` relative to the entry, `order`, `links`, optional `demo`)
   drives the `/projects/` grid of `ProjectWindow`s; the markdown body is the
-  `/projects/<slug>/` page, styled by `.iz-prose` (inline code only — fenced
-  blocks bring the highlighter's own colours). `demo: cafe-feed | recipes-feed`
+  `/projects/<slug>/` page, styled by `.iz-prose` (fenced code is themed through
+  Shiki's light/dark CSS variables — see `astro.config.mjs`). `demo: cafe-feed | recipes-feed`
   adds a `FeedDemo` window that fetches the live feed client-side, read-only.
 - `src/dizzy/` — the Dizzy design system, vendored: `tokens.json` (source of
   truth: colours for the `daylight`/`afterglow` themes, type, spacing, radii,

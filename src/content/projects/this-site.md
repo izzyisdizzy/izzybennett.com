@@ -10,7 +10,7 @@ links:
     href: "/izzys-cafe/"
 ---
 
-The site you're reading. Astro and Tailwind, statically built and deployed to GitHub Pages on every push, styled with **Dizzy** — my own retrofuturist design system: an early-2000s personal page rebuilt with a 2026 stylesheet.
+The site you're reading. Astro and Tailwind, statically built and deployed to GitHub Pages on every merge to `master`, styled with **Dizzy** — my own retrofuturist design system: an early-2000s personal page rebuilt with a 2026 stylesheet.
 
 ## Recipes as files
 
