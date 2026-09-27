@@ -28,7 +28,7 @@
   border: var(--stroke-3) solid var(--outline);
   border-radius: var(--radius-xl);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-sticker-lg);
+  /* Its shadow (bevel plus sticker) is set in "retro chrome" below. */
 }
 
 /* A plain card — a window without the title bar — for panels that are documents, not apps.
@@ -215,11 +215,11 @@
 
 /* ---------------------------------------------------------------- shadows */
 /* Fewer shadows than the stock component sheet: only the hero frame, filled buttons and things
-   that float (the mobile nav sheet, popovers) keep one. Everything else sits flat on its
-   outline. Overrides bundle.css, which stays as vendored; same layer, later import, so these
-   win at equal specificity. With no offset shadow to land on, the hover/press nudges on ghost
-   buttons read as jitter, so those go too. The nav and windows trade their drop shadow for
-   the inset bevel in "retro chrome" below. */
+   that float (the mobile nav sheet, popovers) keep one. Everything else loses its drop
+   shadow; the big panels (nav, windows, cards, hero, footer) get the inset bevel in "retro
+   chrome" below instead. Overrides bundle.css, which stays as vendored; same layer, later
+   import, so these win at equal specificity. With no offset shadow to land on, the
+   hover/press nudges on ghost buttons read as jitter, so those go too. */
 .dz-marquee,
 .dz-btn--ghost,
 .dz-btn--ghost:active,
@@ -242,13 +242,14 @@
 .dz-footer { box-shadow: var(--retro-bevel); }
 .iz-hero { box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
 
-/* Striped title bars, with the title on a solid patch so it stays readable. bundle.css's
-   ellipsis rules still apply to long titles. */
+/* Striped title bars, with the title on a solid patch so it stays readable. The canvas has
+   `flex: none`; here the title may still shrink, so in a narrow bar that also holds a counter
+   (the kitchen columns) bundle.css's ellipsis kicks in instead of the row overflowing. */
 .dz-window__bar {
   background: repeating-linear-gradient(to bottom, var(--cocoa-soft) 0 2px, var(--surface-raised) 2px 4px);
 }
 .dz-window__title {
-  flex: none;
+  flex: 0 1 auto;
   max-width: 70%;
   margin-inline: auto;
   padding: 0 var(--space-2);
@@ -262,7 +263,8 @@
 /* Shading: tonal depth rather than drop shadows. Panels catch light at the top and fall into
    shade at the bottom; filled buttons get a stronger gel curve. background-image only, laid
    over each element's own fill, so hover, pressed and checked colours still show through —
-   which is why the state rules above set background-color, not the shorthand. The button
+   which is why this file's state rules (.iz-option hover/checked, .iz-tag-button hover) set
+   background-color, not the shorthand. The button
    selectors are two classes deep to match bundle.css's `.dz-btn:hover`, whose shorthand
    would otherwise reset the image. */
 .iz-hero,
