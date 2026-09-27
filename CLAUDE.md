@@ -24,6 +24,17 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   only — not a browsable taxonomy).
 - `src/content/pages/*.md` — freeform pages, including the `izzys-cafe` entry
   whose markdown body **is** the cafe menu.
+- `src/dizzy/` — the Dizzy design system, vendored: `tokens.json` (source of
+  truth: colours for the `daylight`/`afterglow` themes, type, spacing, radii,
+  strokes, shadows), `bundle.css` (the `dz-*` components + motion), `bundle.js`
+  (`window.Dizzy`: `bouncify`, `marquee`, `segmented`, `init`) and `index.d.ts`.
+  `tokens.css` and `tailwind-theme.css` are **generated** from the JSON by
+  `npm run dizzy:tokens`. `src/styles/site.css` holds the type classes
+  (`.display-xl`, `.mono`, …) and the `.iz-*` page helpers; `src/styles/global.css`
+  wires it all up. Theme = `<html data-theme>`, stamped before paint by
+  `ThemeBoot.astro` (stored choice in `localStorage['izzy-theme']`, else the OS)
+  and flipped by `ThemeToggle.astro`. Tailwind is for layout; colour, type and
+  shape come from Dizzy classes.
 - `src/pages/` — routes. Note the JSON endpoints: `izzys-cafe.json.ts`,
   `recipes.json.ts`, `densities.json.ts`.
 - `src/lib/izzys-cafe-content.test.ts` — asserts the *live* menu content's shape
@@ -101,6 +112,11 @@ dies unexpectedly, check `node -v` before debugging anything else.
 - **Recipe schema changes are migrations.** Adding a required field to
   `recipeSchema` (in `@izzy/recipe-engine`) invalidates every existing file in
   `src/content/recipes/`; give new fields a default or make them optional.
+- **Never hand-edit `src/dizzy/tokens.css` or `tailwind-theme.css`.** They are
+  generated from `tokens.json`; `src/dizzy/tokens.test.ts` fails when they drift.
+  Change the JSON, run `npm run dizzy:tokens`, commit all three. `bundle.css` and
+  `site.css` are imported into Tailwind's `components` layer on purpose — that is
+  what lets a layout utility (`hidden`, `sm:flex`) override a `dz-*` default.
 - **Clear `.astro/` after bumping `@izzy/recipe-engine`.** Astro keys its content
   cache on `content.config.ts`'s own bytes, not its imports, so a schema change in
   the package is invisible to it. `prebuild` does `rm -rf .astro`; `npm run dev`

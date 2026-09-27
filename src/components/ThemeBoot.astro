@@ -1,0 +1,45 @@
+---
+/**
+ * Stamps <html data-theme="daylight|afterglow"> before first paint so there is no theme flash:
+ * the stored choice if there is one, otherwise the OS preference (and it keeps following the
+ * OS until the visitor picks). Also owns the theme-color metas, which the toggle updates.
+ *
+ * Goes in <head>. Inline on purpose — a module script would run after the stylesheet paints.
+ * Every layout that imports global.css must include it (BaseLayout, and the two standalone
+ * editors that skip BaseLayout).
+ */
+import { THEME_KEY, SURFACE } from '../scripts/theme';
+---
+
+<!-- Two metas keyed on the OS so the no-JS case is right too; the script then sets both to the
+     chosen theme's surface, so whichever one the browser honours matches the page. -->
+<meta name="theme-color" content={SURFACE.daylight} media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content={SURFACE.afterglow} media="(prefers-color-scheme: dark)" />
+<script is:inline define:vars={{ THEME_KEY, SURFACE }}>
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function stored() {
+      try {
+        var value = localStorage.getItem(THEME_KEY);
+        return value === 'daylight' || value === 'afterglow' ? value : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function apply(theme) {
+      root.dataset.theme = theme;
+      var metas = document.querySelectorAll('meta[name="theme-color"]');
+      for (var i = 0; i < metas.length; i++) metas[i].setAttribute('content', SURFACE[theme]);
+    }
+
+    apply(stored() || (media.matches ? 'afterglow' : 'daylight'));
+    // No explicit choice yet: keep tracking the OS if it flips while the page is open. The
+    // toggle watches data-theme, so its own state follows.
+    media.addEventListener('change', function (event) {
+      if (!stored()) apply(event.matches ? 'afterglow' : 'daylight');
+    });
+  })();
+</script>

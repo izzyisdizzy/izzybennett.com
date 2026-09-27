@@ -1,0 +1,165 @@
+/* izzybennett.com page-level styles on top of Dizzy: the type scale as classes, and the few
+   `iz-` helpers the component sheet leaves to the page (frames, fields, the option picker, the
+   mobile nav sheet). Every value is a token from src/dizzy/tokens.css. Imported into
+   layer(components) so Tailwind layout utilities on the same element still win. */
+
+/* ------------------------------------------------------------- type scale */
+/* Named as tokens.json names them. The three display sizes are fluid so a 72px name fits a
+   phone; everything else is fixed, as the tokens specify. */
+.display-xxl { font-family: var(--font-display); font-size: clamp(44px, 4vw + 28px, 72px); line-height: 0.95; font-weight: 800; letter-spacing: -0.02em; }
+.display-xl { font-family: var(--font-display); font-size: clamp(36px, 2.5vw + 26px, 52px); line-height: 0.97; font-weight: 800; letter-spacing: -0.01em; }
+.display-l { font-family: var(--font-display); font-size: clamp(30px, 1.5vw + 24px, 38px); line-height: 1.05; font-weight: 700; }
+.h1 { font-family: var(--font-display); font-size: 30px; line-height: 34px; font-weight: 700; }
+.h2 { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; }
+.h3 { font-family: var(--font-display); font-size: 19px; line-height: 24px; font-weight: 600; }
+.body-l { font-size: 18px; line-height: 29px; }
+.body-strong { font-weight: 600; }
+.body-s { font-size: 14px; line-height: 22px; }
+.caption { font-size: 12px; line-height: 18px; color: var(--ink-muted); }
+.label { font-size: 12px; line-height: 14px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-muted); }
+.mono { font-family: var(--font-mono); font-size: 14px; line-height: 22px; }
+.mono-s { font-family: var(--font-mono); font-size: 12px; line-height: 18px; }
+.counter { font-family: var(--font-mono); font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; }
+
+/* ----------------------------------------------------------------- frames */
+/* Hero: the loudest frame in the system — hero blocks and the cafe menu board. */
+.iz-hero {
+  border: var(--stroke-3) solid var(--outline);
+  border-radius: var(--radius-xl);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sticker-lg);
+}
+
+/* A plain card — a window without the title bar — for panels that are documents, not apps. */
+.iz-card {
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sticker);
+}
+
+/* Sunken, bevelled well for receipts, meta strips, empty states and code. */
+.iz-well {
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  box-shadow: inset 2px 2px 0 var(--chrome-lo), inset -2px -2px 0 var(--chrome-hi);
+}
+
+/* Timeline / divider rule. */
+.iz-rule { height: var(--stroke-hair); background: var(--hairline); border: 0; margin: 0; }
+
+/* ------------------------------------------------------------------ field */
+/* The system has no input component, so this follows its shape rules. Applies to inputs,
+   selects and textareas alike. */
+.iz-field {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 20px;
+}
+.iz-field::placeholder { color: var(--ink-muted); opacity: 0.7; }
+.iz-field:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+
+/* ---------------------------------------------------------- option picker */
+/* A window-shaped radio/checkbox for the order form. The real <input> sits inside the label
+   (visually hidden), so native validation, `required` and form submission keep working; the
+   selected look comes from :has(:checked), never from a button's aria-pressed. */
+.iz-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-sticker);
+  transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+.iz-option:hover { background: var(--orange-soft); transform: translate(-1px, -1px); }
+.iz-option:has(:checked) { background: var(--hotpink-soft); box-shadow: var(--shadow-pressed); transform: translate(3px, 3px); }
+.iz-option:has(:focus-visible) { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+.iz-option__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--on-hotpink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.iz-option:has(:checked) .iz-option__check { background: var(--hotpink); }
+.iz-option:has(:checked) .iz-option__check::after { content: "✓"; }
+
+/* -------------------------------------------------------------- mobile nav */
+/* The "Menu ▾" details/summary sheet the nav uses under the sm breakpoint. */
+.iz-mnav { position: relative; }
+.iz-mnav > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.iz-mnav > summary::-webkit-details-marker { display: none; }
+.iz-mnav > summary:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+.iz-mnav[open] > summary { background: var(--hotpink); color: var(--on-hotpink); box-shadow: var(--shadow-pressed); }
+.iz-mnav__sheet {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 200px;
+  margin: 0;
+  padding: var(--space-3);
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+  list-style: none;
+}
+.iz-mnav__sheet .dz-nav__link { display: block; min-height: 44px; line-height: 28px; }
+
+/* ------------------------------------------------------------ theme toggle */
+/* Shows the theme you'd switch *to*: a moon by day, a sun by night. */
+.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding-inline: var(--space-2); font-size: 16px; }
+.iz-theme-toggle__sun { display: none; }
+[data-theme="afterglow"] .iz-theme-toggle__sun { display: inline; }
+[data-theme="afterglow"] .iz-theme-toggle__moon { display: none; }
+
+/* ------------------------------------------------------------------- print */
+@media print {
+  .iz-no-print { display: none !important; }
+}

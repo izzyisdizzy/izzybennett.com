@@ -6,6 +6,7 @@
 // browser; this page only ever holds an opaque session id. Commits trigger the normal
 // GitHub Pages deploy. Backend: github.com/izzyisdizzy/auth-worker.
 import '../styles/global.css';
+import ThemeBoot from '../components/ThemeBoot.astro';
 import { categoryValues } from '@izzy/recipe-engine/schema';
 // Unit tables shared with the recipe pages. UNIT_OPTIONS fills the item unit <select>; the
 // numeric tables are handed to the inline script (via define:vars) so its grams math uses the
@@ -53,12 +54,12 @@ const dragHandle =
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#db2777" />
+    <ThemeBoot />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <title>Add a recipe · Izzy Bennett</title>
   </head>
-  <body class="min-h-screen bg-white text-neutral-800 dark:bg-neutral-950 dark:text-neutral-200">
+  <body class="min-h-screen">
     <main class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
       <header class="flex items-baseline justify-between gap-3">
         <h1 id="page-title" class="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Add a recipe</h1>
