@@ -26,8 +26,10 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `name`) and `grams` (override). Steps can reference an ingredient as `[[key]]`
   or `[[key|display text]]`; unbracketed prose is still matched lexically. An
   unknown or ambiguous `[[key]]` **fails the build**, listing the valid keys.
-  ⚠️ `/upload` doesn't know the v2 fields yet (M6): editing a recipe there drops
-  `yield`/`oven`/`key`/`grams`, so hand-edit recipes that use them.
+  `/upload` has no inputs for the v2 fields yet (M6) but carries them through an
+  edit untouched — `yield`/`oven` in page state, each item's `key`/`grams` on its
+  row — so re-saving can't orphan a `[[key]]` and break the build. Keep it that way:
+  any field `/upload` can't edit must still round-trip through `toMarkdown`.
 - `src/content/pages/*.md` — freeform pages, including the `izzys-cafe` entry
   whose markdown body **is** the cafe menu.
 - `src/content/projects/*.md` — the projects. Frontmatter (`title`, `tagline`,
@@ -129,6 +131,12 @@ dies unexpectedly, check `node -v` before debugging anything else.
   Change the JSON, run `npm run dizzy:tokens`, commit all three. `bundle.css` and
   `site.css` are imported into Tailwind's `components` layer on purpose — that is
   what lets a layout utility (`hidden`, `sm:flex`) override a `dz-*` default.
+- **`@izzy/*` pins must be release tags** (`github:izzyisdizzy/<repo>#vX.Y.Z`).
+  `src/lib/package-pins.test.ts` fails otherwise — a branch or commit pin can vanish
+  when that branch is squash-merged and deleted, and the deploy's `npm ci` then can't
+  resolve it. Deploy runs the tests first, so a bad pin blocks the deploy rather than
+  breaking the live site. While a cross-repo change is in review, pinning the PR's
+  commit is fine locally; move to the tag before merging.
 - **Clear `.astro/` after bumping `@izzy/recipe-engine`.** Astro keys its content
   cache on `content.config.ts`'s own bytes, not its imports, so a schema change in
   the package is invisible to it. `prebuild` does `rm -rf .astro`; `npm run dev`

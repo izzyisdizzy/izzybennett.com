@@ -405,6 +405,13 @@ const dragHandle =
             set('item-qty', value.qty);
             set('item-detail', value.detail);
             setUnit(row, value.unit);
+            // Engine-v2 item fields the form has no inputs for yet. They ride on the row itself
+            // (so they follow it through drag-reorder) and are written back on save — dropping
+            // a `key` would orphan the step's [[key]] reference and fail the site build.
+            const keep = {};
+            if (value.key) keep.key = value.key;
+            if (typeof value.grams === 'number') keep.grams = value.grams;
+            if (Object.keys(keep).length) row.dataset.keep = JSON.stringify(keep);
           }
           updateItemRow(row);
         }
@@ -649,6 +656,11 @@ const dragHandle =
           if (qty) item.qty = qty;
           if (unit) item.unit = unit;
           if (detail) item.detail = detail;
+          // Carried-through key/grams (see addItem). Malformed JSON can't happen from our own
+          // writes, but a bad value must never block a save.
+          if (rowEl.dataset.keep) {
+            try { Object.assign(item, JSON.parse(rowEl.dataset.keep)); } catch { /* ignore */ }
+          }
           items.push(item);
         }
         return items;
@@ -660,6 +672,11 @@ const dragHandle =
         return Number.isFinite(n) ? n : undefined;
       };
 
+      // Engine-v2 recipe fields the form has no inputs for yet (yield, oven). Set from the loaded
+      // recipe in fillForm, cleared for a new one, and written back unchanged by toMarkdown, so
+      // editing a recipe here never silently drops them.
+      let keptFields = {};
+
       function readForm() {
         return {
           title: val('#title'),
@@ -669,6 +686,8 @@ const dragHandle =
           prepTime: numOrUndef('#prepTime'),
           cookTime: numOrUndef('#cookTime'),
           servings: numOrUndef('#servings'),
+          yield: keptFields.yield,
+          oven: keptFields.oven,
           tools: listVals('#tools-list', 'tool'),
           ingredients: readGroups('#ingredients-list', 'group', collectIngredientItems),
           steps: readGroups('#steps-list', 'step-group', collectStringItems('step')),
@@ -761,6 +780,8 @@ const dragHandle =
         if (it.qty) L.push(`        qty: ${q(it.qty)}`);
         if (it.unit) L.push(`        unit: ${q(it.unit)}`);
         if (it.detail) L.push(`        detail: ${q(it.detail)}`);
+        if (it.key) L.push(`        key: ${q(it.key)}`);
+        if (typeof it.grams === 'number') L.push(`        grams: ${it.grams}`);
       }
 
       function toMarkdown(r) {
@@ -772,6 +793,8 @@ const dragHandle =
         if (r.prepTime !== undefined) L.push(`prepTime: ${r.prepTime}`);
         if (r.cookTime !== undefined) L.push(`cookTime: ${r.cookTime}`);
         if (r.servings !== undefined) L.push(`servings: ${r.servings}`);
+        if (r.yield) L.push(`yield: ${q(r.yield)}`);
+        if (r.oven) L.push(`oven: ${q(r.oven)}`);
         if (r.tools.length) {
           L.push('tools:');
           for (const t of r.tools) L.push(`  - ${q(t)}`);
@@ -1082,6 +1105,9 @@ const dragHandle =
         setVal('#cookTime', r.cookTime);
         setVal('#servings', r.servings);
         $('#draft').checked = !!r.draft;
+        keptFields = {};
+        if (r.yield) keptFields.yield = r.yield;
+        if (r.oven) keptFields.oven = r.oven;
 
         // Rebuild the dynamic lists from data, reusing the same row builders as add mode.
         fillList('#tools-list', 'tool', r.tools);
@@ -1122,6 +1148,7 @@ const dragHandle =
 
       function enterAddMode() {
         clearPending();
+        keptFields = {}; // a new recipe inherits nothing from the one it replaced
         editingSlug = null;
         picker.value = '';
         setAddChrome();
