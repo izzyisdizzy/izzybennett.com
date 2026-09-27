@@ -213,8 +213,8 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
       </form>
     </main>
 
-    <!-- Row templates. tpl-row is the generic single-line input row (tools / notes /
-         ingredient items) — the JS stamps data-field + placeholder per use. -->
+    <!-- Row templates. tpl-row is the generic single-line input row (tools / notes) — the JS
+         stamps data-field + placeholder per use. Ingredient items have their own tpl-item. -->
     <template id="tpl-row">
       <div data-unit="row" class="flex items-center gap-2">
         <span data-drag-handle draggable="true" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
@@ -279,10 +279,10 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
         <div class="ml-6 flex flex-wrap items-center gap-x-4 gap-y-2">
           <label class="flex min-w-0 grow basis-48 items-center gap-2">
             <span class="label shrink-0">Key</span>
-            <input type="text" data-field="item-key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Key (optional)" class={`${itemInput} mono`} />
+            <input type="text" data-field="item-key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Key (optional)" class={`${itemInput} font-mono`} />
           </label>
           <label class="flex items-center gap-2">
-            <span class="label shrink-0">Grams</span>
+            <span class="label shrink-0">Grams <span class={hint}>(override)</span></span>
             <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams-override" placeholder="auto" aria-label="Grams override (optional)" class={`${cellInput} w-24`} />
           </label>
         </div>
@@ -490,9 +490,13 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
 
         row.querySelector('[data-field="item-key"]').placeholder = ingredientKeyOf({ name }) || 'auto';
 
+        // badInput: a number input reports '' for unparseable text, which is still "set".
+        const hasOverride = !!overrideEl.value.trim() || overrideEl.validity.badInput;
+        // A ratio typed into the prompt before the override was set must not still publish.
+        if (hasOverride) delete pendingDensities[nameKey];
         const needs =
           isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities) &&
-          !overrideEl.value.trim();
+          !hasOverride;
         prompt.classList.toggle('hidden', !needs);
         if (needs) {
           row.querySelector('[data-grams-qty]').textContent = qtyEl.value.trim();
@@ -561,7 +565,7 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
         // Row add/remove changes the form's content but fires no 'input' event, so persist here.
         saveDraftSoon();
       });
-      // Re-evaluate a row's grams prompt whenever its qty/unit/name/grams changes.
+      // Re-evaluate a row's grams prompt + key placeholder whenever any of its fields changes.
       const maybeUpdateItemRow = (target) => {
         const row = target?.closest?.('[data-unit="item-row"]');
         if (row) updateItemRow(row);
@@ -709,8 +713,8 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
           if (unit) item.unit = unit;
           if (detail) item.detail = detail;
           if (key) item.key = key;
-          // Kept as a number whenever it parses, even ≤ 0, so validate() can reject it by name
-          // instead of it silently vanishing from the file.
+          // Kept as a number whenever it parses, even ≤ 0, so the preview and the draft show what
+          // was typed; validate() rejects a non-positive value before it can be published.
           if (grams && Number.isFinite(Number(grams))) item.grams = Number(grams);
           items.push(item);
         }
@@ -862,6 +866,8 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
       }
 
       function validate(r) {
+        // Flags from an earlier attempt may no longer apply (e.g. that row lost its name).
+        form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
         if (!r.title) return 'Add a title.';
         if (!slugify(r.title)) return 'Title needs at least one letter or number.';
         if (!r.category) return 'Pick a category.';
@@ -884,7 +890,7 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
 
       // Per-row checks for the item key + grams override, mirroring the schema (INGREDIENT_KEY,
       // grams > 0). Read from the DOM rather than the recipe object so the offending field can
-      // be flagged (aria-invalid, cleared on its next input) and focused.
+      // be flagged (aria-invalid, cleared on its next input or the next validate) and focused.
       function validateItemFields() {
         for (const row of $('#ingredients-list').querySelectorAll('[data-unit="item-row"]')) {
           const name = row.querySelector('[data-field="item-name"]').value.trim();
@@ -911,6 +917,8 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
 
       // Every [[key]] in a step must name exactly one ingredient — the site build fails on an
       // unknown or ambiguous reference (lookupRef in the engine), so catch it before committing.
+      // Steps are read from the DOM (blank ones skipped, as readForm does) so the offending one
+      // can be flagged; the keys come from the recipe object readForm built.
       function validateStepRefs(r) {
         const keys = new Map();
         for (const g of r.ingredients) {
@@ -920,18 +928,17 @@ const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg l
           }
         }
         let n = 0;
-        for (const g of r.steps) {
-          for (const step of g.items) {
-            n++;
-            for (const [, key] of step.matchAll(REF_SYNTAX)) {
-              const hits = keys.get(key) ?? [];
-              if (hits.length === 0) {
-                return `Step ${n} references [[${key}]], but no ingredient has that key. Keys in this recipe: ${[...keys.keys()].sort().join(', ') || '(none)'}.`;
-              }
-              if (hits.length > 1) {
-                return `Step ${n}: [[${key}]] matches ${hits.length} ingredients — give one of them a distinct key and reference that.`;
-              }
-            }
+        for (const stepEl of $('#steps-list').querySelectorAll('[data-field="step"]')) {
+          const step = stepEl.value.trim();
+          if (!step) continue;
+          n++;
+          for (const [, key] of step.matchAll(REF_SYNTAX)) {
+            const hits = keys.get(key) ?? [];
+            if (hits.length === 1) continue;
+            flagField(stepEl);
+            return hits.length === 0
+              ? `Step ${n} references [[${key}]], but no ingredient has that key. Keys in this recipe: ${[...keys.keys()].sort().join(', ') || '(none)'}.`
+              : `Step ${n}: [[${key}]] matches ${hits.length} ingredients (${hits.join(', ')}) — give one of them a distinct key and reference that.`;
           }
         }
         return null;
