@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// The blurb is copied from the summary at the top of resume/resume.typ, which stays the single
+// source of truth — keep the two in sync by hand.
+const skills = ['Kotlin', 'Swift', 'Jetpack Compose', 'SwiftUI', 'Payments'];
+---
+
+<BaseLayout title="Resume" description="Izzy Bennett's resume — mobile software engineer.">
+  <h1 class="display-xl" data-dz-bounce="hover">Resume</h1>
+  <p class="body-l mt-2 text-ink-muted">Please hire me.</p>
+
+  <p class="body-l mt-6">
+    Mobile software engineer with 6+ years shipping Android and iOS apps used by millions. Technical
+    lead for payments-critical systems at Square, scaling Offline Payments to 4M+ sellers and
+    ~$442M/yr in offline volume across mobile and custom hardware.
+  </p>
+
+  <ul class="mt-6 flex flex-wrap gap-2" aria-label="Skills">
+    {skills.map((skill) => <li><span class="dz-tag dz-tag--aqua">{skill}</span></li>)}
+  </ul>
+
+  <a href="/resume.pdf" download class="dz-btn iz-no-print mt-8">Download PDF</a>
+</BaseLayout>
