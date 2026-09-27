@@ -27,7 +27,7 @@
 @import "@izzy/auth-client/styles/auth.css";
 
 /* Legacy `dark:` utilities follow the Dizzy theme instead of the OS while pages are still being
-   migrated, so toggling daylight on a dark OS cannot leave light text on a cream page. The second
+   migrated, so toggling daylight on a dark OS cannot leave light text on a light page. The second
    branch mirrors the no-JS fallback in tokens.css: with nothing stamped on <html>, a dark OS gets
    afterglow tokens, so the utilities must flip with them. Remove once no `dark:` variant remains
    in the site (and drop the accent bridge below with it). */
