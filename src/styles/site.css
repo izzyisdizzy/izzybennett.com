@@ -23,14 +23,6 @@
 .counter { font-family: var(--font-mono); font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.12em; }
 
 /* ----------------------------------------------------------------- frames */
-/* Hero: the loudest frame in the system — hero blocks and the cafe menu board. */
-.iz-hero {
-  border: var(--stroke-3) solid var(--outline);
-  border-radius: var(--radius-xl);
-  background: var(--surface-raised);
-  /* Its shadow (bevel plus sticker) is set in "retro chrome" below. */
-}
-
 /* A plain card — a window without the title bar — for panels that are documents, not apps.
    No drop shadow: its outline and bevel separate it (see "retro chrome" below). */
 .iz-card {
@@ -214,10 +206,9 @@
 .iz-prose hr { height: var(--stroke-hair); border: 0; background: var(--hairline); }
 
 /* ---------------------------------------------------------------- shadows */
-/* Fewer shadows than the stock component sheet: only the hero frame, filled buttons and things
-   that float (the mobile nav sheet, popovers) keep one. Everything else loses its drop
-   shadow; the big panels (nav, windows, cards, hero, footer) get the inset bevel in "retro
-   chrome" below instead. Overrides bundle.css, which stays as vendored; same layer, later
+/* Fewer shadows than the stock component sheet: only filled buttons and things that float (the
+   mobile nav sheet, popovers) keep one. Everything else loses its drop shadow; the big panels
+   (nav, windows, cards, footer) get the inset bevel in "retro chrome" below instead. Overrides bundle.css, which stays as vendored; same layer, later
    import, so these win at equal specificity. With no offset shadow to land on, the
    hover/press nudges on ghost buttons read as jitter, so those go too. */
 .dz-marquee,
@@ -240,7 +231,6 @@
 .dz-window,
 .iz-card,
 .dz-footer { box-shadow: var(--retro-bevel); }
-.iz-hero { box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
 
 /* Striped title bars, with the title on a solid patch so it stays readable. The canvas has
    `flex: none`; here the title may still shrink, so in a narrow bar that also holds a counter
@@ -267,7 +257,6 @@
    background-color, not the shorthand. The button
    selectors are two classes deep to match bundle.css's `.dz-btn:hover`, whose shorthand
    would otherwise reset the image. */
-.iz-hero,
 .iz-card,
 .dz-nav,
 .dz-window__body,
@@ -367,6 +356,22 @@ html { overflow-x: clip; }
   .dz-btn::after { display: none; }
 }
 
+/* ------------------------------------------------------------ window lists */
+/* A project page's facts.txt: label left, value right, hairline between rows. */
+.iz-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 10px 0;
+  border-bottom: var(--stroke-hair) solid var(--hairline);
+}
+.iz-fact:last-child { border-bottom: 0; }
+.iz-fact dt { flex: none; }
+.iz-fact dd { min-width: 0; overflow-wrap: anywhere; text-align: end; }
+
+/* A dz-row inside a narrow window (more-projects.txt): less side padding. */
+.iz-row-tight { padding-inline: var(--space-2); }
+
 /* ------------------------------------------------------------- tag buttons */
 /* A dz-tag used as a toggle (the recipe category filters). */
 .iz-tag-button { cursor: pointer; }
@@ -375,4 +380,8 @@ html { overflow-x: clip; }
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }
+  /* A window prints as its content (the /resume/ page): no title bar, frame or bevel. */
+  .dz-window__bar { display: none; }
+  .dz-window { border: 0; box-shadow: none; }
+  .dz-window__body { background-image: none; }
 }

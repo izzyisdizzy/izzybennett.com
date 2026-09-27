@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Window from '../../components/Window.astro';
 import RecipeCard from '@izzy/recipe-engine/components/RecipeCard.astro';
 import { categoryValues } from '@izzy/recipe-engine/schema';
 
@@ -53,32 +54,35 @@ const countLabel = (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`;
     />
   </div>
 
-  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-    <div id="recipe-filters" class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-      {filters.map((filter) => (
-        <button
-          type="button"
-          data-filter={filter}
-          class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
-          aria-pressed={filter === '' ? 'true' : 'false'}
-        >
-          {filter || 'All'}
-        </button>
-      ))}
-    </div>
+  <div id="recipe-filters" class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+    {filters.map((filter) => (
+      <button
+        type="button"
+        data-filter={filter}
+        class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
+        aria-pressed={filter === '' ? 'true' : 'false'}
+      >
+        {filter || 'All'}
+      </button>
+    ))}
+  </div>
+
+  <!-- The count and list live in the recipes/ window, search and filters above it, as on the
+       canvas board. The count stays the page's one live region — the body is not aria-live. -->
+  <Window title="recipes/" class="mt-6">
     <!-- Updated by the filter script; a status region, so the new count is announced politely. -->
     <span id="recipe-count" class="dz-counter" role="status">{countLabel(recipes.length)}</span>
-  </div>
 
-  <div id="recipe-grid" class="mt-6 flex flex-col gap-1">
-    {recipes.map((recipe) => <RecipeCard recipe={recipe} editHref={`/upload?edit=${recipe.id}`} />)}
-  </div>
+    <div id="recipe-grid" class="mt-4 flex flex-col gap-1">
+      {recipes.map((recipe) => <RecipeCard recipe={recipe} editHref={`/upload?edit=${recipe.id}`} />)}
+    </div>
 
-  <div id="recipe-no-results" class="iz-well mt-6 px-6 py-10 text-center" hidden>
-    <p class="h3"><span class="dz-sparkle" aria-hidden="true">✦</span> No recipes match</p>
-    <p class="body-s mt-2 text-ink-muted">Try a different word, or clear the filters.</p>
-    <button type="button" id="recipe-clear" class="dz-btn dz-btn--ghost dz-btn--sm mt-4">Clear filters</button>
-  </div>
+    <div id="recipe-no-results" class="iz-well mt-6 px-6 py-10 text-center" hidden>
+      <p class="h3"><span class="dz-sparkle" aria-hidden="true">✦</span> No recipes match</p>
+      <p class="body-s mt-2 text-ink-muted">Try a different word, or clear the filters.</p>
+      <button type="button" id="recipe-clear" class="dz-btn dz-btn--ghost dz-btn--sm mt-4">Clear filters</button>
+    </div>
+  </Window>
 </BaseLayout>
 
 <script>

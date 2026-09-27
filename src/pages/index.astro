@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Window from '../components/Window.astro';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import me from '../assets/me.jpeg';
@@ -21,44 +22,44 @@ const picks = [0, 1, 2]
 ---
 
 <BaseLayout title="Home">
-  <section class="iz-hero p-6 sm:p-10">
-    <div class="flex flex-col-reverse gap-8 sm:flex-row sm:items-center sm:justify-between">
-      <div class="min-w-0">
-        <p class="label"><span class="dz-sparkle" aria-hidden="true">✦</span> hi, I'm</p>
-        <!-- The page's one bouncing headline (see the display-xxl token note). -->
-        <h1 class="display-xxl mt-2" data-dz-bounce="once">Izzy Bennett</h1>
-        <p class="body-l mt-4 text-ink-muted">Welcome to my personal website!</p>
-        <p class="mt-4">
-          This website is a personal project of mine. I mostly use it to store my recipes and
-          share them with others. I can be reached at <a class="dz-link" href="mailto:me@izzybennett.com">me@izzybennett.com</a>.
-        </p>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <a href="/recipes/" class="dz-btn">Recipes</a>
-          <a href="/order/" class="dz-btn dz-btn--orange">Order a drink ☕</a>
-          <a href="/projects/" class="dz-btn dz-btn--ghost">Projects</a>
-        </div>
+  <!-- The hero is two sibling windows, never one nested in the other: welcome.txt holds the
+       text, me.jpeg sits beside it (above it on phones, as before). -->
+  <div class="flex flex-col-reverse gap-6 sm:flex-row sm:items-center">
+    <Window title="welcome.txt" class="min-w-0 flex-1" bodyClass="p-6 sm:px-10 sm:py-10">
+      <p class="label"><span class="dz-sparkle" aria-hidden="true">✦</span> hi, I'm</p>
+      <!-- The page's one bouncing headline (see the display-xxl token note). -->
+      <h1 class="display-xxl mt-2" data-dz-bounce="once">Izzy Bennett</h1>
+      <p class="body-l mt-4 text-ink-muted">Welcome to my personal website!</p>
+      <p class="mt-4">
+        This website is a personal project of mine. I mostly use it to store my recipes and
+        share them with others. I can be reached at <a class="dz-link" href="mailto:me@izzybennett.com">me@izzybennett.com</a>.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href="/recipes/" class="dz-btn">Recipes</a>
+        <a href="/order/" class="dz-btn dz-btn--orange">Order a drink ☕</a>
+        <a href="/projects/" class="dz-btn dz-btn--ghost">Projects</a>
       </div>
+    </Window>
 
-      <figure class="dz-window w-40 shrink-0 self-center sm:w-48">
-        <div class="dz-window__bar">
-          <span class="dz-window__lights" aria-hidden="true">
-            <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
-          </span>
-          <span class="dz-window__title">me.jpeg</span>
-        </div>
-        <!-- aspect-square + border-b-0 are utilities, so they override the media class's 4:3 and
-             its bottom rule (the image is the window's last child). -->
-        <Image
-          src={me}
-          alt="Izzy, on a canal in Amsterdam"
-          width={192}
-          height={192}
-          densities={[1, 2, 3]}
-          class="dz-window__media aspect-square border-b-0"
-        />
-      </figure>
-    </div>
-  </section>
+    <figure class="dz-window w-40 shrink-0 self-center sm:w-48">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true">
+          <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
+        </span>
+        <span class="dz-window__title">me.jpeg</span>
+      </div>
+      <!-- aspect-square + border-b-0 are utilities, so they override the media class's 4:3 and
+           its bottom rule (the image is the window's last child). -->
+      <Image
+        src={me}
+        alt="Izzy, on a canal in Amsterdam"
+        width={192}
+        height={192}
+        densities={[1, 2, 3]}
+        class="dz-window__media aspect-square border-b-0"
+      />
+    </figure>
+  </div>
 
   <!-- Ticker. Plain text only: bundle.js clones the track (aria-hidden) for the seamless loop,
        and a link in there would come back as a second, hidden tab stop. -->

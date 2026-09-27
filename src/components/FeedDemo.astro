@@ -4,18 +4,14 @@
  * summary of it — proof that the feed a project depends on is live, on the project's own page.
  * Read-only: nothing here can change the feeds' shape.
  *
- * FEEDS is the one place a feed is described; the script's renderers are keyed the same way.
+ * FEEDS (src/lib/feeds.ts) is the one place a feed is described; the script's renderers are
+ * keyed the same way.
  */
+import { FEEDS, type FeedKind } from '../lib/feeds';
+
 interface Props {
   kind: FeedKind;
 }
-
-type FeedKind = 'cafe-feed' | 'recipes-feed';
-
-const FEEDS: Record<FeedKind, { src: string; heading: string }> = {
-  'cafe-feed': { src: '/izzys-cafe.json', heading: 'What the sign reads right now' },
-  'recipes-feed': { src: '/recipes.json', heading: 'What the feed holds right now' },
-};
 
 const { kind } = Astro.props;
 const { src, heading } = FEEDS[kind];
