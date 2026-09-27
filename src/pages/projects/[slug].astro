@@ -3,47 +3,91 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import FeedDemo from '../../components/FeedDemo.astro';
+import Window from '../../components/Window.astro';
+import { FEEDS } from '../../lib/feeds';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects');
+  const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
   return projects.map((project) => ({
     params: { slug: project.id },
-    props: { project },
+    props: { project, others: projects.filter((other) => other.id !== project.id) },
   }));
 }
 
 interface Props {
   project: CollectionEntry<'projects'>;
+  others: CollectionEntry<'projects'>[];
 }
 
-const { project } = Astro.props;
+const { project, others } = Astro.props;
 const { Content } = await render(project);
 const { title, tagline, repo, links, demo } = project.data;
+const repoSlug = repo?.replace(/^https:\/\/github\.com\//, '');
 ---
 
 <BaseLayout title={title} description={tagline}>
-  <p><a href="/projects/" class="dz-link body-s">← Projects</a></p>
-  <h1 class="display-l mt-4" data-dz-bounce="hover">{title}</h1>
-  <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
+  <!-- The canvas board puts the aside in a 420px side column, but <main> is max-w-3xl here, so
+       that would crush the prose. The aside follows the content instead: its two windows side by
+       side from sm up, stacked on phones. -->
+  <div class="flex flex-col gap-12">
+    <div class="min-w-0">
+      <p><a href="/projects/" class="dz-link body-s">← Projects</a></p>
+      <h1 class="display-l mt-4" data-dz-bounce="hover">{title}</h1>
+      <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
 
-  {(repo || links.length > 0) && (
-    <div class="mt-5 flex flex-wrap gap-3">
-      {repo && (
-        <a href={repo} class="dz-btn dz-btn--ghost dz-btn--sm" target="_blank" rel="noopener noreferrer">GitHub →</a>
+      <div class="iz-prose mt-8">
+        <Content />
+      </div>
+
+      {demo && (
+        <div class="mt-8">
+          <FeedDemo kind={demo} />
+        </div>
       )}
-      {links.map((link) => (
-        <a href={link.href} class="dz-btn dz-btn--ghost dz-btn--sm">{link.label}</a>
-      ))}
     </div>
-  )}
 
-  <div class="iz-prose mt-8">
-    <Content />
+    <aside class="grid items-start gap-6 sm:grid-cols-2" aria-label={`About ${title}`}>
+      <!-- Facts come only from existing frontmatter; a row renders only when it has a value. The
+           repo and links rows carry every link the page has, so there's no separate button row. -->
+      <Window title="facts.txt" bodyClass="p-6">
+        <h2 class="h3">Facts</h2>
+        <dl class="mt-3">
+          {repo && (
+            <div class="iz-fact">
+              <dt class="body-s text-ink-muted">Repo</dt>
+              <dd class="mono"><a href={repo} class="dz-link" target="_blank" rel="noopener noreferrer">{repoSlug}</a></dd>
+            </div>
+          )}
+          {links.length > 0 && (
+            <div class="iz-fact">
+              <dt class="body-s text-ink-muted">Links</dt>
+              <dd class="mono flex flex-wrap justify-end gap-x-3">
+                {links.map((link) => <a href={link.href} class="dz-link">{link.label}</a>)}
+              </dd>
+            </div>
+          )}
+          {demo && (
+            <div class="iz-fact">
+              <dt class="body-s text-ink-muted">Live feed</dt>
+              <dd class="mono"><a href={FEEDS[demo].src} class="dz-link">{FEEDS[demo].src}</a></dd>
+            </div>
+          )}
+        </dl>
+      </Window>
+
+      {others.length > 0 && (
+        <Window title="more-projects.txt" bodyClass="px-6 pb-6 pt-5">
+          <h2 class="h3">More projects</h2>
+          <div class="mt-3 flex flex-col">
+            {others.map((other) => (
+              <a href={`/projects/${other.id}/`} class="dz-row iz-row-tight">
+                <span class="dz-row__title">{other.data.title}</span>
+                <span class="dz-row__meta">{other.data.repo ? 'repo' : 'feed'}</span>
+              </a>
+            ))}
+          </div>
+        </Window>
+      )}
+    </aside>
   </div>
-
-  {demo && (
-    <div class="mt-8">
-      <FeedDemo kind={demo} />
-    </div>
-  )}
 </BaseLayout>

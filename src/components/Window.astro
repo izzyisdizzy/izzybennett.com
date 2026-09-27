@@ -1,0 +1,29 @@
+---
+/**
+ * A titled Dizzy window: the striped bar with its three lights and a filename-style title, then
+ * a body holding the slot. Purely presentational — the title is a span, never a heading, so
+ * wrapping a surface in a window leaves the page's heading outline and landmarks as they were.
+ * Pass `aria-labelledby` / `aria-label` through when the wrapper element should be named.
+ */
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+type Props<Tag extends HTMLTag = 'section'> = Omit<Polymorphic<{ as: Tag }>, 'as' | 'title'> & {
+  as?: Tag;
+  title: string;
+  bodyClass?: string;
+};
+
+const { title, as: Tag = 'section', class: className, bodyClass, ...rest } = Astro.props;
+---
+
+<Tag class:list={['dz-window', className]} {...rest}>
+  <div class="dz-window__bar">
+    <span class="dz-window__lights" aria-hidden="true">
+      <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
+    </span>
+    <span class="dz-window__title">{title}</span>
+  </div>
+  <div class:list={['dz-window__body', bodyClass]}>
+    <slot />
+  </div>
+</Tag>

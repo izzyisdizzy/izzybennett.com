@@ -1,14 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Window from '../components/Window.astro';
 ---
 
 <BaseLayout title="Page Not Found">
-  <div class="iz-hero mx-auto max-w-xl px-6 py-12 text-center sm:py-16">
+  <Window title="404.txt" class="mx-auto max-w-xl" bodyClass="px-6 py-12 text-center sm:py-16">
     <p class="display-xl" aria-hidden="true">
       <span class="dz-sparkle">✦</span> 404 <span class="dz-sparkle">✦</span>
     </p>
     <h1 class="display-l mt-2" data-dz-bounce="hover">Page not found</h1>
     <p class="body-l mt-4 text-ink-muted">The page you're looking for doesn't exist.</p>
     <a href="/" class="dz-btn mt-8">Go home</a>
-  </div>
+  </Window>
 </BaseLayout>

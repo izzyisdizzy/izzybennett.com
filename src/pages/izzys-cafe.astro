@@ -2,6 +2,7 @@
 import { getEntry } from 'astro:content';
 import { parseMenu } from '@izzy/cafe-menu';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Window from '../components/Window.astro';
 
 // The menu board. Rendered from the same parseMenu output as /izzys-cafe.json, /order and the
 // dizzyos sign, so the page can never disagree with them — the markdown stays the one source.
@@ -25,7 +26,7 @@ const glyph: Record<string, string> = { Drinks: '☕', Milks: '🥛', Syrups: '�
     <p data-kitchen-tag hidden></p>
   </div>
 
-  <section class="iz-hero mt-8 p-6 sm:p-8" aria-labelledby="menu-heading">
+  <Window title="menu.txt" class="mt-8" bodyClass="p-6 sm:px-8 sm:pb-8 sm:pt-7" aria-labelledby="menu-heading">
     <h2 id="menu-heading" class="label"><span class="dz-sparkle" aria-hidden="true">✦</span> Menu</h2>
     <div class="mt-4 grid gap-x-10 gap-y-6 sm:grid-cols-2">
       {sections.map((section) => (
@@ -41,7 +42,7 @@ const glyph: Record<string, string> = { Drinks: '☕', Milks: '🥛', Syrups: '�
         </div>
       ))}
     </div>
-  </section>
+  </Window>
 
   <div class="mt-8 flex flex-wrap items-center gap-4">
     <a href="/order/" class="dz-btn dz-btn--lg">Order a drink →</a>
