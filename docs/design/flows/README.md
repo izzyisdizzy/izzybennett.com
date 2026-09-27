@@ -42,13 +42,13 @@ except Grounds. The flows start from Home.
 | Home | `Main.dc.html`, `Main-m.dc.html` | all | Hero window with bouncing name, four entry buttons, latest recipes, project card |
 | Recipes | `Recipes.dc.html`, `Recipes-m.dc.html` | 1 · Find & cook a recipe | Recipe index with filter and search |
 | Recipe | `Recipe.dc.html`, `Recipe-m.dc.html` | 1 · Find & cook a recipe | Recipe page (Raspberry Lemon Scones) with the US / grams switch; `ingredients.txt` + `steps.txt` windows |
-| Cafe | `Cafe.dc.html`, `Cafe-m.dc.html` | 2 · Order a drink | Menu board + order window (drink, milk, temp, name) |
-| Order | `Order.dc.html`, `Order-m.dc.html` | 2 · Order a drink | Order confirmed: "Coming right up." receipt window (`order-000042.txt`) |
+| Cafe | `Cafe.dc.html`, `Cafe-m.dc.html` | 2 · Order a drink at the cafe | Menu board + order window (drink, milk, temp, name) |
+| Order | `Order.dc.html`, `Order-m.dc.html` | 2 · Order a drink at the cafe | Order confirmed: "Coming right up." receipt window (`order-000042.txt`) |
 | Projects | `Projects.dc.html`, `Projects-m.dc.html` | 3 · Browse projects | Grid of project windows (dizzyos, izzybennett.com, recipes.json) |
 | Project | `Project.dc.html`, `Project-m.dc.html` | 3 · Browse projects | Project detail (dizzyos): live demo window, `facts.txt`, `more-projects.txt` |
 | Resume | `Resume.dc.html`, `Resume-m.dc.html` | 4 · Read the resume | Resume page in a `resume.pdf` window |
 | Orders / Kitchen | `Orders.dc.html`, `Orders-m.dc.html` | 5 · Run the kitchen | Kitchen display: new / making / done columns |
-| Nav | (in every board) | — | No board of its own. Desktop: brand, link bar, theme toggle (see `Main.dc.html`). At 390px the links collapse into a "Menu" sheet (`details.iz-mnav`) next to the toggle (see `Main-m.dc.html`). |
+| Nav | (in every board except Grounds) | — | No board of its own. Desktop: brand, link bar, theme toggle (see `Main.dc.html`). At 390px the links collapse into a "Menu" sheet (`details.iz-mnav`) next to the toggle (see `Main-m.dc.html`). |
 | Grounds | `Grounds.dc.html` (desktop only) | — | "Background options": every page-colour option side by side. **Exploration only.** |
 
 ## Tweaks: what ships

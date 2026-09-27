@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* docs/design/flows/ is a design snapshot, not site code: keep its class names out of the build. */
+/* docs/ holds design snapshots, not site code: keep their class names out of the build. */
 @source not "../../docs";
 
 /* Self-hosted fonts (fontsource). The variable packages register "<Name> Variable", which the
