@@ -1,25 +1,27 @@
 ---
 title: "dizzyOS"
-tagline: "A tiny OS for an LED-matrix sign"
+tagline: "The software behind the LED sign in my kitchen"
 repo: "https://github.com/izzyisdizzy/dizzyos"
 icon: "../../assets/dizzyos-icon.png"
 order: 1
 demo: "cafe-feed"
 ---
 
-A tiny "operating system" for the LED-matrix sign in my kitchen, written in Python. A small **kernel** provides the shared services — display, data, fonts, input — and self-contained **apps** plug into it, each with its own lifecycle. A **launcher** rotates through them with smooth transitions.
+I have an LED sign in my kitchen, and dizzyOS is what runs it. It's a small Python program that I built like a toy operating system. There's a kernel that handles the shared stuff (drawing to the display, fetching data, fonts, input), and then a handful of apps that each do one thing. A launcher cycles through the apps and animates the switch between them.
 
 ## The hardware
 
-Two chained Adafruit 64×64 HUB75 panels make a 128×64 canvas, driven by a Raspberry Pi with an Adafruit RGB Matrix Bonnet. A drop-in emulator stands in for the matrix driver on a Mac, so the exact same code renders in a browser window with zero changes — which is where most of the development happens.
+The sign is two Adafruit 64×64 HUB75 panels chained together into one 128×64 screen. A Raspberry Pi drives them through an Adafruit RGB Matrix Bonnet.
+
+I don't want to be standing in the kitchen every time I change a font, so there's also an emulator that swaps in for the matrix driver on my Mac. The same code draws into a browser window instead of the panels, and that's where I do most of the work.
 
 ## The apps
 
-- **Cafe Menu** — renders [Izzy's Cafe](/izzys-cafe/) from this site's `/izzys-cafe.json` feed, so editing the menu here updates the sign in the kitchen a minute or two later.
-- **Weather** — current conditions from Open-Meteo.
-- **Subway** — live next-train times from the MTA's realtime feeds.
+- **Cafe Menu** shows the [Izzy's Cafe](/izzys-cafe/) menu, pulled from this site's `/izzys-cafe.json` feed. If I change the menu here, the sign picks it up a minute or two later.
+- **Weather** shows what it's like outside, using Open-Meteo.
+- **Subway** shows when the next trains are coming, from the MTA's live feeds.
 
-Adding an app is a folder in `apps/` that implements `render()` plus a line in `config.yaml`; the launcher handles the rotation, the double-buffered frame loop and the transitions:
+To add an app, you make a folder in `apps/` with a `render()` function and add its name to `config.yaml`. The launcher takes care of the rotation, the frame loop and the transitions, so the app only has to worry about what to draw:
 
 ```yaml
 launcher:
@@ -31,4 +33,4 @@ launcher:
   transition: slide    # or crossfade, wipe, none…
 ```
 
-Below is the feed the Cafe Menu app reads, fetched live from this site.
+Here's the feed the Cafe Menu app reads. It's loaded live from this site, so it's exactly what the sign has right now.

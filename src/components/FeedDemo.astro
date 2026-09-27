@@ -72,7 +72,7 @@ const { src, heading } = FEEDS[kind];
       const li = el('li', '');
       const link = el('a', 'dz-link', recipe.title) as HTMLAnchorElement;
       link.href = `/recipes/${recipe.slug}/`;
-      li.append('· ', link, ` — ${recipe.category}`);
+      li.append('· ', link, ` (${recipe.category})`);
       list.appendChild(li);
     }
     const nodes = [el('p', 'label', `${feed.length} published recipes`), list];
@@ -99,7 +99,7 @@ const { src, heading } = FEEDS[kind];
         if (status) status.textContent = rendered.status;
       })
       .catch(() => {
-        const message = `Could not load ${src} — open it directly instead.`;
+        const message = `Couldn't load ${src}. You can open it directly instead.`;
         out.replaceChildren(el('p', 'mono', message));
         if (status) status.textContent = message;
       });

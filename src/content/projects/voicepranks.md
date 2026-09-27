@@ -1,19 +1,19 @@
 ---
 title: "Voice Pranks"
-tagline: "Real-time Minion-voice mic filter"
+tagline: "Talk like a Minion on any call"
 repo: "https://github.com/izzyisdizzy/voicepranks"
 icon: "../../assets/voicepranks-icon.png"
 order: 2
 ---
 
-A real-time "Minion voice" microphone filter for macOS and Windows, written in pure Python — numpy and sounddevice with hand-rolled DSP, no scipy or librosa.
+Voice Pranks makes you sound like a Minion in real time. It works on macOS and Windows, and it's written in plain Python. The only libraries are numpy and sounddevice, and I wrote the audio processing myself instead of pulling in scipy or librosa.
 
-It captures your physical microphone, pitch-shifts it up (chipmunk-style, formants move up too) with a presence-EQ boost that ramps in over about a second, and routes the result to a virtual audio device so Discord, Zoom or OBS can pick it up as their microphone input.
+It listens to your actual microphone and pitches your voice up, chipmunk style. It also boosts the frequencies that make a voice sound close and clear, and fades that boost in over about a second so it doesn't hit all at once. The result goes out to a virtual audio device, which Discord, Zoom or OBS can pick as a microphone like any other.
 
 ## How it works
 
-Physical mic → capture → pitch shift up + presence EQ → virtual output device. The virtual device is BlackHole on macOS or VB-CABLE on Windows; install one, then point your voice app's microphone at it.
+Your mic goes in, gets pitched up and EQ'd, and comes out on a virtual device. On a Mac that device is BlackHole, and on Windows it's VB-CABLE. Install one of those, then tell your voice app to use it as its microphone.
 
-## No Python required
+## You don't need Python
 
-Prebuilt bundles ship as a double-clickable app for each platform, with the install steps inside. The only extra piece is the free virtual audio cable driver, which is a system component and can't be bundled.
+There's a ready-made app for each platform that you can just double-click, and the setup steps come with it. The one thing you have to install yourself is the virtual audio cable. It's free, but it's a system driver, so I can't bundle it.
