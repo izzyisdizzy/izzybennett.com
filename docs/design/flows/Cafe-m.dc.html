@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Izzy's Cafe (phone) · order a drink</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+</style>
+</helmet>
+<div class="iz-page" data-theme="{{theme}}" data-shadows="{{shadows}}" data-retro="{{retro}}" data-ground="{{ground}}" data-night="{{night}}" style="width: 390px; height: 1540px; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 24px;">
+
+  <nav class="dz-nav" aria-label="Main" style="padding: 8px 12px 8px 16px;">
+    <a class="dz-nav__brand dz-wiggle-hover" href="Main-m.dc.html" style="font-size: 20px;">Izzy Bennett</a>
+    <div style="display: flex; align-items: center; gap: 8px;">
+    <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}"><sc-if value="{{isLight}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if><sc-if value="{{isDark}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if></button>
+    <details class="iz-mnav">
+      <summary>Menu <span aria-hidden="true">▾</span></summary>
+      <ul class="iz-mnav__sheet">
+        <li><a class="dz-nav__link" href="Recipes-m.dc.html">Recipes</a></li>
+        <li><a class="dz-nav__link" aria-current="page" href="Cafe-m.dc.html">Cafe</a></li>
+        <li><a class="dz-nav__link" href="Projects-m.dc.html">Projects</a></li>
+        <li><a class="dz-nav__link" href="Resume-m.dc.html">Resume</a></li>
+      </ul>
+    </details>
+    </div>
+  </nav>
+
+  <div class="dz-marquee" data-dz-marquee>
+    <div class="dz-marquee__track">
+      <span>★ the cafe is open</span>
+      <span>★ today's syrup: cardamom</span>
+      <span>★ milks: oat, whole, 2%</span>
+    </div>
+  </div>
+
+  <header style="display: flex; flex-direction: column; gap: 8px;">
+    <h1 class="display-l">Izzy's Cafe</h1>
+    <p class="body" style="color: var(--ink-muted);">One kitchen, one espresso machine, no line. Pick a drink and I'll bring it over.</p>
+  </header>
+
+  <section class="dz-window" style="margin-right: 8px;">
+    <div class="dz-window__bar">
+      <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+      <span class="dz-window__title">menu.txt</span>
+    </div>
+    <div class="dz-window__body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+      <h2 class="h2" style="font-size: 22px;">Menu board</h2>
+      <span class="label">Step 1</span>
+    </div>
+    <div role="group" aria-label="Drinks" style="display: flex; flex-direction: column; gap: 14px; padding-right: 6px; padding-bottom: 6px;">
+      <sc-for list="{{drinks}}" as="d" hint-placeholder-count="4">
+        <button type="button" class="iz-option" aria-pressed="{{d.pressed}}" onClick="{{d.pick}}" style="min-height: 60px;">
+          <span class="iz-option__check" aria-hidden="true">{{d.mark}}</span>
+          <span style="display: flex; flex-direction: column; gap: 2px;">
+            <span class="h3" style="font-size: 18px;">{{d.name}}</span>
+            <span class="body-s" style="color: var(--ink-muted);">{{d.note}}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+    </div>
+  </section>
+
+  <aside class="dz-window" style="margin-right: 8px;">
+    <div class="dz-window__bar">
+      <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+      <span class="dz-window__title">order.txt</span>
+    </div>
+    <div class="dz-window__body" style="padding: 20px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span class="label">Step 2 · milk</span>
+        <div role="group" aria-label="Milk" style="display: flex; gap: 10px; padding-right: 6px; padding-bottom: 6px;">
+          <sc-for list="{{milks}}" as="m" hint-placeholder-count="3">
+            <button type="button" class="iz-option" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="width: auto; flex: 1; justify-content: center; padding: 10px 8px; font-size: 15px;">{{m.name}}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <span class="label">Step 3 · temp</span>
+        <div class="dz-seg" role="group" aria-label="Temperature">
+          <button class="dz-seg__btn" type="button" data-value="hot" aria-pressed="{{isHot}}" onClick="{{pickHot}}" style="min-height: 36px;">Hot</button>
+          <button class="dz-seg__btn" type="button" data-value="iced" aria-pressed="{{isIced}}" onClick="{{pickIced}}" style="min-height: 36px;">Iced</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label class="label" for="order-name-m">Step 4 · your name</label>
+        <input id="order-name-m" class="iz-field" type="text" placeholder="So I know who to call">
+      </div>
+
+      <div class="iz-well" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;">
+        <span class="label">Your order</span>
+        <p class="mono">{{summary}}</p>
+      </div>
+
+      <a class="dz-btn dz-btn--lg" href="Order-m.dc.html" style="justify-content: center;">Order a drink</a>
+      <p class="caption">No payment. It's my kitchen, just say thanks.</p>
+    </div>
+  </aside>
+
+  <footer class="dz-footer" style="margin-top: auto; flex-direction: column; align-items: center; gap: 8px; justify-content: center; text-align: center; padding: 10px 24px;">
+    <p>© Izzy Bennett 2026 · me@izzybennett.com</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["daylight","afterglow"],"default":"daylight","section":"Theme"},"shadows":{"editor":"enum","options":["fewer","full"],"default":"fewer","section":"Theme"},"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"ground":{"editor":"enum","options":["seaglass","sage","cream","blush","lavender"],"default":"seaglass","section":"Theme"},"night":{"editor":"enum","options":["neon-purple","espresso","neon-green"],"default":"neon-purple","section":"Theme"},"$preview":{"width":390,"height":1540}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { drink: 'Cardamom latte', milk: 'Oat', temp: 'hot' };
+    this.pickHot = () => this.setState({ temp: 'hot' });
+    this.pickIced = () => this.setState({ temp: 'iced' });
+  }
+  componentDidMount() {
+    if (window.Dizzy) window.Dizzy.init(document);
+  }
+  curTheme() {
+    return (this.state && this.state.theme) || this.props.theme || 'daylight';
+  }
+  renderVals() {
+    const drinks = [
+      { name: 'Cardamom latte', note: 'house syrup, double shot' },
+      { name: 'Americano', note: 'double shot, hot water' },
+      { name: 'Cold brew', note: 'steeped 18 hours' },
+      { name: 'Hot chocolate', note: 'dark, not too sweet' }
+    ];
+    const milks = ['Oat', 'Whole', '2%'];
+    const s = this.state;
+    return {
+      theme: this.curTheme(), isDark: this.curTheme() === 'afterglow', isLight: this.curTheme() !== 'afterglow', themeToggleLabel: this.curTheme() === 'afterglow' ? 'Switch to light mode' : 'Switch to dark mode', toggleTheme: () => this.setState({ theme: this.curTheme() === 'afterglow' ? 'daylight' : 'afterglow' }), shadows: this.props.shadows ?? 'fewer', retro: this.props.retro ?? 'on', ground: this.props.ground ?? 'seaglass', night: this.props.night ?? 'neon-purple',
+      drinks: drinks.map((d) => ({
+        ...d,
+        pressed: s.drink === d.name,
+        mark: '',
+        pick: () => this.setState({ drink: d.name })
+      })),
+      milks: milks.map((m) => ({ name: m, pressed: s.milk === m, pick: () => this.setState({ milk: m }) })),
+      isHot: s.temp === 'hot',
+      isIced: s.temp === 'iced',
+      pickHot: this.pickHot,
+      pickIced: this.pickIced,
+      summary: (s.temp === 'iced' ? 'iced ' : '') + s.drink.toLowerCase() + ' · ' + s.milk.toLowerCase() + ' milk'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Resume · Izzy Bennett</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/dizzy/components/bundle.css">
+<script src="ds/dizzy/components/bundle.js"></script>
+<script src="iz-bounce.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:#c60063}a:hover{color:#a80055}
+.entry{display:grid;grid-template-columns:150px minmax(0,1fr);gap:24px;padding:20px 0;border-bottom:1px solid var(--hairline)}
+.entry:last-child{border-bottom:0;padding-bottom:0}
+</style>
+</helmet>
+<div class="iz-page" data-theme="{{theme}}" data-shadows="{{shadows}}" data-retro="{{retro}}" data-ground="{{ground}}" data-night="{{night}}" style="width: 1280px; height: 1440px; padding: 40px 64px 64px; display: flex; flex-direction: column; gap: 32px;">
+
+  <nav class="dz-nav" aria-label="Main">
+    <a class="dz-nav__brand dz-wiggle-hover" href="Main.dc.html">Izzy Bennett</a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+    <ul class="dz-nav__links">
+      <li><a class="dz-nav__link" href="Recipes.dc.html">Recipes</a></li>
+      <li><a class="dz-nav__link" href="Cafe.dc.html">Cafe</a></li>
+      <li><a class="dz-nav__link" href="Projects.dc.html">Projects</a></li>
+      <li><a class="dz-nav__link" aria-current="page" href="Resume.dc.html">Resume</a></li>
+    </ul>
+    <button type="button" class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle" aria-label="{{themeToggleLabel}}" onClick="{{toggleTheme}}"><sc-if value="{{isLight}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if><sc-if value="{{isDark}}" hint-placeholder-val="{{false}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if></button>
+    </div>
+  </nav>
+
+  <div style="display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 48px; align-items: start; padding-top: 16px;">
+    <aside style="display: flex; flex-direction: column; gap: 24px; position: sticky; top: 0;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h1 class="display-xl"><span data-dz-bounce="once" tabindex="0">Resume</span></h1>
+        <p class="body-s" style="color: var(--ink-muted);">Please hire me.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+        <button class="dz-btn" type="button">Download PDF</button>
+      </div>
+      <div class="iz-well" style="padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <span class="label">Contact</span>
+        <a class="dz-link body-s" href="https://izzybennett.com">izzybennett.com</a>
+        <a class="dz-link body-s" href="https://github.com/izzyisdizzy">github.com/izzyisdizzy</a>
+        <span class="body-s">me@izzybennett.com</span>
+      </div>
+      <p class="caption">Updated <span class="mono-s">[MONTH YEAR]</span></p>
+    </aside>
+
+    <article class="dz-window">
+      <div class="dz-window__bar">
+        <span class="dz-window__lights" aria-hidden="true"><span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span></span>
+        <span class="dz-window__title">resume.pdf</span>
+      </div>
+      <div class="dz-window__body" style="padding: 40px 56px 48px; display: flex; flex-direction: column; gap: 40px;">
+      <header style="display: flex; flex-direction: column; gap: 8px;">
+        <h2 class="h1">Izzy Bennett</h2>
+        <p class="body-l" style="color: var(--orange-deep); font-weight: 500;">[YOUR TITLE]</p>
+        <p class="body" style="max-width: 640px; text-wrap: pretty;">[Two sentences on what you do and what you're looking for. First person, like the rest of the site.]</p>
+      </header>
+
+      <section style="display: flex; flex-direction: column; gap: 4px;">
+        <h3 class="label" style="color: var(--ink-muted);">Experience</h3>
+        <div class="entry">
+          <span class="mono-s" style="color: var(--ink-muted); padding-top: 4px;">[START] – present</span>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <p class="h3">[ROLE] · [COMPANY]</p>
+            <p class="body-s">[What you owned and what changed because of it, in one or two lines.]</p>
+          </div>
+        </div>
+        <div class="entry">
+          <span class="mono-s" style="color: var(--ink-muted); padding-top: 4px;">[START] – [END]</span>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <p class="h3">[ROLE] · [COMPANY]</p>
+            <p class="body-s">[What you owned and what changed because of it, in one or two lines.]</p>
+          </div>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 4px;">
+        <h3 class="label" style="color: var(--ink-muted);">Projects</h3>
+        <div class="entry">
+          <span class="mono-s" style="color: var(--ink-muted); padding-top: 4px;">[YEAR] – present</span>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <p class="h3"><a class="dz-link" href="Project.dc.html">dizzyos</a></p>
+            <p class="body-s">An LED matrix sign that reads the cafe menu off this site's JSON feed. Python on a Raspberry Pi.</p>
+          </div>
+        </div>
+        <div class="entry">
+          <span class="mono-s" style="color: var(--ink-muted); padding-top: 4px;">[YEAR] – present</span>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <p class="h3"><a class="dz-link" href="Projects.dc.html">izzybennett.com</a></p>
+            <p class="body-s">This site and the Dizzy design system behind it, with recipes, a cafe ordering flow and a public feed. Built with Astro and Tailwind.</p>
+          </div>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 12px;">
+        <h3 class="label" style="color: var(--ink-muted);">Skills</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+          <span class="dz-tag dz-tag--aqua">Python</span>
+          <span class="dz-tag dz-tag--orange">Astro</span>
+          <span class="dz-tag dz-tag--orange">Tailwind</span>
+          <span class="dz-tag dz-tag--pink">Design systems</span>
+          <span class="dz-tag">[SKILL]</span>
+          <span class="dz-tag">[SKILL]</span>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 4px;">
+        <h3 class="label" style="color: var(--ink-muted);">Education</h3>
+        <div class="entry">
+          <span class="mono-s" style="color: var(--ink-muted); padding-top: 4px;">[YEARS]</span>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <p class="h3">[DEGREE] · [SCHOOL]</p>
+          </div>
+        </div>
+      </section>
+      </div>
+    </article>
+  </div>
+
+  <footer class="dz-footer" style="margin-top: auto; justify-content: center; text-align: center; padding: 10px 24px;">
+    <p>© Izzy Bennett 2026 · me@izzybennett.com</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["daylight","afterglow"],"default":"daylight","section":"Theme"},"shadows":{"editor":"enum","options":["fewer","full"],"default":"fewer","section":"Theme"},"retro":{"editor":"enum","options":["on","off"],"default":"on","section":"Theme"},"ground":{"editor":"enum","options":["seaglass","sage","cream","blush","lavender"],"default":"seaglass","section":"Theme"},"night":{"editor":"enum","options":["neon-purple","espresso","neon-green"],"default":"neon-purple","section":"Theme"},"$preview":{"width":1280,"height":1440}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    if (window.Dizzy) window.Dizzy.init(document);
+  }
+  curTheme() {
+    return (this.state && this.state.theme) || this.props.theme || 'daylight';
+  }
+  renderVals() {
+    return { theme: this.curTheme(), isDark: this.curTheme() === 'afterglow', isLight: this.curTheme() !== 'afterglow', themeToggleLabel: this.curTheme() === 'afterglow' ? 'Switch to light mode' : 'Switch to dark mode', toggleTheme: () => this.setState({ theme: this.curTheme() === 'afterglow' ? 'daylight' : 'afterglow' }), shadows: this.props.shadows ?? 'fewer', retro: this.props.retro ?? 'on', ground: this.props.ground ?? 'seaglass', night: this.props.night ?? 'neon-purple' };
+  }
+}
+</script>
+</body>
+</html>

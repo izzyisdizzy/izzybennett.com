@@ -1,0 +1,335 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Cafe-m.dc.html": {
+      "h": 1540,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Cafe — pick a drink",
+      "w": 390,
+      "x": 0,
+      "y": 2560
+    },
+    "Cafe.dc.html": {
+      "h": 1120,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Cafe — pick a drink",
+      "w": 1280,
+      "x": 0,
+      "y": 2160
+    },
+    "Main-m.dc.html": {
+      "h": 1220,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Home",
+      "w": 390,
+      "x": 0,
+      "y": 260
+    },
+    "Main.dc.html": {
+      "h": 1080,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Home",
+      "w": 1280,
+      "x": 0,
+      "y": 260
+    },
+    "Order-m.dc.html": {
+      "h": 960,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Order confirmed",
+      "w": 390,
+      "x": 470,
+      "y": 2560
+    },
+    "Order.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Order confirmed",
+      "w": 1280,
+      "x": 1360,
+      "y": 2160
+    },
+    "Project-m.dc.html": {
+      "h": 1460,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Project — dizzyos",
+      "w": 390,
+      "x": 470,
+      "y": 4440
+    },
+    "Project.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Project — dizzyos",
+      "w": 1280,
+      "x": 1360,
+      "y": 3660
+    },
+    "Projects-m.dc.html": {
+      "h": 1560,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Projects",
+      "w": 390,
+      "x": 0,
+      "y": 4440
+    },
+    "Projects.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Projects",
+      "w": 1280,
+      "x": 0,
+      "y": 3660
+    },
+    "Recipe-m.dc.html": {
+      "h": 1880,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Recipe — US / Grams",
+      "w": 390,
+      "x": 940,
+      "y": 260
+    },
+    "Recipe.dc.html": {
+      "h": 1500,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Recipe — US / Grams",
+      "w": 1280,
+      "x": 2720,
+      "y": 260
+    },
+    "Recipes-m.dc.html": {
+      "h": 1160,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Recipes — filter & search",
+      "w": 390,
+      "x": 470,
+      "y": 260
+    },
+    "Recipes.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Recipes — filter & search",
+      "w": 1280,
+      "x": 1360,
+      "y": 260
+    },
+    "Resume-m.dc.html": {
+      "h": 1600,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Resume",
+      "w": 390,
+      "x": 0,
+      "y": 6380
+    },
+    "Resume.dc.html": {
+      "h": 1440,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Resume",
+      "w": 1280,
+      "x": 0,
+      "y": 5140
+    },
+    "Grounds.dc.html": {
+      "h": 1300,
+      "page": "desktop",
+      "title": "Background options",
+      "w": 1280,
+      "x": 4080,
+      "y": 260
+    },
+    "Orders.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Kitchen · all orders (KDS)",
+      "w": 1280,
+      "x": 0,
+      "y": 6980
+    },
+    "Orders-m.dc.html": {
+      "h": 1520,
+      "is_interactive": true,
+      "page": "phone",
+      "title": "Kitchen · all orders (KDS)",
+      "w": 390,
+      "x": 0,
+      "y": 8380
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-18T15:32:46Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/code/artifact/618636e3-28d4-41be-a03b-7b92d86b39ea",
+      "copiedAt": "2026-09-18T15:32:46Z",
+      "namespace": "dizzy",
+      "title": "Dizzy",
+      "version": null
+    }
+  ],
+  "launch": {
+    "page": "desktop",
+    "view": "canvas"
+  },
+  "notes": {
+    "d-flow1": {
+      "kind": "title1",
+      "maxW": 2600,
+      "page": "desktop",
+      "text": "Flow 1 · Find & cook a recipe",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "d-flow2": {
+      "kind": "title1",
+      "maxW": 2600,
+      "page": "desktop",
+      "text": "Flow 2 · Order a drink at the cafe",
+      "w": 240,
+      "x": 0,
+      "y": 1900
+    },
+    "d-flow3": {
+      "kind": "title1",
+      "maxW": 2600,
+      "page": "desktop",
+      "text": "Flow 3 · Browse projects",
+      "w": 240,
+      "x": 0,
+      "y": 3400
+    },
+    "d-flow4": {
+      "kind": "title1",
+      "maxW": 2600,
+      "page": "desktop",
+      "text": "Flow 4 · Read the resume",
+      "w": 240,
+      "x": 0,
+      "y": 4880
+    },
+    "d-howto": {
+      "color": "pink",
+      "maxH": 220,
+      "page": "desktop",
+      "text": "Every artboard is clickable: press Play on Home and follow the buttons through each flow. Flows 2–4 start from the Home buttons too. Each artboard has a Theme tweak — check Afterglow as well as Daylight.",
+      "w": 420,
+      "x": 3000,
+      "y": 0
+    },
+    "p-flow1": {
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "phone",
+      "text": "Flow 1 · Find & cook a recipe",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "p-flow2": {
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "phone",
+      "text": "Flow 2 · Order a drink at the cafe",
+      "w": 240,
+      "x": 0,
+      "y": 2300
+    },
+    "p-flow3": {
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "phone",
+      "text": "Flow 3 · Browse projects",
+      "w": 240,
+      "x": 0,
+      "y": 4180
+    },
+    "p-flow4": {
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "phone",
+      "text": "Flow 4 · Read the resume",
+      "w": 240,
+      "x": 0,
+      "y": 6120
+    },
+    "p-howto": {
+      "color": "orange",
+      "maxH": 220,
+      "page": "phone",
+      "text": "Same four flows at 390px. The nav collapses to a Menu sheet, buttons go full width, and the cafe's menu board stacks above the order window.",
+      "w": 360,
+      "x": 1500,
+      "y": 0
+    },
+    "d-flow5": {
+      "kind": "title1",
+      "maxW": 2600,
+      "page": "desktop",
+      "text": "Flow 5 · Run the kitchen",
+      "w": 240,
+      "x": 0,
+      "y": 6720
+    },
+    "p-flow5": {
+      "kind": "title1",
+      "maxW": 1400,
+      "page": "phone",
+      "text": "Flow 5 · Run the kitchen",
+      "w": 240,
+      "x": 0,
+      "y": 8120
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Recipes.dc.html",
+    "Recipe.dc.html",
+    "Cafe.dc.html",
+    "Order.dc.html",
+    "Projects.dc.html",
+    "Project.dc.html",
+    "Resume.dc.html",
+    "Orders.dc.html",
+    "Grounds.dc.html",
+    "Main-m.dc.html",
+    "Recipes-m.dc.html",
+    "Recipe-m.dc.html",
+    "Cafe-m.dc.html",
+    "Order-m.dc.html",
+    "Projects-m.dc.html",
+    "Project-m.dc.html",
+    "Resume-m.dc.html",
+    "Orders-m.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "desktop",
+      "name": "Desktop"
+    },
+    {
+      "id": "phone",
+      "name": "Phone"
+    }
+  ],
+  "title": "izzybennett.com flows"
+}

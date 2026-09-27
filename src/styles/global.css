@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* docs/ holds design snapshots, not site code: keep their class names out of the build. */
+@source not "../../docs";
 
 /* Self-hosted fonts (fontsource). The variable packages register "<Name> Variable", which the
    generated --font-display / --font-body stacks lead with. Space Mono is static: 400 + 700. */
