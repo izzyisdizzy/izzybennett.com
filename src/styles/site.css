@@ -206,10 +206,9 @@
 .iz-prose hr { height: var(--stroke-hair); border: 0; background: var(--hairline); }
 
 /* ---------------------------------------------------------------- shadows */
-/* Fewer shadows than the stock component sheet: only the hero frame, filled buttons and things
-   that float (the mobile nav sheet, popovers) keep one. Everything else loses its drop
-   shadow; the big panels (nav, windows, cards, hero, footer) get the inset bevel in "retro
-   chrome" below instead. Overrides bundle.css, which stays as vendored; same layer, later
+/* Fewer shadows than the stock component sheet: only filled buttons and things that float (the
+   mobile nav sheet, popovers) keep one. Everything else loses its drop shadow; the big panels
+   (nav, windows, cards, footer) get the inset bevel in "retro chrome" below instead. Overrides bundle.css, which stays as vendored; same layer, later
    import, so these win at equal specificity. With no offset shadow to land on, the
    hover/press nudges on ghost buttons read as jitter, so those go too. */
 .dz-marquee,
@@ -367,11 +366,11 @@ html { overflow-x: clip; }
   border-bottom: var(--stroke-hair) solid var(--hairline);
 }
 .iz-fact:last-child { border-bottom: 0; }
+.iz-fact dt { flex: none; }
 .iz-fact dd { min-width: 0; overflow-wrap: anywhere; text-align: end; }
 
-/* A dz-row inside a narrow window (more-projects.txt): less side padding, smaller title. */
+/* A dz-row inside a narrow window (more-projects.txt): less side padding. */
 .iz-row-tight { padding-inline: var(--space-2); }
-.iz-row-tight .dz-row__title { font-size: 16px; }
 
 /* ------------------------------------------------------------- tag buttons */
 /* A dz-tag used as a toggle (the recipe category filters). */
@@ -381,4 +380,8 @@ html { overflow-x: clip; }
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }
+  /* A window prints as its content (the /resume/ page): no title bar, frame or bevel. */
+  .dz-window__bar { display: none; }
+  .dz-window { border: 0; box-shadow: none; }
+  .dz-window__body { background-image: none; }
 }

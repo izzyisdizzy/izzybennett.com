@@ -54,27 +54,26 @@ const countLabel = (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`;
     />
   </div>
 
-  <!-- The list lives in the recipes/ window, filters and count on top as on the canvas board.
-       The count stays the page's one live region — the body itself is not aria-live. -->
-  <Window title="recipes/" class="mt-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div id="recipe-filters" class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-        {filters.map((filter) => (
-          <button
-            type="button"
-            data-filter={filter}
-            class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
-            aria-pressed={filter === '' ? 'true' : 'false'}
-          >
-            {filter || 'All'}
-          </button>
-        ))}
-      </div>
-      <!-- Updated by the filter script; a status region, so the new count is announced politely. -->
-      <span id="recipe-count" class="dz-counter" role="status">{countLabel(recipes.length)}</span>
-    </div>
+  <div id="recipe-filters" class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+    {filters.map((filter) => (
+      <button
+        type="button"
+        data-filter={filter}
+        class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
+        aria-pressed={filter === '' ? 'true' : 'false'}
+      >
+        {filter || 'All'}
+      </button>
+    ))}
+  </div>
 
-    <div id="recipe-grid" class="mt-6 flex flex-col gap-1">
+  <!-- The count and list live in the recipes/ window, search and filters above it, as on the
+       canvas board. The count stays the page's one live region — the body is not aria-live. -->
+  <Window title="recipes/" class="mt-6">
+    <!-- Updated by the filter script; a status region, so the new count is announced politely. -->
+    <span id="recipe-count" class="dz-counter" role="status">{countLabel(recipes.length)}</span>
+
+    <div id="recipe-grid" class="mt-4 flex flex-col gap-1">
       {recipes.map((recipe) => <RecipeCard recipe={recipe} editHref={`/upload?edit=${recipe.id}`} />)}
     </div>
 

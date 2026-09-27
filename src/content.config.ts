@@ -7,6 +7,7 @@ import { z } from 'astro/zod';
 // file's own bytes, not its imports — so after bumping the engine, `.astro/` must be cleared
 // (the `prebuild` script does this) or builds keep serving data validated by the old schema.
 import { recipeSchema } from '@izzy/recipe-engine/schema';
+import { FEED_KINDS } from './lib/feeds';
 
 const recipes = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/recipes' }),
@@ -23,7 +24,7 @@ const pages = defineCollection({
 
 // One entry per project: the frontmatter drives the /projects/ grid, the markdown body is the
 // detail page. `icon` resolves relative to the entry (../../assets/…); `demo` picks the live
-// feed window a detail page shows under its prose (see src/components/FeedDemo.astro).
+// feed window a detail page shows under its prose (feeds are described in src/lib/feeds.ts).
 const projects = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
   schema: ({ image }) =>
@@ -34,7 +35,7 @@ const projects = defineCollection({
       icon: image().optional(),
       order: z.number().int(),
       links: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
-      demo: z.enum(['cafe-feed', 'recipes-feed']).optional(),
+      demo: z.enum(FEED_KINDS).optional(),
     }),
 });
 

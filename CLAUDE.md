@@ -37,7 +37,9 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   drives the `/projects/` grid of `ProjectWindow`s; the markdown body is the
   `/projects/<slug>/` page, styled by `.iz-prose` (fenced code is themed through
   Shiki's light/dark CSS variables — see `astro.config.mjs`). `demo: cafe-feed | recipes-feed`
-  adds a `FeedDemo` window that fetches the live feed client-side, read-only.
+  adds a `FeedDemo` window that fetches the live feed client-side, read-only. Below
+  the prose, `facts.txt` and `more-projects.txt` windows are built from the same
+  frontmatter — they need no fields of their own.
 - `src/dizzy/` — the Dizzy design system, vendored: `tokens.json` (source of
   truth: colours for the `daylight`/`afterglow` themes, type, spacing, radii,
   strokes, shadows), `bundle.css` (the `dz-*` components + motion), `bundle.js`
@@ -48,7 +50,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   wires it all up. Theme = `<html data-theme>`, stamped before paint by
   `ThemeBoot.astro` (stored choice in `localStorage['izzy-theme']`, else the OS)
   and flipped by `ThemeToggle.astro`. Tailwind is for layout; colour, type and
-  shape come from Dizzy classes.
+  shape come from Dizzy classes. A new boxed surface is a titled window: wrap it in
+  `src/components/Window.astro` (presentational — its title is never a heading).
 - `docs/design/flows/` — a read-only snapshot of the "izzybennett.com flows"
   design canvas (the canvas itself is private): every board as `.dc.html`, plus
   its `site.css`, `iz-bounce.js` and `canvas.json`. Its `README.md` maps the
@@ -56,6 +59,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `@source not` in `global.css`, so it can never change the built CSS.
 - `src/pages/` — routes. Note the JSON endpoints: `izzys-cafe.json.ts`,
   `recipes.json.ts`, `densities.json.ts`.
+- `src/lib/feeds.ts` — the feeds a project can `demo`: `FEED_KINDS` (the schema's
+  enum) and `FEEDS` (used by `FeedDemo` and the facts window). Add a feed here.
 - `src/lib/izzys-cafe-content.test.ts` — asserts the *live* menu content's shape
   (canonical sections, in order, at least one drink). Never item text.
 - `@izzy/cafe-menu` ([izzyisdizzy/cafe-menu](https://github.com/izzyisdizzy/cafe-menu),
