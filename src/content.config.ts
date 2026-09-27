@@ -18,4 +18,21 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { recipes, pages };
+// One entry per project: the frontmatter drives the /projects/ grid, the markdown body is the
+// detail page. `icon` resolves relative to the entry (../../assets/…); `demo` picks the live
+// feed window a detail page shows under its prose (see src/components/FeedDemo.astro).
+const projects = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      tagline: z.string(),
+      repo: z.string().url().optional(),
+      icon: image().optional(),
+      order: z.number().int(),
+      links: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
+      demo: z.enum(['cafe-feed', 'recipes-feed']).optional(),
+    }),
+});
+
+export const collections = { recipes, pages, projects };

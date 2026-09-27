@@ -159,6 +159,43 @@
 [data-theme="afterglow"] .iz-theme-toggle__sun { display: inline; }
 [data-theme="afterglow"] .iz-theme-toggle__moon { display: none; }
 
+/* ------------------------------------------------------------- window art */
+/* Media slot for a window whose project has no icon: a flat brand-colour block, as the
+   system's placeholder-art note suggests. */
+.iz-window-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  border-bottom: var(--stroke-2) solid var(--outline);
+  background: var(--orange-soft);
+  color: var(--hotpink);
+  font-size: 56px;
+}
+
+/* -------------------------------------------------------------------- prose */
+/* Rendered markdown (project pages) in Dizzy type. Bodies use inline code only; a fenced block
+   would arrive with the highlighter's own inline colours, which the theme can't reach. */
+.iz-prose > * + * { margin-top: var(--space-4); }
+.iz-prose > p:first-child { font-size: 18px; line-height: 29px; }
+.iz-prose h2 { margin-top: var(--space-7); font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 700; }
+.iz-prose h3 { margin-top: var(--space-6); font-family: var(--font-display); font-size: 19px; line-height: 24px; font-weight: 600; }
+.iz-prose h2 + *, .iz-prose h3 + * { margin-top: var(--space-3); }
+.iz-prose a { color: var(--hotpink); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.iz-prose a:hover { color: var(--hotpink-strong); }
+.iz-prose a:visited { color: var(--visited); }
+.iz-prose strong { font-weight: 600; }
+.iz-prose ul, .iz-prose ol { padding-left: var(--space-5); }
+.iz-prose ul { list-style: disc; }
+.iz-prose ol { list-style: decimal; }
+.iz-prose li + li { margin-top: var(--space-2); }
+.iz-prose li::marker { color: var(--hotpink); }
+.iz-prose code { padding: 1px 6px; border-radius: var(--radius-xs); background: var(--surface-sunken); font-family: var(--font-mono); font-size: 14px; }
+.iz-prose pre { padding: var(--space-4); border: var(--stroke-1) solid var(--outline); border-radius: var(--radius-sm); background: var(--surface-sunken) !important; color: var(--ink) !important; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 22px; }
+.iz-prose pre code { padding: 0; background: none; }
+.iz-prose blockquote { padding-left: var(--space-4); border-left: var(--stroke-2) solid var(--hotpink); color: var(--ink-muted); }
+.iz-prose hr { height: var(--stroke-hair); border: 0; background: var(--hairline); }
+
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }

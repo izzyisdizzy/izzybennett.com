@@ -1,43 +1,16 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import voicepranksIcon from '../assets/voicepranks-icon.png';
-import recipesIcon from '../assets/recipes-icon.png';
-import dizzyosIcon from '../assets/dizzyos-icon.png';
+import ProjectWindow from '../components/ProjectWindow.astro';
 
-const projects = [
-  {
-    title: 'dizzyOS',
-    image: dizzyosIcon,
-    url: 'https://github.com/izzyisdizzy/dizzyos',
-    description:
-      'A mini "operating system" for an LED-matrix sign, built in Python. Runs pluggable apps on two chained 64×64 HUB75 panels driven by a Raspberry Pi, and rotates between them with crossfades — weather, train times, and a live feed of my cafe menu.',
-    byline: 'Created by Izzy Bennett',
-  },
-  {
-    title: 'Voice Pranks',
-    image: voicepranksIcon,
-    url: 'https://github.com/izzyisdizzy/voicepranks',
-    description:
-      'Real-time "Minion voice" microphone filter for macOS and Windows, written in pure Python. Pitch-shifts your mic and routes it to a virtual audio device so apps like Discord, Zoom, or OBS pick it up as their input.',
-    byline: 'Created by Izzy Bennett',
-  },
-  {
-    title: 'Recipes',
-    image: recipesIcon,
-    url: '/recipes/',
-    description:
-      'The recipe archive on this very site: structured markdown recipes with search, category filters, and US-to-grams ingredient conversion — plus an in-browser editor that commits new recipes back to the repo through a Cloudflare Worker, so the GitHub token never touches the browser.',
-    byline: 'Created by Izzy Bennett',
-  },
-];
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<BaseLayout title="Projects">
-  <h1 class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">Projects</h1>
-  <p class="mt-2 text-neutral-600 dark:text-neutral-400">Recent projects of mine</p>
+<BaseLayout title="Projects" description="Things Izzy Bennett has built.">
+  <h1 class="display-xl" data-dz-bounce="hover">Projects</h1>
+  <p class="body-l mt-2 text-ink-muted">Things I've built.</p>
 
-  <div class="mt-8 grid gap-6 sm:grid-cols-2">
-    {projects.map((project) => <ProjectCard {...project} />)}
+  <div class="mt-8 grid gap-8 sm:grid-cols-2">
+    {projects.map((project) => <ProjectWindow project={project} />)}
   </div>
 </BaseLayout>
