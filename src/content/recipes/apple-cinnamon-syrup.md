@@ -1,6 +1,6 @@
 ---
 title: "Apple Cinnamon Syrup"
-category: "other"
+category: "drink"
 keywords: ["apple", "cinnamon", "syrup", "coffee"]
 prepTime: 10
 cookTime: 20

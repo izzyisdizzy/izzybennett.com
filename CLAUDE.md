@@ -43,7 +43,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
 - `src/dizzy/` — the Dizzy design system, vendored: `tokens.json` (source of
   truth: colours for the `daylight`/`afterglow` themes, type, spacing, radii,
   strokes, shadows), `bundle.css` (the `dz-*` components + motion), `bundle.js`
-  (`window.Dizzy`: `bouncify`, `marquee`, `segmented`, `init`) and `index.d.ts`.
+  (`window.Dizzy`: `bouncify`, `marquee`, `segmented`, `init`) and `index.d.ts`. Its
+  `README.md` covers provenance and the two permanent local patches in `bundle.*`.
   `tokens.css` and `tailwind-theme.css` are **generated** from the JSON by
   `npm run dizzy:tokens`. `src/styles/site.css` holds the type classes
   (`.display-xl`, `.mono`, …) and the `.iz-*` page helpers; `src/styles/global.css`
@@ -111,13 +112,13 @@ the other tweak options were exploration and are not to be built.
 | :-- | :-- | :-- |
 | M6 | #71 (done) | `/upload` + `/update-menu` on Dizzy, inputs for `yield`/`oven`/`key`/`grams` |
 | M7 | #72 | Remove scaffolding, settle open questions, a11y + motion pass |
-| M8 | #77 | Snapshot the flows canvas into `docs/design/flows/` |
-| M9 | #78 | Re-value tokens to sea glass / neon purple |
-| M10 | #79 | Retro chrome: tight radii, chunky strokes, bevels, striped window bars |
-| M11 | #80 | Retro type, neon title glow, blinking cursor, CRT overlay |
-| M12 | #81 | Every boxed surface in a Dizzy window |
-| M13 | #82 | Canvas motion: burst on press, bounce once, pops, sparkles |
-| M14 | #83 | Rewrite visible em-dash copy |
+| M8 | #77 (done) | Snapshot the flows canvas into `docs/design/flows/` |
+| M9 | #78 (done) | Re-value tokens to sea glass / neon purple |
+| M10 | #79 (done) | Retro chrome: tight radii, chunky strokes, bevels, striped window bars |
+| M11 | #80 (done) | Retro type, neon title glow, blinking cursor, CRT overlay |
+| M12 | #81 (done) | Every boxed surface in a Dizzy window |
+| M13 | #82 (done) | Canvas motion: burst on press, bounce once, pops, sparkles |
+| M14 | #83 (done) | Rewrite visible em-dash copy |
 | M15 | #84 | Adopt recipe-engine v2.1.0 on the recipe page |
 
 Order: M8 → M9 → M10–M15 by their stated dependencies, and **M7 lands last**,
