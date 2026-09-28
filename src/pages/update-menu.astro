@@ -1,6 +1,6 @@
 ---
-// Standalone, unlisted cafe-menu editor. Like /upload it deliberately does NOT use BaseLayout,
-// so it stays out of the site chrome. It edits the single source-of-truth menu file
+// Standalone, unlisted cafe-menu editor. It deliberately does NOT use BaseLayout (unlike
+// /upload, which now sits in the site chrome), so it stays out of the site chrome. It edits the single source-of-truth menu file
 // (src/content/pages/izzys-cafe.md) by building the markdown client-side and handing it to the
 // recipe API Worker, which — after a GitHub OAuth sign-in — commits it to the repo. The GitHub
 // token never reaches the browser; this page only ever holds an opaque session id. The commit
@@ -28,7 +28,8 @@ const parsed = parseMenu(page?.body ?? '');
 const menuTitle = page?.data.title ?? "Izzy's Cafe";
 const initialItems = Object.fromEntries(SECTIONS.map((h) => [h, sectionItems(parsed, h)]));
 
-// Shared class strings, mirrored from /upload so the two editors look like one system. Colour,
+// Shared class strings, from /upload's pre-canvas styling (/upload has since moved to the
+// canvas's windowed layout). Colour,
 // type and shape come from Dizzy (site.css / bundle.css); the Tailwind utilities are layout only.
 const rowInput = 'iz-field min-w-0 flex-1';
 const sectionHeading = 'label';

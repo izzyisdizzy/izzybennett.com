@@ -1,0 +1,16 @@
+/* The /upload ingredient-name typeahead, re-skinned to the canvas's Upload boards: a sticker
+   dropdown with roomier options. The engine's own ghost text and grams column stay as they are.
+   Unlayered and imported after the engine's recipes.css for the same reason as
+   recipe-layout.css: a layered site.css rule loses to any engine rule on the same property. */
+.ing-ta-list {
+  z-index: 8;
+  padding: 4px;
+  box-shadow: var(--shadow-sticker);
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.ing-ta-opt {
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+}

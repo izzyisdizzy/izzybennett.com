@@ -1,12 +1,12 @@
 ---
-// Standalone, unlisted recipe uploader. Not linked from Nav and deliberately does NOT
-// use BaseLayout so it stays out of the site chrome. It builds a schema-valid markdown
-// file client-side, then hands it to the recipe API Worker, which — after a GitHub OAuth
-// sign-in — commits it to the repo on your behalf. The GitHub token never reaches the
-// browser; this page only ever holds an opaque session id. Commits trigger the normal
-// GitHub Pages deploy. Backend: github.com/izzyisdizzy/auth-worker.
-import '../styles/global.css';
-import ThemeBoot from '../components/ThemeBoot.astro';
+// Unlisted recipe uploader (not linked from Nav, noindex), in the site chrome with Recipes
+// marked as its section. It builds a schema-valid markdown file client-side, then hands it to
+// the recipe API Worker, which — after a GitHub OAuth sign-in — commits it to the repo on your
+// behalf. The GitHub token never reaches the browser; this page only ever holds an opaque
+// session id. Commits trigger the normal GitHub Pages deploy. Backend:
+// github.com/izzyisdizzy/auth-worker. Layout follows the design canvas's Upload boards.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Window from '../components/Window.astro';
 import { categoryValues, INGREDIENT_KEY } from '@izzy/recipe-engine/schema';
 // Unit tables shared with the recipe pages. UNIT_OPTIONS fills the item unit <select>; the
 // numeric tables are handed to the inline script (via define:vars) so its grams math uses the
@@ -25,1323 +25,1459 @@ const SITE_ORIGIN = import.meta.env.SITE ?? 'https://izzybennett.com';
 // define:vars serialises data as JSON, so a RegExp has to cross as a string and be rebuilt.
 const INGREDIENT_KEY_SOURCE = INGREDIENT_KEY.source;
 
-// Shared class strings, hoisted so a styling tweak happens in one place instead of ~14. Colour,
-// type and shape come from Dizzy (.label / .iz-field in site.css, dz-* in bundle.css); the
-// Tailwind utilities here are layout only.
-const labelCls = 'label mb-1 block';
-// "(optional)" / "min" asides inside a .label or section heading — undo its uppercase tracking.
+// Shared class strings, hoisted so a styling tweak happens in one place. Colour, type and shape
+// come from Dizzy (.label / .iz-field / the uploader's iz- classes in site.css, dz-* in
+// bundle.css); the Tailwind utilities here are layout only.
+const labelCls = 'label';
+// "min" / "(override)" asides inside a .label — undo its uppercase tracking.
 const hint = 'font-normal normal-case tracking-normal';
 const fieldInput = 'iz-field';
+// A label stacked over its field.
+const fieldCol = 'flex flex-col gap-1.5';
+// The body of each form window (the canvas's 24px, 18px on a phone).
+const windowBody = 'flex flex-col gap-4 p-[18px] sm:p-6';
+// A window's heading row: the h2 on the left, its add button on the right.
+const sectionHead = 'flex items-center justify-between gap-4';
+const sectionHeading = 'h2';
+const addBtn = 'dz-btn dz-btn--ghost dz-btn--sm min-h-9';
+// The add button at the foot of a group box.
+const groupAddBtn = 'dz-btn dz-btn--ghost dz-btn--sm min-h-10';
+// A one-line row inside a list: grip, field, ✕.
+const rowCls = 'flex items-center gap-2';
 const rowInput = 'iz-field min-w-0 flex-1';
-// The ingredient row's two flexible fields, name and detail. They use grow + an explicit basis
-// rather than rowInput's `flex-1`, because the `flex` shorthand resets flex-basis to 0 — which
-// would let the name field collapse to a few pixels instead of wrapping the row on a phone.
-// The name field's padding + border come from .iz-field; the typeahead wrapper in tpl-item
-// hands the same values to .ing-ta-ghost (--ing-ta-ghost-padding / --ing-ta-ghost-border) —
-// change one without the other and the ghost text misaligns.
+// The Key and Grams-override fields on an ingredient's second line.
 const itemInput = 'iz-field min-w-0 grow';
-// Narrow, non-flexing variant for the qty box and unit <select> in an ingredient row. Tighter
-// side padding than .iz-field so "2 ¼" and "tbsp" fit the fixed widths.
 const cellInput = 'iz-field px-2';
-const sectionHeading = 'label';
-const addBtn = 'dz-btn dz-btn--ghost dz-btn--sm';
-const removeBtn = 'dz-btn dz-btn--ghost dz-btn--sm shrink-0';
-// Drag grip for reordering rows/groups. Only the grip is draggable, so the text inputs it
-// sits next to keep normal caret/selection behaviour (native DnD, no library).
-const dragHandle = 'shrink-0 cursor-grab touch-none select-none px-0.5 text-lg leading-none text-ink-muted hover:text-ink';
+// Only the grip (.iz-grip) is draggable, so the text inputs it sits next to keep normal
+// caret/selection behaviour (native DnD, no library).
+const dragHandle = 'iz-grip';
+const removeBtn = 'iz-x';
+// The window bar's three lights, for the two bars built here rather than by Window.astro.
+const lights = '<span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>';
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
-    <ThemeBoot />
-    <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <title>Add a recipe · Izzy Bennett</title>
-  </head>
-  <body class="min-h-screen">
-    <main class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
-      <header class="flex items-baseline justify-between gap-3">
-        <h1 id="page-title" class="display-l">Add a recipe</h1>
-        <a href="/recipes/" class="dz-link body-s shrink-0">← Recipes</a>
-      </header>
-      <p id="page-intro" class="body-s mt-2 text-ink-muted">Fill it in, hit publish, and it goes live in a minute or two.</p>
+<BaseLayout title="Add a recipe" noindex section="/recipes/">
+  <div class="mx-auto flex w-full max-w-[760px] flex-col gap-6 sm:gap-7">
+    <header class="flex flex-col gap-2 pt-2">
+      <a href="/recipes/" class="dz-link body-s self-start">← Recipes</a>
+      <h1 id="page-title" class="display-xl" data-dz-bounce="once">Add a recipe</h1>
+      <p id="page-intro" class="body-l text-ink-muted">Fill it in, hit publish, and it goes live in a minute or two.</p>
+    </header>
 
-      <!-- Auth bar. Sign-in kicks off GitHub OAuth on the Worker; on return the page holds
-           only an opaque session id (never a GitHub token). -->
-      <div class="iz-card mt-5 flex items-center gap-3 p-3">
-        <span id="auth-state" class="dz-tag">Checking sign-in…</span>
-        <a id="signin-btn" href={`${RECIPE_API}/login`} class="dz-btn dz-btn--sm ml-auto hidden">
+    <!-- Auth bar. Sign-in kicks off GitHub OAuth on the Worker; on return the page holds
+         only an opaque session id (never a GitHub token). -->
+    <div class="iz-card px-4 py-3">
+      <div class="iz-authbar">
+        <span id="auth-state" class="body-s font-bold text-ink-muted">Checking sign-in…</span>
+        <a id="signin-btn" href={`${RECIPE_API}/login`} class="dz-btn dz-btn--cocoa dz-btn--sm hidden min-h-11">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"></path></svg>
           Sign in with GitHub
         </a>
-        <button type="button" id="signout-btn" class="dz-btn dz-btn--ghost dz-btn--sm ml-auto hidden">
-          Sign out
-        </button>
+        <button type="button" id="signout-btn" class="dz-btn dz-btn--ghost dz-btn--sm hidden min-h-11">Sign out</button>
       </div>
+    </div>
 
-      <!-- Pick an existing recipe to edit it, or keep "New recipe" to add a fresh one.
-           Populated from /recipes.json on load; selecting one switches the form to edit mode. -->
-      <div class="mt-5">
-        <label for="recipe-picker" class={labelCls}>Load existing recipe</label>
-        <select id="recipe-picker" class={fieldInput}>
-          <option value="">➕ New recipe</option>
-        </select>
-      </div>
+    <!-- Shown when an autosaved draft was put back into the form on load. -->
+    <div id="draft-banner" class="iz-banner hidden" role="status">
+      <span id="draft-banner-text" class="body-s"></span>
+      <button type="button" id="discard-draft" class="iz-linkbtn">Discard</button>
+    </div>
 
-      <form id="recipe-form" class="mt-6 space-y-8" novalidate>
-        <!-- Basics -->
-        <section class="space-y-4">
-          <div>
-            <label for="title" class={labelCls}>Title <span class="text-hotpink">*</span></label>
-            <input id="title" name="title" type="text" required autocomplete="off" enterkeyhint="next" class={fieldInput} />
-          </div>
+    <!-- Pick an existing recipe to edit it, or keep "New recipe" to add a fresh one.
+         Populated from /recipes.json on load; selecting one switches the form to edit mode.
+         Also the anchor for the "Discard unsaved changes?" confirm. -->
+    <div id="picker-card" class="iz-card iz-anchor flex flex-col gap-1.5 px-4 py-3.5">
+      <label for="recipe-picker" class={labelCls}>Load existing recipe</label>
+      <select id="recipe-picker" class={fieldInput}>
+        <option value="">➕ New recipe</option>
+      </select>
+    </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label for="category" class={labelCls}>Category <span class="text-hotpink">*</span></label>
-              <select id="category" name="category" class={`${fieldInput} capitalize`}>
-                {categoryValues.map((c) => <option value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div class="flex items-end pb-3">
-              <label class="body-s inline-flex items-center gap-2">
-                <input id="draft" name="draft" type="checkbox" class="iz-check" />
-                Draft (hidden)
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label for="description" class={labelCls}>Description <span class={hint}>(optional)</span></label>
-            <input id="description" name="description" type="text" autocomplete="off" class={fieldInput} />
-          </div>
-
-          <div>
-            <label for="keywords" class={labelCls}>Keywords <span class={hint}>(comma-separated)</span></label>
-            <input id="keywords" name="keywords" type="text" autocomplete="off" placeholder="e.g. pie, apple, baking" class={fieldInput} />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div>
-              <label for="prepTime" class={labelCls}>Prep <span class={hint}>min</span></label>
-              <input id="prepTime" name="prepTime" type="number" min="0" step="1" inputmode="numeric" class={fieldInput} />
-            </div>
-            <div>
-              <label for="cookTime" class={labelCls}>Cook <span class={hint}>min</span></label>
-              <input id="cookTime" name="cookTime" type="number" min="0" step="1" inputmode="numeric" class={fieldInput} />
-            </div>
-            <div>
-              <label for="servings" class={labelCls}>Servings</label>
-              <input id="servings" name="servings" type="number" min="1" step="1" inputmode="numeric" class={fieldInput} />
-            </div>
-            <!-- Freeform display strings for the recipe's meta strip (engine v2 `yield` / `oven`). -->
-            <div>
-              <label for="yield" class={labelCls}>Yield</label>
-              <input id="yield" name="yield" type="text" autocomplete="off" placeholder="8 scones" class={fieldInput} />
-            </div>
-            <div>
-              <label for="oven" class={labelCls}>Oven</label>
-              <input id="oven" name="oven" type="text" autocomplete="off" placeholder="400°F / 200°C" class={fieldInput} />
-            </div>
-          </div>
-        </section>
-
-        <!-- Tools -->
-        <section>
-          <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Tools <span class={hint}>(optional)</span></h2>
-            <button type="button" data-action="add-tool" class={addBtn}>+ Add</button>
-          </div>
-          <div id="tools-list" class="mt-2 space-y-2"></div>
-        </section>
-
-        <!-- Ingredients -->
-        <section>
-          <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Ingredients <span class="text-hotpink">*</span></h2>
-            <button type="button" data-action="add-group" class={addBtn}>+ Group</button>
-          </div>
+    <form id="recipe-form" class="iz-uploader flex flex-col gap-6 sm:gap-7" novalidate>
+      <Window title="basics.txt" aria-label="Basics" bodyClass={windowBody}>
+        <div class={fieldCol}>
+          <label for="title" class={labelCls}>Title *</label>
+          <input id="title" name="title" type="text" required autocomplete="off" enterkeyhint="next" aria-describedby="slug-caption" class={fieldInput} />
           <!-- One line on purpose: HTML compression drops whitespace at a line break next to a tag. -->
-          <p class="caption mt-1">Group names are optional — leave blank for a plain list. A <b>key</b> is the handle steps use to point at an ingredient, as <code>[[key]]</code>; leave it blank to use the name. <b>Grams</b> overrides the conversion for amounts the density list can't do ("2 medium apples").</p>
-          <div id="ingredients-list" class="mt-2 space-y-4"></div>
-        </section>
-
-        <!-- Steps -->
-        <section>
-          <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Steps <span class="text-hotpink">*</span></h2>
-            <button type="button" data-action="add-step-group" class={addBtn}>+ Group</button>
-          </div>
-          <p class="caption mt-1">
-            Group names are optional — leave blank for a plain list. Markdown supported in steps — <code>**bold**</code>, <code>*italic*</code>, <code>`code`</code>, <code>[links](url)</code>.
-            Point at an ingredient with <code>[[key]]</code> or <code>[[key|the words to show]]</code>.
-          </p>
-          <div id="steps-list" class="mt-2 space-y-4"></div>
-        </section>
-
-        <!-- Notes -->
-        <section>
-          <div class="flex items-center justify-between">
-            <h2 class={sectionHeading}>Notes <span class={hint}>(optional)</span></h2>
-            <button type="button" data-action="add-note" class={addBtn}>+ Add</button>
-          </div>
-          <div id="notes-list" class="mt-2 space-y-2"></div>
-        </section>
-
-        <!-- Preview -->
-        <details id="preview-details" class="iz-card">
-          <summary class="label cursor-pointer px-3 py-3">Preview markdown</summary>
-          <div class="border-t border-hairline p-3">
-            <pre id="preview" class="iz-well mono-s max-h-80 overflow-auto whitespace-pre-wrap p-3">Fill in the form to see the generated file.</pre>
-            <button type="button" id="copy-md" class={`mt-3 ${addBtn}`}>Copy markdown</button>
-          </div>
-        </details>
-
-        <!-- Actions -->
-        <div class="sticky bottom-0 -mx-4 border-t border-hairline bg-surface px-4 py-3 sm:-mx-6 sm:px-6">
-          <button type="submit" id="publish" class="dz-btn dz-btn--lg w-full justify-center disabled:opacity-60">
-            Publish 🚀
-          </button>
-          <button type="button" id="delete-recipe" class="dz-btn dz-btn--ghost mt-2 hidden w-full justify-center text-cherry disabled:opacity-60">
-            Delete recipe
-          </button>
-          <p id="status" class="caption mt-2" role="status" aria-live="polite"></p>
+          <p id="slug-caption" class="caption">Lives at <span id="slug-url" class="mono-s text-ink">izzybennett.com/recipes/…/</span><span id="slug-note"></span></p>
         </div>
-      </form>
-    </main>
 
-    <!-- Row templates. tpl-row is the generic single-line input row (tools / notes) — the JS
-         stamps data-field + placeholder per use. Ingredient items have their own tpl-item. -->
-    <template id="tpl-row">
-      <div data-unit="row" class="flex items-center gap-2">
-        <span data-drag-handle draggable="true" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
-        <input type="text" autocomplete="off" class={rowInput} />
-        <button type="button" data-action="remove" aria-label="Remove" class={removeBtn}>✕</button>
+        <div class="flex flex-wrap items-end gap-4">
+          <div class={`${fieldCol} grow basis-[200px]`}>
+            <label for="category" class={labelCls}>Category *</label>
+            <select id="category" name="category" class={`${fieldInput} capitalize`}>
+              {categoryValues.map((c) => <option value={c}>{c}</option>)}
+            </select>
+          </div>
+          <label class="iz-check">
+            <input id="draft" name="draft" type="checkbox" />
+            Draft (hidden)
+          </label>
+        </div>
+
+        <div class={fieldCol}>
+          <label for="description" class={labelCls}>Description (optional)</label>
+          <input id="description" name="description" type="text" autocomplete="off" class={fieldInput} />
+        </div>
+
+        <div class={fieldCol}>
+          <label for="keywords" class={labelCls}>Keywords (comma-separated)</label>
+          <input id="keywords" name="keywords" type="text" autocomplete="off" placeholder="e.g. pie, apple, baking" class={fieldInput} />
+        </div>
+
+        <!-- Prep / Cook / Servings in thirds, then the freeform meta-strip strings (engine v2
+             `yield` / `oven`) in halves. -->
+        <div class="grid grid-cols-6 gap-3">
+          <div class={`${fieldCol} col-span-2`}>
+            <label for="prepTime" class={labelCls}>Prep <span class={hint}>min</span></label>
+            <input id="prepTime" name="prepTime" type="number" min="0" step="1" inputmode="numeric" class={fieldInput} />
+          </div>
+          <div class={`${fieldCol} col-span-2`}>
+            <label for="cookTime" class={labelCls}>Cook <span class={hint}>min</span></label>
+            <input id="cookTime" name="cookTime" type="number" min="0" step="1" inputmode="numeric" class={fieldInput} />
+          </div>
+          <div class={`${fieldCol} col-span-2`}>
+            <label for="servings" class={labelCls}>Servings</label>
+            <input id="servings" name="servings" type="number" min="1" step="1" inputmode="numeric" class={fieldInput} />
+          </div>
+          <div class={`${fieldCol} col-span-3`}>
+            <label for="yield" class={labelCls}>Yield</label>
+            <input id="yield" name="yield" type="text" autocomplete="off" placeholder="8 scones" class={fieldInput} />
+          </div>
+          <div class={`${fieldCol} col-span-3`}>
+            <label for="oven" class={labelCls}>Oven</label>
+            <input id="oven" name="oven" type="text" autocomplete="off" placeholder="400°F / 200°C" class={fieldInput} />
+          </div>
+        </div>
+      </Window>
+
+      <Window title="tools.txt" aria-labelledby="tools-heading" bodyClass={windowBody}>
+        <div class={sectionHead}>
+          <h2 id="tools-heading" class={sectionHeading}>Tools (optional)</h2>
+          <button type="button" data-action="add-tool" class={addBtn}>+ Add</button>
+        </div>
+        <div id="tools-list" class="flex flex-col gap-2 empty:hidden"></div>
+      </Window>
+
+      <!-- iz-window-open: the name typeahead's dropdown can hang past the window's foot. -->
+      <Window title="ingredients.txt" aria-labelledby="ingredients-heading" class="iz-window-open" bodyClass={windowBody}>
+        <div class={sectionHead}>
+          <h2 id="ingredients-heading" class={sectionHeading}>Ingredients *</h2>
+          <button type="button" data-action="add-group" class={addBtn}>+ Group</button>
+        </div>
+        <!-- One line on purpose: HTML compression drops whitespace at a line break next to a tag. -->
+        <p class="caption">Group names are optional — leave blank for a plain list. A <b>key</b> is the handle steps use to point at an ingredient, as <span class="mono-s">[[key]]</span>; leave it blank to use the name. <b>Grams</b> overrides the conversion for amounts the density list can't do ("2 medium apples").</p>
+        <div id="ingredients-list" class="flex flex-col gap-4"></div>
+      </Window>
+
+      <Window title="steps.txt" aria-labelledby="steps-heading" bodyClass={windowBody}>
+        <div class={sectionHead}>
+          <h2 id="steps-heading" class={sectionHeading}>Steps *</h2>
+          <button type="button" data-action="add-step-group" class={addBtn}>+ Group</button>
+        </div>
+        <p class="caption">
+          Group names are optional — leave blank for a plain list. Markdown supported in steps — <span class="mono-s">**bold**</span>, <span class="mono-s">*italic*</span>, <span class="mono-s">`code`</span>, <span class="mono-s">[links](url)</span>.
+          Point at an ingredient with <span class="mono-s">[[key]]</span> or <span class="mono-s">[[key|the words to show]]</span>.
+        </p>
+        <div id="steps-list" class="flex flex-col gap-4"></div>
+      </Window>
+
+      <Window title="notes.txt" aria-labelledby="notes-heading" bodyClass={windowBody}>
+        <div class={sectionHead}>
+          <h2 id="notes-heading" class={sectionHeading}>Notes (optional)</h2>
+          <button type="button" data-action="add-note" class={addBtn}>+ Add</button>
+        </div>
+        <div id="notes-list" class="flex flex-col gap-2 empty:hidden"></div>
+      </Window>
+
+      <!-- Preview: a window whose title bar is the <summary>. -->
+      <details id="preview-details" class="dz-window">
+        <summary class="dz-window__bar iz-sum">
+          <span class="flex items-center gap-2"><span class="dz-window__lights" aria-hidden="true" set:html={lights} /><span>Preview markdown</span></span>
+          <span class="iz-sum__chev" aria-hidden="true">▾</span>
+        </summary>
+        <div class="dz-window__body flex flex-col gap-3 p-4">
+          <pre id="preview" class="iz-well iz-pre">Fill in the form to see the generated file.</pre>
+          <div><button type="button" id="copy-md" class="dz-btn dz-btn--ghost dz-btn--sm min-h-10">Copy markdown</button></div>
+        </div>
+      </details>
+
+      <!-- Actions. Also the anchor for the overwrite and delete confirms. -->
+      <div id="action-bar" class="iz-actionbar">
+        <button type="submit" id="publish" class="dz-btn dz-btn--lg w-full justify-center disabled:opacity-60">
+          Publish 🚀
+        </button>
+        <button type="button" id="delete-recipe" class="dz-btn dz-btn--danger hidden w-full justify-center disabled:opacity-60">
+          Delete recipe
+        </button>
+        <p id="status" class="iz-status body-s" role="status" aria-live="polite"></p>
       </div>
-    </template>
+    </form>
+  </div>
 
-    <template id="tpl-step">
-      <div data-unit="step" class="flex gap-2">
-        <span data-drag-handle draggable="true" aria-label="Drag to reorder" class={`${dragHandle} self-start py-1.5`}>⠿</span>
-        <textarea data-field="step" rows="2" placeholder="Describe the step…" class={rowInput}></textarea>
-        <button type="button" data-action="remove" aria-label="Remove" class={`${removeBtn} self-start py-2`}>✕</button>
+  <!-- The in-page confirm (see izConfirm): moved under whichever card asked, over a scrim. -->
+  <div id="confirm-scrim" class="iz-scrim hidden" aria-hidden="true"></div>
+  <div id="confirm" tabindex="-1" class="iz-confirm hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <div class="dz-window__bar">
+      <span class="dz-window__lights" aria-hidden="true" set:html={lights} />
+      <span id="confirm-title" class="dz-window__title">izzybennett.com says</span>
+    </div>
+    <div class="flex flex-col gap-4 px-5 py-[18px]">
+      <p id="confirm-text" class="font-bold"></p>
+      <div class="flex justify-end gap-3">
+        <button type="button" id="confirm-cancel" class="dz-btn dz-btn--ghost dz-btn--sm min-h-11">Cancel</button>
+        <button type="button" id="confirm-ok" class="dz-btn dz-btn--sm min-h-11 px-[22px]">OK</button>
       </div>
-    </template>
+    </div>
+  </div>
 
-    <template id="tpl-group">
-      <div data-unit="group" class="iz-card p-3">
+  <!-- Row templates. Tools and notes each have a one-field row; ingredient items and steps
+       have their own. -->
+  <template id="tpl-tool">
+    <div data-unit="row" class={rowCls}>
+      <span data-drag-handle draggable="true" title="Drag to reorder" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
+      <input type="text" data-field="tool" placeholder="e.g. Rolling pin" autocomplete="off" aria-label="Tool" class={rowInput} />
+      <button type="button" data-action="remove" aria-label="Remove tool" class={removeBtn}>✕</button>
+    </div>
+  </template>
+
+  <template id="tpl-note">
+    <div data-unit="row" class="flex items-start gap-2">
+      <span data-drag-handle draggable="true" title="Drag to reorder" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
+      <textarea data-field="note" placeholder="A tip or variation…" aria-label="Note" class={`${rowInput} min-h-16`}></textarea>
+      <button type="button" data-action="remove" aria-label="Remove note" class={removeBtn}>✕</button>
+    </div>
+  </template>
+
+  <!-- One step: grip, its number within the group (renumberSteps), the text, ✕. -->
+  <template id="tpl-step">
+    <div data-unit="step" class="flex items-start gap-1.5 sm:gap-2.5">
+      <span data-drag-handle draggable="true" title="Drag to reorder" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
+      <span data-step-n aria-hidden="true" class="counter w-6 flex-none pt-3.5 text-aqua-deep">01</span>
+      <textarea data-field="step" placeholder="Describe the step…" aria-label="Step 1" class={rowInput}></textarea>
+      <button type="button" data-action="remove" aria-label="Remove step" class={removeBtn}>✕</button>
+    </div>
+  </template>
+
+  <template id="tpl-group">
+    <div data-unit="group" class="iz-group">
+      <div class={rowCls}>
+        <span data-drag-handle draggable="true" title="Drag to reorder group" aria-label="Drag to reorder group" class={dragHandle}>⠿</span>
+        <input type="text" data-field="group" placeholder="Group name (optional), e.g. Pie Crust" autocomplete="off" aria-label="Ingredient group name" class={rowInput} />
+        <button type="button" data-action="remove" aria-label="Remove group" class={removeBtn}>✕</button>
+      </div>
+      <div class="items-list flex flex-col gap-2.5"></div>
+      <div><button type="button" data-action="add-item" class={groupAddBtn}>+ Ingredient</button></div>
+    </div>
+  </template>
+
+  <!-- One ingredient: qty + unit + name + detail (one line; two on a phone — .iz-ingrow in
+       site.css), then an always-visible line for the optional key and grams override, then a
+       grams prompt that appears when the unit is a volume the ingredient's density isn't known
+       for yet (see updateItemRow). `detail` is the prep note ("softened") and is kept out of
+       `name` so `name` stays a clean density-lookup key. -->
+  <template id="tpl-item">
+    <div data-unit="item-row" class="iz-ingitem flex flex-col gap-2">
+      <div class="iz-ingrow">
+        <span data-drag-handle draggable="true" title="Drag to reorder" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
+        <input type="text" data-field="item-qty" inputmode="text" placeholder="2 ¼" autocomplete="off" aria-label="Quantity" class={fieldInput} />
+        <select data-field="item-unit" aria-label="Unit" class={fieldInput}>
+          <option value="">—</option>
+          {UNIT_OPTIONS.map((u) => <option value={u}>{u}</option>)}
+        </select>
+        <!-- The name field autocompletes over the ingredients whose densities are already
+             known (@izzy/recipe-engine/ingredient-typeahead). The wrapper takes the name's grid
+             cell so the field itself can host the overlays. .ing-ta-ghost (engine
+             styles/recipes.css) reads its padding and border from the two variables set
+             here, which must equal .iz-field's (site.css) or the ghost text drifts out of
+             line with what's typed. -->
+        <div data-typeahead class="relative min-w-0"
+          style="--ing-ta-ghost-padding: var(--space-3) var(--space-4); --ing-ta-ghost-border: var(--stroke-1);">
+          <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="both" aria-label="Ingredient" class={`${fieldInput} w-full`} />
+          <span data-ta-ghost aria-hidden="true" hidden class="ing-ta-ghost"><span data-ta-typed></span><span data-ta-rest></span></span>
+          <ul data-ta-list role="listbox" aria-label="Known ingredients" hidden class="ing-ta-list"></ul>
+        </div>
+        <input type="text" data-field="item-detail" placeholder="e.g. softened" autocomplete="off" aria-label="Details" class={`${fieldInput} min-w-0`} />
+        <button type="button" data-action="remove" aria-label="Remove ingredient" class={removeBtn}>✕</button>
+      </div>
+      <!-- Engine-v2 item fields. `key` is the handle steps reference as [[key]] (its
+           placeholder shows the default, the slug of the name); `grams` overrides the
+           density conversion for this item and is written to the frontmatter — unlike the
+           prompt below, which grows the shared density list and never touches the file. -->
+      <div class="ml-[26px] flex flex-wrap items-center gap-x-4 gap-y-2">
+        <label class="flex min-w-0 grow basis-48 items-center gap-2">
+          <span class="label shrink-0">Key</span>
+          <input type="text" data-field="item-key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Key (optional)" class={`${itemInput} font-mono`} />
+        </label>
+        <label class="flex items-center gap-2">
+          <span class="label shrink-0">Grams <span class={hint}>(override)</span></span>
+          <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams-override" placeholder="auto" aria-label="Grams override (optional)" class={`${cellInput} w-24`} />
+        </label>
+      </div>
+      <div data-grams-prompt role="group" aria-label="Grams for a new ingredient" class="iz-grams hidden">
+        <p class="body-s font-bold">New ingredient — how many grams is <span data-grams-qty></span> <span data-grams-unit></span> of “<span data-grams-name></span>”?</p>
         <div class="flex items-center gap-2">
-          <span data-drag-handle draggable="true" aria-label="Drag to reorder group" class={dragHandle}>⠿</span>
-          <input type="text" data-field="group" placeholder="Group name (optional), e.g. Pie Crust" autocomplete="off" class={`${rowInput} body-strong`} />
-          <button type="button" data-action="remove" aria-label="Remove group" class={removeBtn}>✕</button>
+          <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams" placeholder="grams" aria-label="Grams" class={`${fieldInput} w-[140px]`} />
+          <span class="mono-s">g</span>
         </div>
-        <div class="items-list mt-2 space-y-2"></div>
-        <button type="button" data-action="add-item" class={`mt-2 ${addBtn}`}>+ Ingredient</button>
+        <p class="caption">Saved to the shared list so future recipes convert it automatically.</p>
       </div>
-    </template>
+    </div>
+  </template>
 
-    <!-- One ingredient: qty + unit + name + detail, then an always-visible line for the
-         optional key and grams override, then a grams prompt that appears when the unit is a
-         volume the ingredient's density isn't known for yet (see updateItemRow).
-         `detail` is the prep note ("softened") and is kept out of `name` so `name` stays a
-         clean density-lookup key. -->
-    <template id="tpl-item">
-      <div data-unit="item-row" class="space-y-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <span data-drag-handle draggable="true" aria-label="Drag to reorder" class={dragHandle}>⠿</span>
-          <input type="text" data-field="item-qty" inputmode="text" placeholder="2 ¼" autocomplete="off" aria-label="Quantity" class={`${cellInput} w-16 shrink-0 text-center`} />
-          <select data-field="item-unit" aria-label="Unit" class={`${cellInput} w-24 shrink-0`}>
-            <option value="">—</option>
-            {UNIT_OPTIONS.map((u) => <option value={u}>{u}</option>)}
-          </select>
-          <!-- The name field autocompletes over the ingredients whose densities are already
-               known (@izzy/recipe-engine/ingredient-typeahead). The wrapper takes the row's
-               flex sizing so the field itself can host the overlays. .ing-ta-ghost (engine
-               styles/recipes.css) reads its padding and border from the two variables set
-               here, which must equal .iz-field's (site.css) or the ghost text drifts out of
-               line with what's typed. -->
-          <div data-typeahead class="relative flex min-w-0 grow basis-32"
-            style="--ing-ta-ghost-padding: var(--space-3) var(--space-4); --ing-ta-ghost-border: var(--stroke-1);">
-            <input type="text" data-field="item-name" placeholder="flour" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="both" aria-label="Ingredient" class={`${itemInput} w-full`} />
-            <span data-ta-ghost aria-hidden="true" hidden class="ing-ta-ghost"><span data-ta-typed></span><span data-ta-rest></span></span>
-            <ul data-ta-list role="listbox" hidden class="ing-ta-list"></ul>
-          </div>
-          <input type="text" data-field="item-detail" placeholder="softened" autocomplete="off" aria-label="Detail" class={`${itemInput} basis-24`} />
-          <button type="button" data-action="remove" aria-label="Remove" class={removeBtn}>✕</button>
-        </div>
-        <!-- Engine-v2 item fields. `key` is the handle steps reference as [[key]] (its
-             placeholder shows the default, the slug of the name); `grams` overrides the
-             density conversion for this item and is written to the frontmatter — unlike the
-             prompt below, which grows the shared density list and never touches the file. -->
-        <div class="ml-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <label class="flex min-w-0 grow basis-48 items-center gap-2">
-            <span class="label shrink-0">Key</span>
-            <input type="text" data-field="item-key" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Key (optional)" class={`${itemInput} font-mono`} />
-          </label>
-          <label class="flex items-center gap-2">
-            <span class="label shrink-0">Grams <span class={hint}>(override)</span></span>
-            <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams-override" placeholder="auto" aria-label="Grams override (optional)" class={`${cellInput} w-24`} />
-          </label>
-        </div>
-        <div data-grams-prompt class="caption ml-6 hidden rounded-sm bg-orange-soft px-2.5 py-1.5 text-ink">
-          <label class="flex flex-wrap items-center gap-1.5">
-            <span>New ingredient — how many grams is <span data-grams-qty></span> <span data-grams-unit></span> of “<span data-grams-name></span>”?</span>
-            <input type="number" min="0" step="any" inputmode="decimal" data-field="item-grams" placeholder="grams" aria-label="Grams" class={`${cellInput} w-24`} />
-          </label>
-          <span class="mt-0.5 block text-ink-muted">Saved to the shared list so future recipes convert it automatically.</span>
-        </div>
+  <template id="tpl-step-group">
+    <div data-unit="step-group" class="iz-group">
+      <div class={rowCls}>
+        <span data-drag-handle draggable="true" title="Drag to reorder group" aria-label="Drag to reorder group" class={dragHandle}>⠿</span>
+        <input type="text" data-field="step-group" placeholder="Group name (optional), e.g. Make the crust" autocomplete="off" aria-label="Step group name" class={rowInput} />
+        <button type="button" data-action="remove" aria-label="Remove group" class={removeBtn}>✕</button>
       </div>
-    </template>
+      <div class="steps-items flex flex-col gap-2.5"></div>
+      <div><button type="button" data-action="add-step" class={groupAddBtn}>+ Step</button></div>
+    </div>
+  </template>
 
-    <template id="tpl-step-group">
-      <div data-unit="step-group" class="iz-card p-3">
-        <div class="flex items-center gap-2">
-          <span data-drag-handle draggable="true" aria-label="Drag to reorder group" class={dragHandle}>⠿</span>
-          <input type="text" data-field="step-group" placeholder="Group name (optional), e.g. Make the crust" autocomplete="off" class={`${rowInput} body-strong`} />
-          <button type="button" data-action="remove" aria-label="Remove group" class={removeBtn}>✕</button>
-        </div>
-        <div class="steps-items mt-2 space-y-2"></div>
-        <button type="button" data-action="add-step" class={`mt-2 ${addBtn}`}>+ Step</button>
-      </div>
-    </template>
+  <script define:vars={{ RECIPE_API, SESSION_KEY, SITE_ORIGIN, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS, INGREDIENT_KEY_SOURCE }}>
+    // ---- Config ---------------------------------------------------------
+    // RECIPE_API and SESSION_KEY (from @izzy/auth-client) are injected from the frontmatter above.
+    // The browser only ever holds the opaque session id under SESSION_KEY — never a GitHub token.
+    const API = RECIPE_API;
+    // Unsaved form content is autosaved here so it survives a full-page reload — most
+    // importantly the GitHub OAuth round-trip, which navigates away and back. Holds
+    // { editingSlug, recipe, pendingDensities } where recipe is a readForm() snapshot.
+    const DRAFT_KEY = 'izzy-recipe-draft';
 
-    <script define:vars={{ RECIPE_API, SESSION_KEY, SITE_ORIGIN, VOLUME_IN_CUPS, WEIGHT_IN_GRAMS, UNIT_ALIASES, UNICODE_FRACTIONS, INGREDIENT_KEY_SOURCE }}>
-      // ---- Config ---------------------------------------------------------
-      // RECIPE_API and SESSION_KEY (from @izzy/auth-client) are injected from the frontmatter above.
-      // The browser only ever holds the opaque session id under SESSION_KEY — never a GitHub token.
-      const API = RECIPE_API;
-      // Unsaved form content is autosaved here so it survives a full-page reload — most
-      // importantly the GitHub OAuth round-trip, which navigates away and back. Holds
-      // { editingSlug, recipe, pendingDensities } where recipe is a readForm() snapshot.
-      const DRAFT_KEY = 'izzy-recipe-draft';
+    // ---- Ingredient unit conversion (grams) -----------------------------
+    // knownDensities: ingredient name (lowercased) → grams-per-cup, loaded from /densities.json
+    // (what the shared list already knows). pendingDensities: ratios the user supplies this
+    // session for ingredients not yet in the list — sent to the Worker on publish to grow it.
+    const knownDensities = {};
+    const pendingDensities = {};
+    const clearPending = () => { for (const k of Object.keys(pendingDensities)) delete pendingDensities[k]; };
 
-      // ---- Ingredient unit conversion (grams) -----------------------------
-      // knownDensities: ingredient name (lowercased) → grams-per-cup, loaded from /densities.json
-      // (what the shared list already knows). pendingDensities: ratios the user supplies this
-      // session for ingredients not yet in the list — sent to the Worker on publish to grow it.
-      const knownDensities = {};
-      const pendingDensities = {};
-      const clearPending = () => { for (const k of Object.keys(pendingDensities)) delete pendingDensities[k]; };
+    // Compact re-implementations of @izzy/recipe-engine/units, using the tables injected via define:vars
+    // above (so the numbers never drift). define:vars can't cross functions, only data.
+    const normUnit = (u) => { if (!u) return ''; const k = String(u).toLowerCase().trim().replace(/\.$/, ''); return UNIT_ALIASES[k] ?? k; };
+    const isVolumeUnit = (u) => normUnit(u) in VOLUME_IN_CUPS;
 
-      // Compact re-implementations of @izzy/recipe-engine/units, using the tables injected via define:vars
-      // above (so the numbers never drift). define:vars can't cross functions, only data.
-      const normUnit = (u) => { if (!u) return ''; const k = String(u).toLowerCase().trim().replace(/\.$/, ''); return UNIT_ALIASES[k] ?? k; };
-      const isVolumeUnit = (u) => normUnit(u) in VOLUME_IN_CUPS;
+    // The shared density list is keyed on a normalised name, so normalise the same way
+    // lookupDensity (@izzy/recipe-engine/units) does before consulting or extending it — otherwise a
+    // name like "lavender paste (or extract)" is saved as its own unreachable key.
+    // Deliberately an EXACT miss, not lookupDensity's leading-word fallback: the fallback is
+    // how the page degrades gracefully, but the prompt's job is to grow the list. Treating
+    // "almond flour" as known because "flour" is listed would silently render it at flour's
+    // 120 g/cup instead of asking for its real ~96.
+    const densityKey = (name) =>
+      String(name ?? '').toLowerCase().replace(/\([^)]*\)/g, ' ').split(',')[0].replace(/\s+/g, ' ').trim();
+    // ---- Ingredient keys + [[key]] step references -----------------------
+    // Compact mirrors of the engine's ingredientKey and REF_SYNTAX (@izzy/recipe-engine
+    // src/ingredients.ts), so /upload can refuse a reference the site build would fail on.
+    // The key pattern itself crosses from the schema via define:vars, so it can't drift.
+    const INGREDIENT_KEY_RE = new RegExp(INGREDIENT_KEY_SOURCE);
+    // An explicit key wins; otherwise the slug of the name, with parentheticals, a trailing
+    // comma-note and accents dropped ("Crème fraîche (full fat)" → "creme-fraiche").
+    const ingredientKeyOf = (item) =>
+      item.key ||
+      String(item.name ?? '')
+        .replace(/\([^)]*\)/g, ' ')
+        .split(',')[0]
+        .normalize('NFKD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    // [[key]] / [[key|display text]]; the key part excludes | and ].
+    const REF_SYNTAX = /\[\[\s*([^\]|]+?)\s*(?:\|\s*([^\]]+?)\s*)?\]\]/g;
 
-      // The shared density list is keyed on a normalised name, so normalise the same way
-      // lookupDensity (@izzy/recipe-engine/units) does before consulting or extending it — otherwise a
-      // name like "lavender paste (or extract)" is saved as its own unreachable key.
-      // Deliberately an EXACT miss, not lookupDensity's leading-word fallback: the fallback is
-      // how the page degrades gracefully, but the prompt's job is to grow the list. Treating
-      // "almond flour" as known because "flour" is listed would silently render it at flour's
-      // 120 g/cup instead of asking for its real ~96.
-      const densityKey = (name) =>
-        String(name ?? '').toLowerCase().replace(/\([^)]*\)/g, ' ').split(',')[0].replace(/\s+/g, ' ').trim();
-      // ---- Ingredient keys + [[key]] step references -----------------------
-      // Compact mirrors of the engine's ingredientKey and REF_SYNTAX (@izzy/recipe-engine
-      // src/ingredients.ts), so /upload can refuse a reference the site build would fail on.
-      // The key pattern itself crosses from the schema via define:vars, so it can't drift.
-      const INGREDIENT_KEY_RE = new RegExp(INGREDIENT_KEY_SOURCE);
-      // An explicit key wins; otherwise the slug of the name, with parentheticals, a trailing
-      // comma-note and accents dropped ("Crème fraîche (full fat)" → "creme-fraiche").
-      const ingredientKeyOf = (item) =>
-        item.key ||
-        String(item.name ?? '')
-          .replace(/\([^)]*\)/g, ' ')
-          .split(',')[0]
-          .normalize('NFKD')
-          .replace(/[̀-ͯ]/g, '')
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
-      // [[key]] / [[key|display text]]; the key part excludes | and ].
-      const REF_SYNTAX = /\[\[\s*([^\]|]+?)\s*(?:\|\s*([^\]]+?)\s*)?\]\]/g;
-
-      function parseQty(qty) {
-        if (qty == null) return null;
-        const s = String(qty).trim();
-        if (!s || /[-–—]/.test(s) || /\bto\b/i.test(s)) return null;
-        let total = 0, matched = false;
-        for (const ch of s) { if (ch in UNICODE_FRACTIONS) { total += UNICODE_FRACTIONS[ch]; matched = true; } }
-        const rest = s.replace(/[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, ' ').trim();
-        if (rest) {
-          const mixed = rest.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
-          const frac = rest.match(/^(\d+)\s*\/\s*(\d+)$/);
-          if (mixed) { total += Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]); matched = true; }
-          else if (frac) { total += Number(frac[1]) / Number(frac[2]); matched = true; }
-          else { const n = Number(rest); if (!Number.isFinite(n)) return null; total += n; matched = true; }
-        }
-        return matched ? total : null;
+    function parseQty(qty) {
+      if (qty == null) return null;
+      const s = String(qty).trim();
+      if (!s || /[-–—]/.test(s) || /\bto\b/i.test(s)) return null;
+      let total = 0, matched = false;
+      for (const ch of s) { if (ch in UNICODE_FRACTIONS) { total += UNICODE_FRACTIONS[ch]; matched = true; } }
+      const rest = s.replace(/[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/g, ' ').trim();
+      if (rest) {
+        const mixed = rest.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+        const frac = rest.match(/^(\d+)\s*\/\s*(\d+)$/);
+        if (mixed) { total += Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]); matched = true; }
+        else if (frac) { total += Number(frac[1]) / Number(frac[2]); matched = true; }
+        else { const n = Number(rest); if (!Number.isFinite(n)) return null; total += n; matched = true; }
       }
-      function densityFromGrams(qty, unit, grams) {
-        const cups = VOLUME_IN_CUPS[normUnit(unit)];
-        const n = parseQty(qty);
-        if (cups == null || n == null || n <= 0 || !(grams > 0)) return null;
-        return grams / (n * cups);
-      }
+      return matched ? total : null;
+    }
+    function densityFromGrams(qty, unit, grams) {
+      const cups = VOLUME_IN_CUPS[normUnit(unit)];
+      const n = parseQty(qty);
+      if (cups == null || n == null || n <= 0 || !(grams > 0)) return null;
+      return grams / (n * cups);
+    }
 
-      // ---- Element helpers ------------------------------------------------
-      const $ = (sel) => document.querySelector(sel);
-      const form = $('#recipe-form');
-      const statusEl = $('#status');
-      const previewEl = $('#preview');
-      const previewDetails = $('#preview-details');
-      const publishBtn = $('#publish');
-      const pageTitle = $('#page-title');
-      const pageIntro = $('#page-intro');
-      const picker = $('#recipe-picker');
-      const deleteBtn = $('#delete-recipe');
-      const authState = $('#auth-state');
-      const signinBtn = $('#signin-btn');
-      const signoutBtn = $('#signout-btn');
+    // ---- Element helpers ------------------------------------------------
+    const $ = (sel) => document.querySelector(sel);
+    const form = $('#recipe-form');
+    const statusEl = $('#status');
+    const previewEl = $('#preview');
+    const previewDetails = $('#preview-details');
+    const publishBtn = $('#publish');
+    // `let`: setHeading swaps in a fresh <h1> so the bounce re-splits the new text.
+    let pageTitle = $('#page-title');
+    // Captured before Dizzy's bounce adds its runtime classes, so a swapped heading starts clean.
+    const HEADING_CLASS = pageTitle.className;
+    const pageIntro = $('#page-intro');
+    const picker = $('#recipe-picker');
+    const deleteBtn = $('#delete-recipe');
+    const authState = $('#auth-state');
+    const signinBtn = $('#signin-btn');
+    const signoutBtn = $('#signout-btn');
+    const slugUrl = $('#slug-url');
+    const slugNote = $('#slug-note');
+    const draftBanner = $('#draft-banner');
+    const pickerCard = $('#picker-card');
+    const actionBar = $('#action-bar');
+    const confirmEl = $('#confirm');
+    const confirmScrim = $('#confirm-scrim');
+    const confirmText = $('#confirm-text');
+    const confirmOk = $('#confirm-ok');
+    const confirmCancel = $('#confirm-cancel');
+    // The site's host, for the "Lives at …" caption under the title.
+    const SITE_HOST = SITE_ORIGIN.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 
-      // Edit-mode state: the slug of the recipe currently being edited (null = add mode),
-      // plus an index of every recipe's data keyed by slug (loaded once from /recipes.json).
-      let editingSlug = null;
-      const recipesBySlug = {};
-      // True once the user has typed into the form since the last load/save; used to warn
-      // before the picker discards unsaved edits. Set only by real user input (not by the
-      // programmatic value-setting in fillForm/resetDynamic, which fire no 'input' event).
-      let formDirty = false;
-      // True once an autosaved draft has been restored into the form on load; makes the
-      // ?edit=<slug> deep link stand down so it can't overwrite the restored content.
-      let draftRestored = false;
+    // Edit-mode state: the slug of the recipe currently being edited (null = add mode),
+    // plus an index of every recipe's data keyed by slug (loaded once from /recipes.json).
+    let editingSlug = null;
+    const recipesBySlug = {};
+    // True once the user has typed into the form since the last load/save; used to warn
+    // before the picker discards unsaved edits. Set only by real user input (not by the
+    // programmatic value-setting in fillForm/resetDynamic, which fire no 'input' event).
+    let formDirty = false;
+    // True once an autosaved draft has been restored into the form on load; makes the
+    // ?edit=<slug> deep link stand down so it can't overwrite the restored content.
+    let draftRestored = false;
 
-      const tpl = (id) => document.getElementById(id);
-      // Clone a <template>'s row and append it — to an element (appendTpl) or a selector (addRow).
-      function appendTpl(listEl, tplId) {
-        const node = tpl(tplId).content.firstElementChild.cloneNode(true);
-        listEl.appendChild(node);
-        return node;
-      }
-      const addRow = (listSel, tplId) => appendTpl($(listSel), tplId);
-      // Generic single-line row (tools / notes / ingredient items).
-      function makeRow(field, placeholder) {
-        const row = tpl('tpl-row').content.firstElementChild.cloneNode(true);
-        const input = row.querySelector('input');
-        input.dataset.field = field;
-        input.placeholder = placeholder;
-        return row;
-      }
-      // Single source of truth for the simple single-line row types (field name + placeholder),
-      // shared by add mode (click handler) and edit mode (fillForm/fillList) so they can't drift.
-      const SIMPLE_ROWS = {
-        tool: 'e.g. Rolling pin',
-        note: 'A tip or variation…',
-      };
-      const makeSimpleRow = (field) => makeRow(field, SIMPLE_ROWS[field]);
+    const tpl = (id) => document.getElementById(id);
+    // Clone a <template>'s row and append it — to an element (appendTpl) or a selector (addRow).
+    function appendTpl(listEl, tplId) {
+      const node = tpl(tplId).content.firstElementChild.cloneNode(true);
+      listEl.appendChild(node);
+      return node;
+    }
+    const addRow = (listSel, tplId) => appendTpl($(listSel), tplId);
+    // A one-field row for tools (tpl-tool, an input) or notes (tpl-note, a textarea), shared by
+    // add mode (click handler) and edit mode (fillList) so they can't drift.
+    const makeSimpleRow = (field) => tpl(`tpl-${field}`).content.firstElementChild.cloneNode(true);
 
-      // Stamp a structured ingredient row (qty / unit / name + grams prompt) from tpl-item.
-      const makeItemRow = () => tpl('tpl-item').content.firstElementChild.cloneNode(true);
+    // Stamp a structured ingredient row (qty / unit / name + grams prompt) from tpl-item.
+    const makeItemRow = () => tpl('tpl-item').content.firstElementChild.cloneNode(true);
 
-      // The item builders take an optional value so add mode (no value) and edit-mode
-      // rehydration (value from data) share the one call — see fillGroups. `value` is a
-      // { name, qty?, unit?, detail?, key?, grams? } object (a bare string is tolerated as the
-      // name, defensively).
-      function addItem(itemsList, value) {
-        const row = makeItemRow();
-        itemsList.appendChild(row);
-        if (value != null) {
-          const set = (field, v) => { if (v != null) row.querySelector(`[data-field="${field}"]`).value = v; };
-          if (typeof value === 'string') set('item-name', value);
-          else {
-            set('item-name', value.name);
-            set('item-qty', value.qty);
-            set('item-detail', value.detail);
-            set('item-key', value.key);
-            if (typeof value.grams === 'number') set('item-grams-override', value.grams);
-            setUnit(row, value.unit);
-          }
-        }
-        // Always, not just on rehydration: it also stamps the Key field's default placeholder.
-        updateItemRow(row);
-        return row;
-      }
-
-      // Set a row's unit <select>, injecting a one-off <option> for a unit that isn't in the
-      // standard list — otherwise a hand-authored recipe's unusual unit (e.g. "clove") would be
-      // silently dropped on edit, because assigning an unknown value to a <select> is a no-op.
-      function setUnit(row, unit) {
-        if (!unit) return;
-        const sel = row.querySelector('[data-field="item-unit"]');
-        if (![...sel.options].some((o) => o.value === unit)) sel.add(new Option(unit, unit));
-        sel.value = unit;
-      }
-
-      // Show/hide a row's grams prompt and, when grams are entered, capture the derived ratio.
-      // "Needs grams" = a volume unit with a parseable qty and a name the shared list doesn't
-      // know yet, and no grams override — the recipe page uses the override for this item, so
-      // a ratio would be noise. Weight units convert without a ratio; count/no-unit items never
-      // convert. Also keeps the Key field's placeholder showing the key the name defaults to.
-      function updateItemRow(row) {
-        const nameEl = row.querySelector('[data-field="item-name"]');
-        const qtyEl = row.querySelector('[data-field="item-qty"]');
-        const unitEl = row.querySelector('[data-field="item-unit"]');
-        const gramsEl = row.querySelector('[data-field="item-grams"]');
-        const overrideEl = row.querySelector('[data-field="item-grams-override"]');
-        const prompt = row.querySelector('[data-grams-prompt]');
-        const name = (nameEl.value ?? '').trim();
-        const nameKey = densityKey(name);
-        const unit = unitEl.value;
-        const qtyNum = parseQty(qtyEl.value);
-
-        row.querySelector('[data-field="item-key"]').placeholder = ingredientKeyOf({ name }) || 'auto';
-
-        // badInput: a number input reports '' for unparseable text, which is still "set".
-        const hasOverride = !!overrideEl.value.trim() || overrideEl.validity.badInput;
-        // A ratio typed into the prompt before the override was set must not still publish.
-        if (hasOverride) delete pendingDensities[nameKey];
-        const needs =
-          isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities) &&
-          !hasOverride;
-        prompt.classList.toggle('hidden', !needs);
-        if (needs) {
-          row.querySelector('[data-grams-qty]').textContent = qtyEl.value.trim();
-          row.querySelector('[data-grams-unit]').textContent = unit;
-          row.querySelector('[data-grams-name]').textContent = name;
-          const grams = Number(gramsEl.value);
-          if (gramsEl.value.trim() && Number.isFinite(grams)) {
-            const d = densityFromGrams(qtyEl.value, unit, grams);
-            if (d != null) pendingDensities[nameKey] = Math.round(d * 100) / 100;
-          }
+    // The item builders take an optional value so add mode (no value) and edit-mode
+    // rehydration (value from data) share the one call — see fillGroups. `value` is a
+    // { name, qty?, unit?, detail?, key?, grams? } object (a bare string is tolerated as the
+    // name, defensively).
+    function addItem(itemsList, value) {
+      const row = makeItemRow();
+      itemsList.appendChild(row);
+      if (value != null) {
+        const set = (field, v) => { if (v != null) row.querySelector(`[data-field="${field}"]`).value = v; };
+        if (typeof value === 'string') set('item-name', value);
+        else {
+          set('item-name', value.name);
+          set('item-qty', value.qty);
+          set('item-detail', value.detail);
+          set('item-key', value.key);
+          if (typeof value.grams === 'number') set('item-grams-override', value.grams);
+          setUnit(row, value.unit);
         }
       }
+      // Always, not just on rehydration: it also stamps the Key field's default placeholder.
+      updateItemRow(row);
+      return row;
+    }
 
-      // Re-evaluate every ingredient row's prompt (e.g. after /densities.json finishes loading,
-      // which can arrive after the form is already populated from a draft or an edit).
-      const refreshAllItemRows = () =>
-        $('#ingredients-list').querySelectorAll('[data-unit="item-row"]').forEach(updateItemRow);
-      function addGroup() {
-        const group = addRow('#ingredients-list', 'tpl-group');
-        addItem(group.querySelector('.items-list'));
-        return group;
-      }
-      // Steps mirror ingredients: a group box (tpl-step-group) holding step rows (tpl-step).
-      function addStep(stepsItems, value) {
-        const row = appendTpl(stepsItems, 'tpl-step');
-        if (value != null) setRowValue(row, 'step', value);
-        return row;
-      }
-      function addStepGroup() {
-        const group = addRow('#steps-list', 'tpl-step-group');
-        addStep(group.querySelector('.steps-items'));
-        return group;
-      }
-      // Build a picker <option>; shared by the initial index load and post-add registration.
-      function makeOption(slug, title) {
-        const opt = document.createElement('option');
-        opt.value = slug;
-        opt.textContent = title;
-        return opt;
-      }
+    // Set a row's unit <select>, injecting a one-off <option> for a unit that isn't in the
+    // standard list — otherwise a hand-authored recipe's unusual unit (e.g. "clove") would be
+    // silently dropped on edit, because assigning an unknown value to a <select> is a no-op.
+    function setUnit(row, unit) {
+      if (!unit) return;
+      const sel = row.querySelector('[data-field="item-unit"]');
+      if (![...sel.options].some((o) => o.value === unit)) sel.add(new Option(unit, unit));
+      sel.value = unit;
+    }
 
-      // Reconcile the in-memory index + picker with a just-saved recipe so the UI matches what a
-      // reload would show. Drafts are excluded from /recipes.json, so they're kept out of the
-      // picker (a saved draft would otherwise appear, then vanish on the next load).
-      function syncPickerEntry(slug, recipe) {
-        recipesBySlug[slug] = recipe;
-        const opt = picker.querySelector(`option[value="${slug}"]`);
-        if (recipe.draft) opt?.remove();
-        else if (opt) opt.textContent = recipe.title;
-        else picker.appendChild(makeOption(slug, recipe.title));
-      }
+    // Show/hide a row's grams prompt and, when grams are entered, capture the derived ratio.
+    // "Needs grams" = a volume unit with a parseable qty and a name the shared list doesn't
+    // know yet, and no grams override — the recipe page uses the override for this item, so
+    // a ratio would be noise. Weight units convert without a ratio; count/no-unit items never
+    // convert. Also keeps the Key field's placeholder showing the key the name defaults to.
+    function updateItemRow(row) {
+      const nameEl = row.querySelector('[data-field="item-name"]');
+      const qtyEl = row.querySelector('[data-field="item-qty"]');
+      const unitEl = row.querySelector('[data-field="item-unit"]');
+      const gramsEl = row.querySelector('[data-field="item-grams"]');
+      const overrideEl = row.querySelector('[data-field="item-grams-override"]');
+      const prompt = row.querySelector('[data-grams-prompt]');
+      const name = (nameEl.value ?? '').trim();
+      const nameKey = densityKey(name);
+      const unit = unitEl.value;
+      const qtyNum = parseQty(qtyEl.value);
 
-      // ---- Row add / remove (event delegation) ----------------------------
-      form.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-action]');
-        if (!btn) return;
-        switch (btn.dataset.action) {
-          case 'add-tool': $('#tools-list').appendChild(makeSimpleRow('tool')); break;
-          case 'add-note': $('#notes-list').appendChild(makeSimpleRow('note')); break;
-          case 'add-step-group': addStepGroup(); break;
-          case 'add-step': addStep(btn.closest('[data-unit="step-group"]').querySelector('.steps-items')); break;
-          case 'add-group': addGroup(); break;
-          case 'add-item': addItem(btn.closest('[data-unit="group"]').querySelector('.items-list')); break;
-          case 'remove': btn.closest('[data-unit]')?.remove(); formDirty = true; refreshPreview(); break;
-        }
-        // Row add/remove changes the form's content but fires no 'input' event, so persist here.
-        saveDraftSoon();
-      });
-      // Re-evaluate a row's grams prompt + key placeholder whenever any of its fields changes.
-      const maybeUpdateItemRow = (target) => {
-        const row = target?.closest?.('[data-unit="item-row"]');
-        if (row) updateItemRow(row);
-      };
-      form.addEventListener('input', (e) => {
-        // Editing a field validate() flagged clears the flag; the next publish re-checks.
-        e.target.removeAttribute?.('aria-invalid');
-        maybeUpdateItemRow(e.target);
-        formDirty = true;
-        refreshPreview();
-        saveDraftSoon();
-      });
-      // <select> reliably fires 'change' (and 'input' in modern browsers); cover both.
-      form.addEventListener('change', (e) => maybeUpdateItemRow(e.target));
+      row.querySelector('[data-field="item-key"]').placeholder = ingredientKeyOf({ name }) || 'auto';
 
-      // ---- Drag-to-reorder (native HTML5, no library) ---------------------
-      // Only the grip (data-drag-handle) is draggable, so text inputs stay editable. A drag
-      // reorders the grip's [data-unit] element within its own parent list only — which
-      // naturally scopes each drag to its own list and blocks cross-group/cross-type moves.
-      // DOM order is already the source of truth (readForm reads in document order), so moving
-      // the node is the entire change. Note: HTML5 DnD does not fire on touch devices.
-      let draggedEl = null;
-      // The child whose vertical midpoint sits just below the cursor — insert before it.
-      function getDragAfterElement(container, y) {
-        const els = [...container.children].filter((el) => el !== draggedEl && el.matches('[data-unit]'));
-        let closest = { offset: -Infinity, el: null };
-        for (const el of els) {
-          const box = el.getBoundingClientRect();
-          const offset = y - (box.top + box.height / 2);
-          if (offset < 0 && offset > closest.offset) closest = { offset, el };
-        }
-        return closest.el;
-      }
-      form.addEventListener('dragstart', (e) => {
-        const grip = e.target.closest('[data-drag-handle]');
-        if (!grip) return;
-        draggedEl = grip.closest('[data-unit]');
-        draggedEl.classList.add('opacity-50');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', ''); // Firefox won't start a drag without a payload
-      });
-      form.addEventListener('dragover', (e) => {
-        if (!draggedEl) return;
-        e.preventDefault();
-        const container = draggedEl.parentElement;
-        const after = getDragAfterElement(container, e.clientY);
-        if (after == null) container.appendChild(draggedEl);
-        else container.insertBefore(draggedEl, after);
-      });
-      form.addEventListener('dragend', () => {
-        if (!draggedEl) return;
-        draggedEl.classList.remove('opacity-50');
-        draggedEl = null;
-        formDirty = true; // a reorder is a real edit, but moving a node fires no 'input' event
-        refreshPreview();
-      });
-
-      // ---- Session / auth -------------------------------------------------
-      const currentSession = () => localStorage.getItem(SESSION_KEY);
-      const clearSession = () => localStorage.removeItem(SESSION_KEY);
-
-      // On return from OAuth the Worker redirects to /upload#session=<id>. Pull it out of the
-      // fragment (fragments never hit a server or log), stash it, then scrub the URL.
-      function ingestSessionFromHash() {
-        const prefix = '#session=';
-        if (location.hash.startsWith(prefix)) {
-          const id = location.hash.slice(prefix.length);
-          if (id) localStorage.setItem(SESSION_KEY, id);
-          history.replaceState(null, '', location.pathname + location.search);
+      // badInput: a number input reports '' for unparseable text, which is still "set".
+      const hasOverride = !!overrideEl.value.trim() || overrideEl.validity.badInput;
+      // A ratio typed into the prompt before the override was set must not still publish.
+      if (hasOverride) delete pendingDensities[nameKey];
+      const needs =
+        isVolumeUnit(unit) && !!name && qtyNum != null && qtyNum > 0 && !(nameKey in knownDensities) &&
+        !hasOverride;
+      prompt.classList.toggle('hidden', !needs);
+      if (needs) {
+        row.querySelector('[data-grams-qty]').textContent = qtyEl.value.trim();
+        row.querySelector('[data-grams-unit]').textContent = unit;
+        row.querySelector('[data-grams-name]').textContent = name;
+        const grams = Number(gramsEl.value);
+        if (gramsEl.value.trim() && Number.isFinite(grams)) {
+          const d = densityFromGrams(qtyEl.value, unit, grams);
+          if (d != null) pendingDensities[nameKey] = Math.round(d * 100) / 100;
         }
       }
+    }
 
-      function renderAuthState() {
-        const signed = !!currentSession();
-        authState.textContent = signed ? '✓ Signed in with GitHub' : 'Not signed in';
-        authState.className = signed ? 'dz-tag dz-tag--ready' : 'dz-tag';
-        signinBtn.classList.toggle('hidden', signed);
-        signoutBtn.classList.toggle('hidden', !signed);
-      }
-
-      signoutBtn.addEventListener('click', async () => {
-        const session = currentSession();
-        if (session) {
-          // Best-effort server-side revoke; the local session is cleared regardless.
-          try {
-            await fetch(`${API}/logout`, { method: 'POST', headers: { Authorization: `Bearer ${session}` } });
-          } catch { /* offline is fine — we still drop the local id */ }
-        }
-        clearSession();
-        renderAuthState();
-        setStatus('Signed out.', 'ok');
-      });
-
-      // ---- Status ---------------------------------------------------------
-      // textContent (not innerHTML) — messages can include server-returned error text,
-      // which must never be parsed as markup. Callers that need a link append DOM nodes.
-      function setStatus(msg, kind = '') {
-        statusEl.textContent = msg;
-        statusEl.className =
-          'caption mt-2 ' +
-          (kind === 'ok' ? 'body-strong text-leaf' : kind === 'err' ? 'body-strong text-cherry' : 'text-ink-muted');
-      }
-
-      // ---- Read form into a recipe object ---------------------------------
-      const val = (sel) => ($(sel)?.value ?? '').trim();
-      const listVals = (listSel, field) =>
-        Array.from($(listSel).querySelectorAll(`[data-field="${field}"]`))
-          .map((el) => el.value.trim())
-          .filter(Boolean);
-      // Read a grouped list into [{group?, items}], dropping empty groups. A blank group name
-      // yields no `group` key (renders as a plain list). `groupUnit` names both the [data-unit]
-      // box and its group-name [data-field]; `collectItems(groupEl)` returns that group's items —
-      // the one bit that differs between steps (strings) and ingredients (objects).
-      function readGroups(listSel, groupUnit, collectItems) {
-        const out = [];
-        for (const groupEl of $(listSel).querySelectorAll(`[data-unit="${groupUnit}"]`)) {
-          const items = collectItems(groupEl);
-          if (items.length === 0) continue;
-          const name = (groupEl.querySelector(`[data-field="${groupUnit}"]`)?.value ?? '').trim();
-          out.push(name ? { group: name, items } : { items });
-        }
-        return out;
-      }
-
-      // Item collectors for readGroups. Steps are trimmed strings from one field; ingredients are
-      // { name, qty?, unit?, detail?, key?, grams? } objects read per row (nameless rows dropped).
-      // The density prompt's field (item-grams) is deliberately NOT read — those ratios live in
-      // the shared density list, never in the frontmatter. `grams` here is the per-item override.
-      const collectStringItems = (itemField) => (groupEl) =>
-        Array.from(groupEl.querySelectorAll(`[data-field="${itemField}"]`))
-          .map((el) => el.value.trim())
-          .filter(Boolean);
-      function collectIngredientItems(groupEl) {
-        const items = [];
-        for (const rowEl of groupEl.querySelectorAll('[data-unit="item-row"]')) {
-          const name = (rowEl.querySelector('[data-field="item-name"]')?.value ?? '').trim();
-          if (!name) continue;
-          const qty = (rowEl.querySelector('[data-field="item-qty"]')?.value ?? '').trim();
-          const unit = (rowEl.querySelector('[data-field="item-unit"]')?.value ?? '').trim();
-          const detail = (rowEl.querySelector('[data-field="item-detail"]')?.value ?? '').trim();
-          const key = (rowEl.querySelector('[data-field="item-key"]')?.value ?? '').trim();
-          const grams = (rowEl.querySelector('[data-field="item-grams-override"]')?.value ?? '').trim();
-          const item = { name };
-          if (qty) item.qty = qty;
-          if (unit) item.unit = unit;
-          if (detail) item.detail = detail;
-          if (key) item.key = key;
-          // Kept as a number whenever it parses, even ≤ 0, so the preview and the draft show what
-          // was typed; validate() rejects a non-positive value before it can be published.
-          if (grams && Number.isFinite(Number(grams))) item.grams = Number(grams);
-          items.push(item);
-        }
-        return items;
-      }
-      const numOrUndef = (sel) => {
-        const v = val(sel);
-        if (v === '') return undefined;
-        const n = Number(v);
-        return Number.isFinite(n) ? n : undefined;
-      };
-
-      function readForm() {
-        return {
-          title: val('#title'),
-          category: val('#category'),
-          description: val('#description') || undefined,
-          keywords: val('#keywords').split(',').map((k) => k.trim()).filter(Boolean),
-          prepTime: numOrUndef('#prepTime'),
-          cookTime: numOrUndef('#cookTime'),
-          servings: numOrUndef('#servings'),
-          yield: val('#yield') || undefined,
-          oven: val('#oven') || undefined,
-          tools: listVals('#tools-list', 'tool'),
-          ingredients: readGroups('#ingredients-list', 'group', collectIngredientItems),
-          steps: readGroups('#steps-list', 'step-group', collectStringItems('step')),
-          notes: listVals('#notes-list', 'note'),
-          draft: $('#draft').checked,
-        };
-      }
-
-      // ---- Draft autosave -------------------------------------------------
-      // Persist in-progress form content so it survives a reload / the OAuth round-trip.
-      // Only real user edits trigger a save (see the input + row-button handlers); the
-      // programmatic fills in fillForm/enterEditMode/enterAddMode deliberately don't.
-      let draftTimer = null;
-
-      // Is there anything worth keeping? Guards against saving/restoring an empty form
-      // (which would otherwise pop a spurious "restored draft" note on every visit).
-      function hasContent(r) {
-        return !!(
-          r.title || r.description ||
-          (r.keywords && r.keywords.length) ||
-          r.prepTime !== undefined || r.cookTime !== undefined || r.servings !== undefined ||
-          r.yield || r.oven ||
-          (r.tools && r.tools.length) ||
-          (r.steps && r.steps.length) ||
-          (r.notes && r.notes.length) ||
-          // readForm() drops groups with no items, so any group present means real content.
-          (r.ingredients && r.ingredients.length)
-        );
-      }
-
-      function clearDraft() {
-        // Cancel any pending debounced save first, or it would fire after this and rewrite the
-        // draft we just dropped — in edit mode the form isn't reset on save, so a save scheduled
-        // just before "Save changes" would resurrect the draft and spuriously offer to restore it.
-        clearTimeout(draftTimer);
-        try { localStorage.removeItem(DRAFT_KEY); } catch { /* private mode — nothing to clear */ }
-      }
-
-      function saveDraft() {
-        const recipe = readForm();
-        if (!hasContent(recipe)) { clearDraft(); return; }
-        try {
-          localStorage.setItem(DRAFT_KEY, JSON.stringify({ editingSlug, recipe, pendingDensities }));
-        } catch { /* quota/private mode — a lost autosave is non-fatal */ }
-      }
-
-      // Debounced so we don't touch localStorage on every keystroke.
-      function saveDraftSoon() {
-        clearTimeout(draftTimer);
-        draftTimer = setTimeout(saveDraft, 400);
-      }
-
-      // Flush any pending debounced save when the page is being hidden — the user clicking
-      // "Sign in with GitHub" is a full-page navigation, and it can land inside the 400ms
-      // debounce window and otherwise lose the most recent edits. pagehide covers nav + tab close.
-      window.addEventListener('pagehide', saveDraft);
-
-      // ---- YAML frontmatter serializer ------------------------------------
-      // Escape order matters: backslashes first, then the chars whose escapes
-      // introduce backslashes. Newlines/tabs must be escaped too — a raw newline
-      // inside a double-quoted YAML scalar is a "missing closing quote" parse error.
-      const q = (s) =>
-        '"' +
-        s
-          .replace(/\\/g, '\\\\')
-          .replace(/"/g, '\\"')
-          .replace(/\n/g, '\\n')
-          .replace(/\r/g, '\\r')
-          .replace(/\t/g, '\\t') +
-        '"';
-
-      // Serialize [{group?, items}] as YAML under `key:` — the shared ingredient/step envelope.
-      // `serializeItem(L, it)` emits one item's line(s): a bare string for steps, or the
-      // name/qty/unit block for ingredients (which mirrors the one-time content migration, so
-      // re-saving a recipe stays a clean diff).
-      function serializeGroups(L, key, groups, serializeItem) {
-        L.push(`${key}:`);
-        for (const g of groups) {
-          if (g.group) {
-            L.push(`  - group: ${q(g.group)}`);
-            L.push('    items:');
-          } else {
-            L.push('  - items:');
-          }
-          for (const it of g.items) serializeItem(L, it);
-        }
-      }
-      const serializeStringItem = (L, it) => L.push(`      - ${q(it)}`);
-      function serializeIngredientItem(L, it) {
-        L.push(`      - name: ${q(it.name)}`);
-        if (it.qty) L.push(`        qty: ${q(it.qty)}`);
-        if (it.unit) L.push(`        unit: ${q(it.unit)}`);
-        if (it.detail) L.push(`        detail: ${q(it.detail)}`);
-        if (it.key) L.push(`        key: ${q(it.key)}`);
-        if (typeof it.grams === 'number') L.push(`        grams: ${it.grams}`);
-      }
-
-      function toMarkdown(r) {
-        const L = ['---'];
-        L.push(`title: ${q(r.title)}`);
-        L.push(`category: ${q(r.category)}`);
-        if (r.description) L.push(`description: ${q(r.description)}`);
-        if (r.keywords.length) L.push(`keywords: [${r.keywords.map(q).join(', ')}]`);
-        if (r.prepTime !== undefined) L.push(`prepTime: ${r.prepTime}`);
-        if (r.cookTime !== undefined) L.push(`cookTime: ${r.cookTime}`);
-        if (r.servings !== undefined) L.push(`servings: ${r.servings}`);
-        if (r.yield) L.push(`yield: ${q(r.yield)}`);
-        if (r.oven) L.push(`oven: ${q(r.oven)}`);
-        if (r.tools.length) {
-          L.push('tools:');
-          for (const t of r.tools) L.push(`  - ${q(t)}`);
-        }
-        serializeGroups(L, 'ingredients', r.ingredients, serializeIngredientItem);
-        serializeGroups(L, 'steps', r.steps, serializeStringItem);
-        if (r.notes.length) {
-          L.push('notes:');
-          for (const n of r.notes) L.push(`  - ${q(n)}`);
-        }
-        if (r.draft) L.push('draft: true');
-        L.push('---');
-        return L.join('\n') + '\n';
-      }
-
-      function slugify(t) {
-        return t.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-      }
-
-      function validate(r) {
-        // Flags from an earlier attempt may no longer apply (e.g. that row lost its name).
-        form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
-        if (!r.title) return 'Add a title.';
-        if (!slugify(r.title)) return 'Title needs at least one letter or number.';
-        if (!r.category) return 'Pick a category.';
-        if (r.ingredients.length === 0) return 'Add at least one ingredient.';
-        if (r.steps.length === 0) return 'Add at least one step.';
-        // Mirror the schema's numeric constraints (int + nonnegative/positive) so a
-        // stray decimal or out-of-range value is caught here, not by a failed deploy build.
-        const numeric = [
-          ['Prep time', r.prepTime, 0],
-          ['Cook time', r.cookTime, 0],
-          ['Servings', r.servings, 1],
-        ];
-        for (const [name, v, min] of numeric) {
-          if (v !== undefined && (!Number.isInteger(v) || v < min)) {
-            return `${name} must be a whole number (${min} or more).`;
-          }
-        }
-        return validateItemFields() ?? validateStepRefs(r);
-      }
-
-      // Per-row checks for the item key + grams override, mirroring the schema (INGREDIENT_KEY,
-      // grams > 0). Read from the DOM rather than the recipe object so the offending field can
-      // be flagged (aria-invalid, cleared on its next input or the next validate) and focused.
-      function validateItemFields() {
-        for (const row of $('#ingredients-list').querySelectorAll('[data-unit="item-row"]')) {
-          const name = row.querySelector('[data-field="item-name"]').value.trim();
-          if (!name) continue; // nameless rows are dropped on save, so their extras don't matter
-          const keyEl = row.querySelector('[data-field="item-key"]');
-          const key = keyEl.value.trim();
-          if (key && !INGREDIENT_KEY_RE.test(key)) {
-            flagField(keyEl);
-            return `Key “${key}” for “${name}” must be lowercase words joined by hyphens, e.g. "glaze-lemon".`;
-          }
-          const gramsEl = row.querySelector('[data-field="item-grams-override"]');
-          // A number input reports '' for unparseable text, so badInput is the only way to see it.
-          if (gramsEl.validity.badInput || (gramsEl.value.trim() && !(Number(gramsEl.value) > 0))) {
-            flagField(gramsEl);
-            return `Grams for “${name}” must be a positive number (or blank to convert automatically).`;
-          }
-        }
-        return null;
-      }
-      function flagField(el) {
-        el.setAttribute('aria-invalid', 'true');
-        el.focus();
-      }
-
-      // Every [[key]] in a step must name exactly one ingredient — the site build fails on an
-      // unknown or ambiguous reference (lookupRef in the engine), so catch it before committing.
-      // Steps are read from the DOM (blank ones skipped, as readForm does) so the offending one
-      // can be flagged; the keys come from the recipe object readForm built.
-      function validateStepRefs(r) {
-        const keys = new Map();
-        for (const g of r.ingredients) {
-          for (const it of g.items) {
-            const k = ingredientKeyOf(it);
-            if (k) keys.set(k, [...(keys.get(k) ?? []), it.name]);
-          }
-        }
-        let n = 0;
-        for (const stepEl of $('#steps-list').querySelectorAll('[data-field="step"]')) {
-          const step = stepEl.value.trim();
-          if (!step) continue;
-          n++;
-          for (const [, key] of step.matchAll(REF_SYNTAX)) {
-            const hits = keys.get(key) ?? [];
-            if (hits.length === 1) continue;
-            flagField(stepEl);
-            return hits.length === 0
-              ? `Step ${n} references [[${key}]], but no ingredient has that key. Keys in this recipe: ${[...keys.keys()].sort().join(', ') || '(none)'}.`
-              : `Step ${n}: [[${key}]] matches ${hits.length} ingredients (${hits.join(', ')}) — give one of them a distinct key and reference that.`;
-          }
-        }
-        return null;
-      }
-
-      function refreshPreview() {
-        // Skip work while the preview panel is collapsed — it's refreshed on open (toggle).
-        if (!previewDetails.open) return;
-        try {
-          previewEl.textContent = toMarkdown(readForm());
-        } catch {
-          /* ignore mid-edit errors */
-        }
-      }
-      previewDetails.addEventListener('toggle', () => {
-        if (previewDetails.open) refreshPreview();
-      });
-
-      // ---- Recipe API (via the Worker) ------------------------------------
-      // All writes go through the Worker with the opaque session id as a bearer token; the
-      // Worker injects the real GitHub token server-side.
-      function apiFetch(path, options = {}) {
-        const session = currentSession();
-        return fetch(`${API}${path}`, {
-          ...options,
-          headers: { Authorization: `Bearer ${session}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
+    // Re-evaluate every ingredient row's prompt (e.g. after /densities.json finishes loading,
+    // which can arrive after the form is already populated from a draft or an edit).
+    const refreshAllItemRows = () =>
+      $('#ingredients-list').querySelectorAll('[data-unit="item-row"]').forEach(updateItemRow);
+    function addGroup() {
+      const group = addRow('#ingredients-list', 'tpl-group');
+      addItem(group.querySelector('.items-list'));
+      return group;
+    }
+    // Steps mirror ingredients: a group box (tpl-step-group) holding step rows (tpl-step).
+    function addStep(stepsItems, value) {
+      const row = appendTpl(stepsItems, 'tpl-step');
+      if (value != null) setRowValue(row, 'step', value);
+      renumberSteps();
+      return row;
+    }
+    // Number each step within its group ("01", "02"…) and name its textarea to match. Run after
+    // anything that adds, removes or reorders a step.
+    function renumberSteps() {
+      for (const items of $('#steps-list').querySelectorAll('.steps-items')) {
+        [...items.children].forEach((row, i) => {
+          const n = String(i + 1).padStart(2, '0');
+          row.querySelector('[data-step-n]').textContent = n;
+          row.querySelector('[data-field="step"]').setAttribute('aria-label', `Step ${n}`);
         });
       }
+    }
+    function addStepGroup() {
+      const group = addRow('#steps-list', 'tpl-step-group');
+      addStep(group.querySelector('.steps-items'));
+      return group;
+    }
+    // Build a picker <option>; shared by the initial index load and post-add registration.
+    function makeOption(slug, title) {
+      const opt = document.createElement('option');
+      opt.value = slug;
+      opt.textContent = title;
+      return opt;
+    }
 
-      // Extract a human message from a failed API response. A 401 means the session is gone —
-      // clear it and flip the UI back to signed-out so the fix (re-sign-in) is obvious.
-      async function apiError(res) {
-        let msg = '';
-        try { msg = (await res.json()).error ?? ''; } catch { /* noop */ }
-        if (res.status === 401) {
-          clearSession();
-          renderAuthState();
-          return msg || 'Session expired — sign in again.';
-        }
-        return msg || `Server error ${res.status}.`;
+    // Reconcile the in-memory index + picker with a just-saved recipe so the UI matches what a
+    // reload would show. Drafts are excluded from /recipes.json, so they're kept out of the
+    // picker (a saved draft would otherwise appear, then vanish on the next load).
+    function syncPickerEntry(slug, recipe) {
+      recipesBySlug[slug] = recipe;
+      const opt = picker.querySelector(`option[value="${slug}"]`);
+      if (recipe.draft) opt?.remove();
+      else if (opt) opt.textContent = recipe.title;
+      else picker.appendChild(makeOption(slug, recipe.title));
+    }
+
+    // ---- Row add / remove (event delegation) ----------------------------
+    form.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      switch (btn.dataset.action) {
+        case 'add-tool': $('#tools-list').appendChild(makeSimpleRow('tool')); break;
+        case 'add-note': $('#notes-list').appendChild(makeSimpleRow('note')); break;
+        case 'add-step-group': addStepGroup(); break;
+        case 'add-step': addStep(btn.closest('[data-unit="step-group"]').querySelector('.steps-items')); break;
+        case 'add-group': addGroup(); break;
+        case 'add-item': addItem(btn.closest('[data-unit="group"]').querySelector('.items-list')); break;
+        case 'remove': btn.closest('[data-unit]')?.remove(); renumberSteps(); formDirty = true; refreshPreview(); break;
       }
+      // Row add/remove changes the form's content but fires no 'input' event, so persist here.
+      saveDraftSoon();
+    });
+    // Re-evaluate a row's grams prompt + key placeholder whenever any of its fields changes.
+    const maybeUpdateItemRow = (target) => {
+      const row = target?.closest?.('[data-unit="item-row"]');
+      if (row) updateItemRow(row);
+    };
+    form.addEventListener('input', (e) => {
+      // Editing a field validate() flagged clears the flag; the next publish re-checks.
+      e.target.removeAttribute?.('aria-invalid');
+      maybeUpdateItemRow(e.target);
+      if (e.target.id === 'title') refreshSlug();
+      formDirty = true;
+      refreshPreview();
+      saveDraftSoon();
+    });
+    // <select> reliably fires 'change' (and 'input' in modern browsers); cover both.
+    form.addEventListener('change', (e) => maybeUpdateItemRow(e.target));
 
-      // ---- Copy markdown --------------------------------------------------
-      $('#copy-md').addEventListener('click', async () => {
+    // ---- Drag-to-reorder (native HTML5, no library) ---------------------
+    // Only the grip (data-drag-handle) is draggable, so text inputs stay editable. A drag
+    // reorders the grip's [data-unit] element within its own parent list only — which
+    // naturally scopes each drag to its own list and blocks cross-group/cross-type moves.
+    // DOM order is already the source of truth (readForm reads in document order), so moving
+    // the node is the entire change. Note: HTML5 DnD does not fire on touch devices.
+    let draggedEl = null;
+    // The child whose vertical midpoint sits just below the cursor — insert before it.
+    function getDragAfterElement(container, y) {
+      const els = [...container.children].filter((el) => el !== draggedEl && el.matches('[data-unit]'));
+      let closest = { offset: -Infinity, el: null };
+      for (const el of els) {
+        const box = el.getBoundingClientRect();
+        const offset = y - (box.top + box.height / 2);
+        if (offset < 0 && offset > closest.offset) closest = { offset, el };
+      }
+      return closest.el;
+    }
+    form.addEventListener('dragstart', (e) => {
+      const grip = e.target.closest('[data-drag-handle]');
+      if (!grip) return;
+      draggedEl = grip.closest('[data-unit]');
+      draggedEl.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', ''); // Firefox won't start a drag without a payload
+    });
+    form.addEventListener('dragover', (e) => {
+      if (!draggedEl) return;
+      e.preventDefault();
+      const container = draggedEl.parentElement;
+      const after = getDragAfterElement(container, e.clientY);
+      if (after == null) container.appendChild(draggedEl);
+      else container.insertBefore(draggedEl, after);
+    });
+    form.addEventListener('dragend', () => {
+      if (!draggedEl) return;
+      draggedEl.classList.remove('is-dragging');
+      draggedEl = null;
+      renumberSteps();
+      formDirty = true; // a reorder is a real edit, but moving a node fires no 'input' event
+      refreshPreview();
+      saveDraftSoon();
+    });
+
+    // ---- Session / auth -------------------------------------------------
+    const currentSession = () => localStorage.getItem(SESSION_KEY);
+    const clearSession = () => localStorage.removeItem(SESSION_KEY);
+
+    // On return from OAuth the Worker redirects to /upload#session=<id>. Pull it out of the
+    // fragment (fragments never hit a server or log), stash it, then scrub the URL.
+    function ingestSessionFromHash() {
+      const prefix = '#session=';
+      if (location.hash.startsWith(prefix)) {
+        const id = location.hash.slice(prefix.length);
+        if (id) localStorage.setItem(SESSION_KEY, id);
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    }
+
+    function renderAuthState() {
+      const signed = !!currentSession();
+      authState.textContent = signed ? '✓ Signed in with GitHub' : 'Not signed in';
+      authState.className = `body-s font-bold ${signed ? 'text-leaf' : 'text-ink-muted'}`;
+      signinBtn.classList.toggle('hidden', signed);
+      signoutBtn.classList.toggle('hidden', !signed);
+    }
+
+    signoutBtn.addEventListener('click', async () => {
+      const session = currentSession();
+      if (session) {
+        // Best-effort server-side revoke; the local session is cleared regardless.
         try {
-          await navigator.clipboard.writeText(toMarkdown(readForm()));
-          setStatus('Markdown copied.', 'ok');
-        } catch {
-          setStatus('Could not copy — select the preview text manually.', 'err');
-        }
-      });
-
-      // ---- Submit ---------------------------------------------------------
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const recipe = readForm();
-        const problem = validate(recipe);
-        if (problem) { setStatus(problem, 'err'); return; }
-
-        if (!currentSession()) {
-          setStatus('Sign in with GitHub first (top of the page).', 'err');
-          return;
-        }
-
-        // In edit mode the file keeps its original slug even if the title changed, so the
-        // URL stays stable and no orphaned file is left behind. Add mode slugifies the title.
-        const slug = editingSlug ?? slugify(recipe.title);
-        const md = toMarkdown(recipe);
-
-        publishBtn.disabled = true;
-        deleteBtn.disabled = true;
-        try {
-          setStatus(editingSlug ? 'Saving…' : 'Publishing…', 'info');
-          // New grams ratios ride along so the Worker can grow the shared list — but only for
-          // ingredients actually in THIS recipe. That drops anything left in pendingDensities from
-          // a rename or a prior recipe, so unrelated ratios never tag along on a publish.
-          const recipeNames = new Set(
-            recipe.ingredients.flatMap((g) => g.items.map((it) => densityKey(it.name)))
-          );
-          const pending = Object.fromEntries(
-            Object.entries(pendingDensities).filter(([name]) => recipeNames.has(name))
-          );
-          const densities = Object.keys(pending).length ? pending : undefined;
-          const commit = (overwrite) =>
-            apiFetch('/api/recipe', {
-              method: 'POST',
-              body: JSON.stringify({
-                slug,
-                markdown: md,
-                message: `${overwrite ? 'Update' : 'Add'} recipe: ${recipe.title}`,
-                overwrite,
-                densities,
-              }),
-            });
-
-          // Edit mode always overwrites. Add mode tries create-only first; a 409 means a file
-          // already exists at that slug, so confirm and retry as an overwrite.
-          let res = await commit(!!editingSlug);
-          if (res.status === 409) {
-            if (!confirm(`A recipe already exists at "${slug}.md". Overwrite it?`)) {
-              setStatus('Cancelled — nothing published.', 'info');
-              return;
-            }
-            res = await commit(true);
-          }
-          if (!res.ok) throw new Error(await apiError(res));
-          const result = await res.json().catch(() => ({}));
-
-          // Keep the picker + index in sync with the save (drops drafts from the picker).
-          syncPickerEntry(slug, recipe);
-
-          if (recipe.draft) {
-            // A draft has no detail page, so don't dangle a "live at…" link it can't fulfill.
-            setStatus(
-              (editingSlug ? 'Saved' : 'Created') +
-                ' as a draft 📝 — hidden from the site and the picker until you un-draft it in the repo.',
-              'ok'
-            );
-          } else {
-            setStatus((editingSlug ? 'Saved! 🎉' : 'Published! 🎉') + " It'll be live in a minute or two at ", 'ok');
-            const link = document.createElement('a');
-            link.href = `${SITE_ORIGIN}/recipes/${slug}/`;
-            link.textContent = link.href;
-            link.className = 'dz-link';
-            statusEl.appendChild(link);
-          }
-
-          // The work is safely committed, so drop the autosaved draft (add and edit mode alike).
-          clearDraft();
-
-          // New grams ratios are committed best-effort alongside the recipe. On success, fold them
-          // into what this session "knows" (so rows stop prompting); on failure, keep them and warn.
-          if (densities) {
-            if (result.densitiesSaved === false) {
-              setStatus('Recipe saved — but the new gram conversions didn’t save. Re-publish to retry them.', 'err');
-            } else {
-              Object.assign(knownDensities, pending);
-              clearPending();
-              refreshAllItemRows();
-            }
-          }
-
-          // Add mode: clear the form for the next recipe. Edit mode: stay put for further tweaks.
-          if (!editingSlug) {
-            clearPending(); // don't carry a failed-save's ratios into the next recipe
-            form.reset();
-            resetDynamic();
-          }
-          formDirty = false;
-        } catch (err) {
-          setStatus(err instanceof Error ? err.message : 'Something went wrong.', 'err');
-        } finally {
-          publishBtn.disabled = false;
-          deleteBtn.disabled = false;
-        }
-      });
-
-      // ---- Delete ---------------------------------------------------------
-      deleteBtn.addEventListener('click', async () => {
-        if (!editingSlug) return;
-        if (!currentSession()) {
-          setStatus('Sign in with GitHub first (top of the page).', 'err');
-          return;
-        }
-        const slug = editingSlug;
-        const title = recipesBySlug[slug]?.title ?? slug;
-        if (!confirm(`Delete “${title}”? This removes ${slug}.md from the site.`)) return;
-
-        deleteBtn.disabled = true;
-        publishBtn.disabled = true;
-        try {
-          setStatus('Deleting…', 'info');
-          const res = await apiFetch('/api/recipe', {
-            method: 'DELETE',
-            body: JSON.stringify({ slug, message: `Delete recipe: ${title}` }),
-          });
-          if (res.status === 404) {
-            setStatus('That recipe no longer exists on the server.', 'err');
-            return;
-          }
-          if (!res.ok) throw new Error(await apiError(res));
-
-          // Drop it from the local index + picker, then fall back to a blank add form.
-          delete recipesBySlug[slug];
-          picker.querySelector(`option[value="${slug}"]`)?.remove();
-          enterAddMode();
-          setStatus(`Deleted “${title}”. The site will update in a minute or two.`, 'ok');
-        } catch (err) {
-          setStatus(err instanceof Error ? err.message : 'Something went wrong.', 'err');
-        } finally {
-          deleteBtn.disabled = false;
-          publishBtn.disabled = false;
-        }
-      });
-
-      // Load the shared ingredient → grams-per-cup list so rows only prompt for grams on
-      // ingredients it doesn't already know. Arrives async, so re-run every row's prompt after.
-      async function loadDensities() {
-        try {
-          const res = await fetch('/densities.json', { headers: { Accept: 'application/json' } });
-          if (res.ok) Object.assign(knownDensities, await res.json());
-        } catch { /* the prompt just errs toward asking — non-fatal */ }
-        refreshAllItemRows();
+          await fetch(`${API}/logout`, { method: 'POST', headers: { Authorization: `Bearer ${session}` } });
+        } catch { /* offline is fine — we still drop the local id */ }
       }
-
-      // ---- Edit mode: load existing recipes & prefill ---------------------
-      async function loadRecipeIndex() {
-        try {
-          const res = await fetch('/recipes.json', { headers: { Accept: 'application/json' } });
-          if (!res.ok) return;
-          const list = await res.json();
-          const frag = document.createDocumentFragment();
-          for (const r of list) {
-            recipesBySlug[r.slug] = r;
-            frag.appendChild(makeOption(r.slug, r.title));
-          }
-          picker.appendChild(frag);
-          if (draftRestored) {
-            // A restored draft owns the form; just point the picker at the slug it's editing
-            // (its <option> only exists now that the index has loaded) — don't refill from the index.
-            if (editingSlug) picker.value = editingSlug;
-            return;
-          }
-          // Deep link: /upload?edit=<slug> jumps straight into editing once data is in.
-          const wanted = new URLSearchParams(location.search).get('edit');
-          if (wanted && recipesBySlug[wanted]) enterEditMode(wanted);
-        } catch {
-          /* the picker is a convenience — a failed index just leaves add mode intact */
-        }
-      }
-
-      function setRowValue(row, field, value) {
-        row.querySelector(`[data-field="${field}"]`).value = value;
-      }
-
-      // Clear a list container and repopulate it with one simple row per value.
-      function fillList(listSel, field, values) {
-        const list = $(listSel);
-        list.innerHTML = '';
-        for (const v of values ?? []) {
-          const row = makeSimpleRow(field);
-          row.querySelector('input').value = v;
-          list.appendChild(row);
-        }
-      }
-
-      // Rehydrate a grouped list ([{group?, items}]) into the editor — the fill counterpart
-      // to readGroups/serializeGroups, shared by ingredients and steps. addItemFn(container,
-      // value) appends one item row; an empty list seeds a single empty group.
-      function fillGroups(listSel, tplId, groupField, itemsSel, addItemFn, groups) {
-        const list = $(listSel);
-        list.innerHTML = '';
-        for (const g of groups?.length ? groups : [{}]) {
-          const groupEl = appendTpl(list, tplId);
-          if (g.group) setRowValue(groupEl, groupField, g.group);
-          const itemsEl = groupEl.querySelector(itemsSel);
-          const items = g.items ?? [];
-          if (items.length === 0) addItemFn(itemsEl);
-          else for (const it of items) addItemFn(itemsEl, it);
-        }
-      }
-
-      function fillForm(r) {
-        const setVal = (sel, v) => {
-          const el = $(sel);
-          if (el) el.value = v === undefined || v === null ? '' : String(v);
-        };
-        setVal('#title', r.title);
-        $('#category').value = r.category;
-        setVal('#description', r.description);
-        setVal('#keywords', (r.keywords ?? []).join(', '));
-        setVal('#prepTime', r.prepTime);
-        setVal('#cookTime', r.cookTime);
-        setVal('#servings', r.servings);
-        setVal('#yield', r.yield);
-        setVal('#oven', r.oven);
-        $('#draft').checked = !!r.draft;
-
-        // Rebuild the dynamic lists from data, reusing the same row builders as add mode.
-        fillList('#tools-list', 'tool', r.tools);
-        fillList('#notes-list', 'note', r.notes);
-
-        fillGroups('#steps-list', 'tpl-step-group', 'step-group', '.steps-items', addStep, r.steps);
-        fillGroups('#ingredients-list', 'tpl-group', 'group', '.items-list', addItem, r.ingredients);
-      }
-
-      // Page chrome (title / intro / publish-button label / delete visibility) for each mode,
-      // split out so restoreDraft can apply edit-mode chrome before the recipe index has loaded
-      // (it can't call enterEditMode, which needs recipesBySlug + the picker option to exist).
-      function setEditChrome() {
-        pageTitle.textContent = 'Edit recipe';
-        pageIntro.textContent = 'Tweak it, save, and the change goes live in a minute or two.';
-        publishBtn.textContent = 'Save changes';
-        deleteBtn.classList.remove('hidden');
-      }
-      function setAddChrome() {
-        pageTitle.textContent = 'Add a recipe';
-        pageIntro.textContent = 'Fill it in, hit publish, and it goes live in a minute or two.';
-        publishBtn.textContent = 'Publish 🚀';
-        deleteBtn.classList.add('hidden');
-      }
-
-      function enterEditMode(slug) {
-        const r = recipesBySlug[slug];
-        if (!r) return;
-        clearPending(); // fresh recipe context — drop any half-entered ratios from the last one
-        editingSlug = slug;
-        picker.value = slug;
-        fillForm(r);
-        setEditChrome();
-        refreshPreview();
-        setStatus(`Editing “${r.title}”.`, 'info');
-        formDirty = false;
-      }
-
-      function enterAddMode() {
-        clearPending();
-        editingSlug = null;
-        picker.value = '';
-        setAddChrome();
-        form.reset();
-        resetDynamic();
-        setStatus('', '');
-        formDirty = false;
-      }
-
-      picker.addEventListener('change', () => {
-        const slug = picker.value;
-        const current = editingSlug ?? '';
-        if (slug === current) return;
-        // Guard against silently wiping in-progress edits when switching recipes.
-        if (formDirty && !confirm('Discard unsaved changes to this recipe?')) {
-          picker.value = current;
-          return;
-        }
-        if (slug && recipesBySlug[slug]) enterEditMode(slug);
-        else enterAddMode();
-      });
-
-      // Repopulate the form from an autosaved draft (if any) on page load. This is what
-      // rescues in-progress work across the OAuth sign-in round-trip and accidental reloads.
-      function restoreDraft() {
-        let saved;
-        try { saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { saved = null; }
-        if (!saved || !saved.recipe || !hasContent(saved.recipe)) return;
-
-        // Restore any grams ratios entered before the OAuth round-trip so they still publish.
-        if (saved.pendingDensities && typeof saved.pendingDensities === 'object') {
-          Object.assign(pendingDensities, saved.pendingDensities);
-        }
-        fillForm(saved.recipe);
-        if (saved.editingSlug) {
-          // The recipe index isn't loaded yet, so apply edit-mode chrome directly instead of
-          // via enterEditMode; loadRecipeIndex fixes up picker.value once the option exists.
-          editingSlug = saved.editingSlug;
-          setEditChrome();
-        }
-        draftRestored = true;
-        // A restored draft is unsaved work, so mark it dirty — otherwise switching recipes in
-        // the picker would swap the form contents without the "Discard unsaved changes?" prompt.
-        formDirty = true;
-        refreshPreview();
-
-        // Auto-restored, with a one-click way to throw it away and start clean.
-        setStatus('Restored your unsaved draft. ', 'ok');
-        const discard = document.createElement('button');
-        discard.type = 'button';
-        discard.textContent = 'Discard';
-        discard.className = 'dz-link';
-        discard.addEventListener('click', () => { clearDraft(); enterAddMode(); });
-        statusEl.appendChild(discard);
-      }
-
-      // ---- Init -----------------------------------------------------------
-      function resetDynamic() {
-        $('#tools-list').innerHTML = '';
-        $('#notes-list').innerHTML = '';
-        $('#ingredients-list').innerHTML = '';
-        $('#steps-list').innerHTML = '';
-        addGroup();
-        addStepGroup();
-        refreshPreview();
-      }
-      ingestSessionFromHash();
+      clearSession();
       renderAuthState();
+      setStatus('Signed out.', 'info');
+    });
+
+    // ---- Status ---------------------------------------------------------
+    // textContent (not innerHTML) — messages can include server-returned error text,
+    // which must never be parsed as markup. Callers that need a link append DOM nodes.
+    // kind: 'ok' | 'err' | 'info', or '' for plain text (.iz-status--* in site.css).
+    function setStatus(msg, kind = '') {
+      statusEl.textContent = msg;
+      statusEl.className = 'iz-status body-s' + (kind ? ` iz-status--${kind}` : '');
+    }
+
+    // Human text for a failed save or delete. A fetch that never reached the Worker rejects
+    // with a TypeError whose message ("Failed to fetch", "Load failed") varies by browser.
+    const errorText = (err) =>
+      err instanceof TypeError ? 'Something went wrong.' : err instanceof Error ? err.message : 'Something went wrong.';
+
+    // While a publish or delete is in flight, hold Publish, Delete and the picker — so switching
+    // recipes can't change editingSlug under the save, or open a confirm over it.
+    function setBusy(busy) {
+      publishBtn.disabled = deleteBtn.disabled = picker.disabled = busy;
+    }
+
+    // ---- In-page confirm -------------------------------------------------
+    // Replaces window.confirm with a small window anchored to what asked: under the picker
+    // ('picker') or above the action bar ('actions'). Resolves true on OK, false on Cancel,
+    // Escape or a click on the scrim. One at a time: a second ask while one is open is refused.
+    // Publish, Delete and the picker are held disabled while it's open.
+    let confirmOpen = false;
+    function izConfirm(message, where) {
+      if (confirmOpen) return Promise.resolve(false);
+      confirmOpen = true;
+      const below = where === 'picker';
+      (below ? pickerCard : actionBar).appendChild(confirmEl);
+      confirmEl.classList.toggle('iz-confirm--below', below);
+      confirmEl.classList.toggle('iz-confirm--above', !below);
+      confirmText.textContent = message;
+      const returnFocus = document.activeElement;
+      const wasDisabled = [publishBtn.disabled, deleteBtn.disabled, picker.disabled];
+      setBusy(true);
+      confirmScrim.classList.remove('hidden');
+      confirmEl.classList.remove('hidden');
+      confirmOk.focus();
+
+      return new Promise((resolve) => {
+        const close = (ok) => {
+          confirmOpen = false;
+          confirmEl.classList.add('hidden');
+          confirmScrim.classList.add('hidden');
+          [publishBtn.disabled, deleteBtn.disabled, picker.disabled] = wasDisabled;
+          confirmOk.removeEventListener('click', onOk);
+          confirmCancel.removeEventListener('click', onCancel);
+          confirmScrim.removeEventListener('click', onCancel);
+          document.removeEventListener('keydown', onKey, true);
+          returnFocus?.focus?.();
+          resolve(ok);
+        };
+        const onOk = () => close(true);
+        const onCancel = () => close(false);
+        // On the document, not the dialog, so a click on the dialog's text (which drops focus
+        // to <body>) can't let Escape lapse or Tab walk into the page under the scrim. Tab and
+        // Shift+Tab move between the two buttons.
+        const onKey = (e) => {
+          if (e.key === 'Escape') { e.preventDefault(); close(false); }
+          else if (e.key === 'Tab') {
+            e.preventDefault();
+            (document.activeElement === confirmOk ? confirmCancel : confirmOk).focus();
+          }
+        };
+        confirmOk.addEventListener('click', onOk);
+        confirmCancel.addEventListener('click', onCancel);
+        confirmScrim.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKey, true);
+      });
+    }
+
+    // ---- Read form into a recipe object ---------------------------------
+    const val = (sel) => ($(sel)?.value ?? '').trim();
+    const listVals = (listSel, field) =>
+      Array.from($(listSel).querySelectorAll(`[data-field="${field}"]`))
+        .map((el) => el.value.trim())
+        .filter(Boolean);
+    // Read a grouped list into [{group?, items}], dropping empty groups. A blank group name
+    // yields no `group` key (renders as a plain list). `groupUnit` names both the [data-unit]
+    // box and its group-name [data-field]; `collectItems(groupEl)` returns that group's items —
+    // the one bit that differs between steps (strings) and ingredients (objects).
+    function readGroups(listSel, groupUnit, collectItems) {
+      const out = [];
+      for (const groupEl of $(listSel).querySelectorAll(`[data-unit="${groupUnit}"]`)) {
+        const items = collectItems(groupEl);
+        if (items.length === 0) continue;
+        const name = (groupEl.querySelector(`[data-field="${groupUnit}"]`)?.value ?? '').trim();
+        out.push(name ? { group: name, items } : { items });
+      }
+      return out;
+    }
+
+    // Item collectors for readGroups. Steps are trimmed strings from one field; ingredients are
+    // { name, qty?, unit?, detail?, key?, grams? } objects read per row (nameless rows dropped).
+    // The density prompt's field (item-grams) is deliberately NOT read — those ratios live in
+    // the shared density list, never in the frontmatter. `grams` here is the per-item override.
+    const collectStringItems = (itemField) => (groupEl) =>
+      Array.from(groupEl.querySelectorAll(`[data-field="${itemField}"]`))
+        .map((el) => el.value.trim())
+        .filter(Boolean);
+    function collectIngredientItems(groupEl) {
+      const items = [];
+      for (const rowEl of groupEl.querySelectorAll('[data-unit="item-row"]')) {
+        const name = (rowEl.querySelector('[data-field="item-name"]')?.value ?? '').trim();
+        if (!name) continue;
+        const qty = (rowEl.querySelector('[data-field="item-qty"]')?.value ?? '').trim();
+        const unit = (rowEl.querySelector('[data-field="item-unit"]')?.value ?? '').trim();
+        const detail = (rowEl.querySelector('[data-field="item-detail"]')?.value ?? '').trim();
+        const key = (rowEl.querySelector('[data-field="item-key"]')?.value ?? '').trim();
+        const grams = (rowEl.querySelector('[data-field="item-grams-override"]')?.value ?? '').trim();
+        const item = { name };
+        if (qty) item.qty = qty;
+        if (unit) item.unit = unit;
+        if (detail) item.detail = detail;
+        if (key) item.key = key;
+        // Kept as a number whenever it parses, even ≤ 0, so the preview and the draft show what
+        // was typed; validate() rejects a non-positive value before it can be published.
+        if (grams && Number.isFinite(Number(grams))) item.grams = Number(grams);
+        items.push(item);
+      }
+      return items;
+    }
+    const numOrUndef = (sel) => {
+      const v = val(sel);
+      if (v === '') return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
+
+    function readForm() {
+      return {
+        title: val('#title'),
+        category: val('#category'),
+        description: val('#description') || undefined,
+        keywords: val('#keywords').split(',').map((k) => k.trim()).filter(Boolean),
+        prepTime: numOrUndef('#prepTime'),
+        cookTime: numOrUndef('#cookTime'),
+        servings: numOrUndef('#servings'),
+        yield: val('#yield') || undefined,
+        oven: val('#oven') || undefined,
+        tools: listVals('#tools-list', 'tool'),
+        ingredients: readGroups('#ingredients-list', 'group', collectIngredientItems),
+        steps: readGroups('#steps-list', 'step-group', collectStringItems('step')),
+        notes: listVals('#notes-list', 'note'),
+        draft: $('#draft').checked,
+      };
+    }
+
+    // ---- Draft autosave -------------------------------------------------
+    // Persist in-progress form content so it survives a reload / the OAuth round-trip.
+    // Only real user edits trigger a save (see the input + row-button handlers); the
+    // programmatic fills in fillForm/enterEditMode/enterAddMode deliberately don't.
+    let draftTimer = null;
+
+    // Is there anything worth keeping? Guards against saving/restoring an empty form
+    // (which would otherwise pop a spurious "restored draft" note on every visit).
+    function hasContent(r) {
+      return !!(
+        r.title || r.description ||
+        (r.keywords && r.keywords.length) ||
+        r.prepTime !== undefined || r.cookTime !== undefined || r.servings !== undefined ||
+        r.yield || r.oven ||
+        (r.tools && r.tools.length) ||
+        (r.steps && r.steps.length) ||
+        (r.notes && r.notes.length) ||
+        // readForm() drops groups with no items, so any group present means real content.
+        (r.ingredients && r.ingredients.length)
+      );
+    }
+
+    function clearDraft() {
+      // Cancel any pending debounced save first, or it would fire after this and rewrite the
+      // draft we just dropped — in edit mode the form isn't reset on save, so a save scheduled
+      // just before "Save changes" would resurrect the draft and spuriously offer to restore it.
+      clearTimeout(draftTimer);
+      try { localStorage.removeItem(DRAFT_KEY); } catch { /* private mode — nothing to clear */ }
+    }
+
+    function saveDraft() {
+      const recipe = readForm();
+      if (!hasContent(recipe)) { clearDraft(); return; }
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ editingSlug, recipe, pendingDensities }));
+      } catch { /* quota/private mode — a lost autosave is non-fatal */ }
+    }
+
+    // Debounced so we don't touch localStorage on every keystroke.
+    function saveDraftSoon() {
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(saveDraft, 400);
+    }
+
+    // Flush any pending debounced save when the page is being hidden — the user clicking
+    // "Sign in with GitHub" is a full-page navigation, and it can land inside the 400ms
+    // debounce window and otherwise lose the most recent edits. pagehide covers nav + tab close.
+    window.addEventListener('pagehide', saveDraft);
+
+    // ---- YAML frontmatter serializer ------------------------------------
+    // Escape order matters: backslashes first, then the chars whose escapes
+    // introduce backslashes. Newlines/tabs must be escaped too — a raw newline
+    // inside a double-quoted YAML scalar is a "missing closing quote" parse error.
+    const q = (s) =>
+      '"' +
+      s
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t') +
+      '"';
+
+    // Serialize [{group?, items}] as YAML under `key:` — the shared ingredient/step envelope.
+    // `serializeItem(L, it)` emits one item's line(s): a bare string for steps, or the
+    // name/qty/unit block for ingredients (which mirrors the one-time content migration, so
+    // re-saving a recipe stays a clean diff).
+    function serializeGroups(L, key, groups, serializeItem) {
+      L.push(`${key}:`);
+      for (const g of groups) {
+        if (g.group) {
+          L.push(`  - group: ${q(g.group)}`);
+          L.push('    items:');
+        } else {
+          L.push('  - items:');
+        }
+        for (const it of g.items) serializeItem(L, it);
+      }
+    }
+    const serializeStringItem = (L, it) => L.push(`      - ${q(it)}`);
+    function serializeIngredientItem(L, it) {
+      L.push(`      - name: ${q(it.name)}`);
+      if (it.qty) L.push(`        qty: ${q(it.qty)}`);
+      if (it.unit) L.push(`        unit: ${q(it.unit)}`);
+      if (it.detail) L.push(`        detail: ${q(it.detail)}`);
+      if (it.key) L.push(`        key: ${q(it.key)}`);
+      if (typeof it.grams === 'number') L.push(`        grams: ${it.grams}`);
+    }
+
+    function toMarkdown(r) {
+      const L = ['---'];
+      L.push(`title: ${q(r.title)}`);
+      L.push(`category: ${q(r.category)}`);
+      if (r.description) L.push(`description: ${q(r.description)}`);
+      if (r.keywords.length) L.push(`keywords: [${r.keywords.map(q).join(', ')}]`);
+      if (r.prepTime !== undefined) L.push(`prepTime: ${r.prepTime}`);
+      if (r.cookTime !== undefined) L.push(`cookTime: ${r.cookTime}`);
+      if (r.servings !== undefined) L.push(`servings: ${r.servings}`);
+      if (r.yield) L.push(`yield: ${q(r.yield)}`);
+      if (r.oven) L.push(`oven: ${q(r.oven)}`);
+      if (r.tools.length) {
+        L.push('tools:');
+        for (const t of r.tools) L.push(`  - ${q(t)}`);
+      }
+      serializeGroups(L, 'ingredients', r.ingredients, serializeIngredientItem);
+      serializeGroups(L, 'steps', r.steps, serializeStringItem);
+      if (r.notes.length) {
+        L.push('notes:');
+        for (const n of r.notes) L.push(`  - ${q(n)}`);
+      }
+      if (r.draft) L.push('draft: true');
+      L.push('---');
+      return L.join('\n') + '\n';
+    }
+
+    function slugify(t) {
+      return t.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function validate(r) {
+      // Flags from an earlier attempt may no longer apply (e.g. that row lost its name).
+      form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+      if (!r.title) return 'Add a title.';
+      if (!slugify(r.title)) return 'Title needs at least one letter or number.';
+      if (!r.category) return 'Pick a category.';
+      if (r.ingredients.length === 0) return 'Add at least one ingredient.';
+      if (r.steps.length === 0) return 'Add at least one step.';
+      // Mirror the schema's numeric constraints (int + nonnegative/positive) so a
+      // stray decimal or out-of-range value is caught here, not by a failed deploy build.
+      const numeric = [
+        ['Prep time', r.prepTime, 0],
+        ['Cook time', r.cookTime, 0],
+        ['Servings', r.servings, 1],
+      ];
+      for (const [name, v, min] of numeric) {
+        if (v !== undefined && (!Number.isInteger(v) || v < min)) {
+          return `${name} must be a whole number (${min} or more).`;
+        }
+      }
+      return validateItemFields() ?? validateStepRefs(r);
+    }
+
+    // Per-row checks for the item key + grams override, mirroring the schema (INGREDIENT_KEY,
+    // grams > 0). Read from the DOM rather than the recipe object so the offending field can
+    // be flagged (aria-invalid, cleared on its next input or the next validate) and focused.
+    function validateItemFields() {
+      for (const row of $('#ingredients-list').querySelectorAll('[data-unit="item-row"]')) {
+        const name = row.querySelector('[data-field="item-name"]').value.trim();
+        if (!name) continue; // nameless rows are dropped on save, so their extras don't matter
+        const keyEl = row.querySelector('[data-field="item-key"]');
+        const key = keyEl.value.trim();
+        if (key && !INGREDIENT_KEY_RE.test(key)) {
+          flagField(keyEl);
+          return `Key “${key}” for “${name}” must be lowercase words joined by hyphens, e.g. "glaze-lemon".`;
+        }
+        const gramsEl = row.querySelector('[data-field="item-grams-override"]');
+        // A number input reports '' for unparseable text, so badInput is the only way to see it.
+        if (gramsEl.validity.badInput || (gramsEl.value.trim() && !(Number(gramsEl.value) > 0))) {
+          flagField(gramsEl);
+          return `Grams for “${name}” must be a positive number (or blank to convert automatically).`;
+        }
+      }
+      return null;
+    }
+    function flagField(el) {
+      el.setAttribute('aria-invalid', 'true');
+      el.focus();
+    }
+
+    // Every [[key]] in a step must name exactly one ingredient — the site build fails on an
+    // unknown or ambiguous reference (lookupRef in the engine), so catch it before committing.
+    // Steps are read from the DOM (blank ones skipped, as readForm does) so the offending one
+    // can be flagged; the keys come from the recipe object readForm built.
+    function validateStepRefs(r) {
+      const keys = new Map();
+      for (const g of r.ingredients) {
+        for (const it of g.items) {
+          const k = ingredientKeyOf(it);
+          if (k) keys.set(k, [...(keys.get(k) ?? []), it.name]);
+        }
+      }
+      let n = 0;
+      for (const stepEl of $('#steps-list').querySelectorAll('[data-field="step"]')) {
+        const step = stepEl.value.trim();
+        if (!step) continue;
+        n++;
+        for (const [, key] of step.matchAll(REF_SYNTAX)) {
+          const hits = keys.get(key) ?? [];
+          if (hits.length === 1) continue;
+          flagField(stepEl);
+          return hits.length === 0
+            ? `Step ${n} references [[${key}]], but no ingredient has that key. Keys in this recipe: ${[...keys.keys()].sort().join(', ') || '(none)'}.`
+            : `Step ${n}: [[${key}]] matches ${hits.length} ingredients (${hits.join(', ')}) — give one of them a distinct key and reference that.`;
+        }
+      }
+      return null;
+    }
+
+    function refreshPreview() {
+      // Skip work while the preview panel is collapsed — it's refreshed on open (toggle).
+      if (!previewDetails.open) return;
+      try {
+        previewEl.textContent = toMarkdown(readForm());
+      } catch {
+        /* ignore mid-edit errors */
+      }
+    }
+    previewDetails.addEventListener('toggle', () => {
+      if (previewDetails.open) refreshPreview();
+    });
+
+    // ---- Recipe API (via the Worker) ------------------------------------
+    // All writes go through the Worker with the opaque session id as a bearer token; the
+    // Worker injects the real GitHub token server-side.
+    function apiFetch(path, options = {}) {
+      const session = currentSession();
+      return fetch(`${API}${path}`, {
+        ...options,
+        headers: { Authorization: `Bearer ${session}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
+      });
+    }
+
+    // Extract a human message from a failed API response. A 401 means the session is gone —
+    // clear it and flip the UI back to signed-out so the fix (re-sign-in) is obvious.
+    async function apiError(res) {
+      let msg = '';
+      try { msg = (await res.json()).error ?? ''; } catch { /* noop */ }
+      if (res.status === 401) {
+        clearSession();
+        renderAuthState();
+        return msg || 'Session expired — sign in again.';
+      }
+      return msg || `Server error ${res.status}.`;
+    }
+
+    // ---- Copy markdown --------------------------------------------------
+    $('#copy-md').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(toMarkdown(readForm()));
+        setStatus('Markdown copied.', 'info');
+      } catch {
+        setStatus('Could not copy — select the preview text manually.', 'err');
+      }
+    });
+
+    // ---- Submit ---------------------------------------------------------
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const recipe = readForm();
+      const problem = validate(recipe);
+      if (problem) { setStatus(problem, 'err'); return; }
+
+      if (!currentSession()) {
+        setStatus('Sign in with GitHub first (top of the page).', 'err');
+        return;
+      }
+
+      // In edit mode the file keeps its original slug even if the title changed, so the
+      // URL stays stable and no orphaned file is left behind. Add mode slugifies the title.
+      const slug = editingSlug ?? slugify(recipe.title);
+      const md = toMarkdown(recipe);
+
+      setBusy(true);
+      try {
+        setStatus(editingSlug ? 'Saving…' : 'Publishing…', 'info');
+        // New grams ratios ride along so the Worker can grow the shared list — but only for
+        // ingredients actually in THIS recipe. That drops anything left in pendingDensities from
+        // a rename or a prior recipe, so unrelated ratios never tag along on a publish.
+        const recipeNames = new Set(
+          recipe.ingredients.flatMap((g) => g.items.map((it) => densityKey(it.name)))
+        );
+        const pending = Object.fromEntries(
+          Object.entries(pendingDensities).filter(([name]) => recipeNames.has(name))
+        );
+        const densities = Object.keys(pending).length ? pending : undefined;
+        const commit = (overwrite) =>
+          apiFetch('/api/recipe', {
+            method: 'POST',
+            body: JSON.stringify({
+              slug,
+              markdown: md,
+              message: `${overwrite ? 'Update' : 'Add'} recipe: ${recipe.title}`,
+              overwrite,
+              densities,
+            }),
+          });
+
+        // Edit mode always overwrites. Add mode tries create-only first; a 409 means a file
+        // already exists at that slug, so confirm and retry as an overwrite.
+        let res = await commit(!!editingSlug);
+        if (res.status === 409) {
+          if (!(await izConfirm(`A recipe already exists at "${slug}.md". Overwrite it?`, 'actions'))) {
+            setStatus('Cancelled — nothing published.', 'info');
+            return;
+          }
+          res = await commit(true);
+        }
+        if (!res.ok) throw new Error(await apiError(res));
+        const result = await res.json().catch(() => ({}));
+
+        // Keep the picker + index in sync with the save (drops drafts from the picker).
+        syncPickerEntry(slug, recipe);
+
+        if (recipe.draft) {
+          // A draft has no detail page, so don't dangle a "live at…" link it can't fulfill.
+          setStatus(
+            (editingSlug ? 'Saved' : 'Created') +
+              ' as a draft 📝 — hidden from the site and the picker until you un-draft it in the repo.',
+            'ok'
+          );
+        } else {
+          setStatus((editingSlug ? 'Saved! 🎉' : 'Published! 🎉') + " It'll be live in a minute or two at ", 'ok');
+          const link = document.createElement('a');
+          link.href = `${SITE_ORIGIN}/recipes/${slug}/`;
+          link.textContent = link.href;
+          link.className = 'dz-link';
+          statusEl.appendChild(link);
+        }
+
+        // The work is safely committed, so drop the autosaved draft (add and edit mode alike).
+        clearDraft();
+        draftBanner.classList.add('hidden');
+
+        // New grams ratios are committed best-effort alongside the recipe. On success, fold them
+        // into what this session "knows" (so rows stop prompting); on failure, keep them and warn.
+        if (densities) {
+          if (result.densitiesSaved === false) {
+            setStatus('Recipe saved — but the new gram conversions didn’t save. Re-publish to retry them.', 'err');
+          } else {
+            Object.assign(knownDensities, pending);
+            clearPending();
+            refreshAllItemRows();
+          }
+        }
+
+        // Add mode: clear the form for the next recipe. Edit mode: stay put for further tweaks —
+        // on the same slug even if this save made it a draft, so a re-save can't strand the file.
+        if (!editingSlug) {
+          clearPending(); // don't carry a failed-save's ratios into the next recipe
+          form.reset();
+          resetDynamic();
+        }
+        formDirty = false;
+      } catch (err) {
+        setStatus(errorText(err), 'err');
+      } finally {
+        setBusy(false);
+        // The overwrite confirm hands focus back to Publish while it's still disabled, which
+        // drops it on <body>; put it back now that the button works again.
+        if (document.activeElement === document.body) publishBtn.focus();
+      }
+    });
+
+    // ---- Delete ---------------------------------------------------------
+    deleteBtn.addEventListener('click', async () => {
+      if (!editingSlug) return;
+      if (!currentSession()) {
+        setStatus('Sign in with GitHub first (top of the page).', 'err');
+        return;
+      }
+      const slug = editingSlug;
+      const title = recipesBySlug[slug]?.title ?? slug;
+      if (!(await izConfirm(`Delete “${title}”? This removes ${slug}.md from the site.`, 'actions'))) return;
+
+      setBusy(true);
+      try {
+        setStatus('Deleting…', 'info');
+        const res = await apiFetch('/api/recipe', {
+          method: 'DELETE',
+          body: JSON.stringify({ slug, message: `Delete recipe: ${title}` }),
+        });
+        if (res.status === 404) {
+          setStatus('That recipe no longer exists on the server.', 'err');
+          return;
+        }
+        if (!res.ok) throw new Error(await apiError(res));
+
+        // Drop it from the local index + picker, then fall back to a blank add form.
+        delete recipesBySlug[slug];
+        picker.querySelector(`option[value="${slug}"]`)?.remove();
+        enterAddMode();
+        setStatus(`Deleted “${title}”. The site will update in a minute or two.`, 'ok');
+      } catch (err) {
+        setStatus(errorText(err), 'err');
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    // Load the shared ingredient → grams-per-cup list so rows only prompt for grams on
+    // ingredients it doesn't already know. Arrives async, so re-run every row's prompt after.
+    async function loadDensities() {
+      try {
+        const res = await fetch('/densities.json', { headers: { Accept: 'application/json' } });
+        if (res.ok) Object.assign(knownDensities, await res.json());
+      } catch { /* the prompt just errs toward asking — non-fatal */ }
+      refreshAllItemRows();
+    }
+
+    // ---- Edit mode: load existing recipes & prefill ---------------------
+    async function loadRecipeIndex() {
+      try {
+        const res = await fetch('/recipes.json', { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        const list = await res.json();
+        const frag = document.createDocumentFragment();
+        for (const r of list) {
+          recipesBySlug[r.slug] = r;
+          frag.appendChild(makeOption(r.slug, r.title));
+        }
+        picker.appendChild(frag);
+        if (draftRestored) {
+          // A restored draft owns the form; just point the picker at the slug it's editing
+          // (its <option> only exists now that the index has loaded) — don't refill from the index.
+          if (editingSlug) picker.value = editingSlug;
+          return;
+        }
+        // Deep link: /upload?edit=<slug> jumps straight into editing once data is in.
+        const wanted = new URLSearchParams(location.search).get('edit');
+        if (wanted && recipesBySlug[wanted]) enterEditMode(wanted);
+      } catch {
+        /* the picker is a convenience — a failed index just leaves add mode intact */
+      }
+    }
+
+    function setRowValue(row, field, value) {
+      row.querySelector(`[data-field="${field}"]`).value = value;
+    }
+
+    // Clear a list container and repopulate it with one simple row per value.
+    function fillList(listSel, field, values) {
+      const list = $(listSel);
+      list.innerHTML = '';
+      for (const v of values ?? []) {
+        const row = makeSimpleRow(field);
+        row.querySelector(`[data-field="${field}"]`).value = v;
+        list.appendChild(row);
+      }
+    }
+
+    // Rehydrate a grouped list ([{group?, items}]) into the editor — the fill counterpart
+    // to readGroups/serializeGroups, shared by ingredients and steps. addItemFn(container,
+    // value) appends one item row; an empty list seeds a single empty group.
+    function fillGroups(listSel, tplId, groupField, itemsSel, addItemFn, groups) {
+      const list = $(listSel);
+      list.innerHTML = '';
+      for (const g of groups?.length ? groups : [{}]) {
+        const groupEl = appendTpl(list, tplId);
+        if (g.group) setRowValue(groupEl, groupField, g.group);
+        const itemsEl = groupEl.querySelector(itemsSel);
+        const items = g.items ?? [];
+        if (items.length === 0) addItemFn(itemsEl);
+        else for (const it of items) addItemFn(itemsEl, it);
+      }
+      renumberSteps();
+    }
+
+    function fillForm(r) {
+      const setVal = (sel, v) => {
+        const el = $(sel);
+        if (el) el.value = v === undefined || v === null ? '' : String(v);
+      };
+      setVal('#title', r.title);
+      $('#category').value = r.category;
+      setVal('#description', r.description);
+      setVal('#keywords', (r.keywords ?? []).join(', '));
+      setVal('#prepTime', r.prepTime);
+      setVal('#cookTime', r.cookTime);
+      setVal('#servings', r.servings);
+      setVal('#yield', r.yield);
+      setVal('#oven', r.oven);
+      $('#draft').checked = !!r.draft;
+
+      // Rebuild the dynamic lists from data, reusing the same row builders as add mode.
+      fillList('#tools-list', 'tool', r.tools);
+      fillList('#notes-list', 'note', r.notes);
+
+      fillGroups('#steps-list', 'tpl-step-group', 'step-group', '.steps-items', addStep, r.steps);
+      fillGroups('#ingredients-list', 'tpl-group', 'group', '.items-list', addItem, r.ingredients);
+    }
+
+    // Page chrome (title / intro / publish-button label / delete visibility) for each mode,
+    // split out so restoreDraft can apply edit-mode chrome before the recipe index has loaded
+    // (it can't call enterEditMode, which needs recipesBySlug + the picker option to exist).
+    function setEditChrome() {
+      setHeading('Edit recipe');
+      pageIntro.textContent = 'Tweak it, save, and the change goes live in a minute or two.';
+      publishBtn.textContent = 'Save changes';
+      deleteBtn.classList.remove('hidden');
+      refreshSlug();
+    }
+    function setAddChrome() {
+      setHeading('Add a recipe');
+      pageIntro.textContent = 'Fill it in, hit publish, and it goes live in a minute or two.';
+      publishBtn.textContent = 'Publish 🚀';
+      deleteBtn.classList.add('hidden');
+      refreshSlug();
+    }
+    // The heading bounces once (Dizzy's data-dz-bounce), which splits it into per-letter spans
+    // and binds its hover replay to that element — so a new heading is a new <h1>, bounced by
+    // Dizzy.init on first load or directly once the bundle has run. The tab title follows it.
+    function setHeading(text) {
+      document.title = `${text} · Izzy Bennett`;
+      if (pageTitle.textContent === text) return;
+      const h1 = document.createElement('h1');
+      h1.id = pageTitle.id;
+      h1.className = HEADING_CLASS;
+      h1.dataset.dzBounce = 'once';
+      h1.textContent = text;
+      pageTitle.replaceWith(h1);
+      pageTitle = h1;
+      window.Dizzy?.bouncify(h1, { trigger: 'once' });
+    }
+    // "Lives at izzybennett.com/recipes/<slug>/" under the title: where a new recipe will land,
+    // or where the one being edited stays (edit mode keeps its slug when the title changes).
+    function refreshSlug() {
+      const slug = editingSlug ?? slugify(val('#title'));
+      slugUrl.textContent = `${SITE_HOST}/recipes/${slug || '…'}/`;
+      slugNote.textContent = editingSlug ? ' Stays put if you rename it.' : '';
+    }
+
+    function enterEditMode(slug) {
+      const r = recipesBySlug[slug];
+      if (!r) return;
+      clearPending(); // fresh recipe context — drop any half-entered ratios from the last one
+      editingSlug = slug;
+      picker.value = slug;
+      draftBanner.classList.add('hidden');
+      fillForm(r);
+      setEditChrome();
+      refreshPreview();
+      setStatus(`Editing “${r.title}”.`, 'info');
+      formDirty = false;
+    }
+
+    function enterAddMode() {
+      clearPending();
+      editingSlug = null;
+      picker.value = '';
+      draftBanner.classList.add('hidden');
+      setAddChrome();
+      form.reset();
       resetDynamic();
-      restoreDraft();
-      loadDensities();
-      loadRecipeIndex();
-    </script>
+      setStatus('', '');
+      formDirty = false;
+    }
 
-    <!-- Ingredient-name autocomplete. It's a module rather than part of the script above
-         because that one is a define:vars block, which Astro leaves unprocessed and which
-         therefore can't import. Loading it after that block keeps the uploader's own
-         delegated listeners registered first, so they see an accepted name the same way
-         they see a keystroke. -->
-    <script>
-      import { initIngredientTypeahead } from '@izzy/recipe-engine/ingredient-typeahead';
-      // Bundled at build time, as before: suggestions come from the densities committed so far.
-      // (The inline script above separately fetches /densities.json for its grams prompt.)
-      import densities from '../data/densities.json';
+    picker.addEventListener('change', async () => {
+      const slug = picker.value;
+      const current = editingSlug ?? '';
+      if (slug === current) return;
+      // Guard against silently wiping in-progress edits when switching recipes.
+      if (formDirty && !(await izConfirm('Discard unsaved changes to this recipe?', 'picker'))) {
+        picker.value = current;
+        return;
+      }
+      if (slug && recipesBySlug[slug]) enterEditMode(slug);
+      else enterAddMode();
+    });
 
-      initIngredientTypeahead(document.getElementById('recipe-form'), densities);
-    </script>
-  </body>
-</html>
+    // Repopulate the form from an autosaved draft (if any) on page load. This is what
+    // rescues in-progress work across the OAuth sign-in round-trip and accidental reloads.
+    function restoreDraft() {
+      let saved;
+      try { saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { saved = null; }
+      if (!saved || !saved.recipe || !hasContent(saved.recipe)) return;
+
+      // Restore any grams ratios entered before the OAuth round-trip so they still publish.
+      if (saved.pendingDensities && typeof saved.pendingDensities === 'object') {
+        Object.assign(pendingDensities, saved.pendingDensities);
+      }
+      fillForm(saved.recipe);
+      if (saved.editingSlug) {
+        // The recipe index isn't loaded yet, so apply edit-mode chrome directly instead of
+        // via enterEditMode; loadRecipeIndex fixes up picker.value once the option exists.
+        editingSlug = saved.editingSlug;
+        setEditChrome();
+      }
+      draftRestored = true;
+      // A restored draft is unsaved work, so mark it dirty — otherwise switching recipes in
+      // the picker would swap the form contents without the "Discard unsaved changes?" prompt.
+      formDirty = true;
+      refreshPreview();
+
+      refreshSlug();
+      // Auto-restored, with a one-click way to throw it away and start clean. The text is
+      // written as the banner shows, so its role=status region announces it.
+      draftBanner.classList.remove('hidden');
+      $('#draft-banner-text').textContent = 'Restored your unsaved draft.';
+    }
+    $('#discard-draft').addEventListener('click', () => { clearDraft(); enterAddMode(); });
+
+    // ---- Init -----------------------------------------------------------
+    function resetDynamic() {
+      $('#tools-list').innerHTML = '';
+      $('#notes-list').innerHTML = '';
+      $('#ingredients-list').innerHTML = '';
+      $('#steps-list').innerHTML = '';
+      addGroup();
+      addStepGroup();
+      refreshSlug();
+      refreshPreview();
+    }
+    ingestSessionFromHash();
+    renderAuthState();
+    resetDynamic();
+    restoreDraft();
+    loadDensities();
+    loadRecipeIndex();
+  </script>
+
+  <!-- Ingredient-name autocomplete. It's a module rather than part of the script above
+       because that one is a define:vars block, which Astro leaves unprocessed and which
+       therefore can't import. Loading it after that block keeps the uploader's own
+       delegated listeners registered first, so they see an accepted name the same way
+       they see a keystroke. -->
+  <script>
+    import { initIngredientTypeahead } from '@izzy/recipe-engine/ingredient-typeahead';
+    // Bundled at build time, as before: suggestions come from the densities committed so far.
+    // (The inline script above separately fetches /densities.json for its grams prompt.)
+    import densities from '../data/densities.json';
+
+    initIngredientTypeahead(document.getElementById('recipe-form'), densities);
+  </script>
+</BaseLayout>
