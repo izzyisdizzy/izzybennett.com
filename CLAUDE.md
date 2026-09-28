@@ -114,7 +114,7 @@ the other tweak options were exploration and are not to be built.
 | Milestone | Issue | Scope |
 | :-- | :-- | :-- |
 | M6 | #71 (done) | `/upload` + `/update-menu` on Dizzy, inputs for `yield`/`oven`/`key`/`grams` |
-| M7 | #72 | Remove scaffolding, settle open questions, a11y + motion pass |
+| M7 | #72 (done) | Remove scaffolding, settle open questions, a11y + motion pass |
 | M8 | #77 (done) | Snapshot the flows canvas into `docs/design/flows/` |
 | M9 | #78 (done) | Re-value tokens to sea glass / neon purple |
 | M10 | #79 (done) | Retro chrome: tight radii, chunky strokes, bevels, striped window bars |
@@ -126,6 +126,8 @@ the other tweak options were exploration and are not to be built.
 
 Order: M8 → M9 → M10–M15 by their stated dependencies, and **M7 lands last**,
 after M15 — its a11y and motion pass covers everything the later milestones add.
+All milestones are done. New motion must stay inside the `prefers-reduced-motion`
+guards in `site.css` (vendored `src/dizzy/` is never edited for it).
 
 ### Build / run / test
 

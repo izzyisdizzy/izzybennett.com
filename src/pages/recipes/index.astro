@@ -69,7 +69,9 @@ const countLabel = (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`;
 
   <!-- The count and list live in the recipes/ window, search and filters above it, as on the
        canvas board. The count stays the page's one live region. The body is not aria-live. -->
-  <Window title="recipes/" class="mt-6">
+  <Window title="recipes/" class="mt-6" aria-labelledby="recipe-list-heading">
+    <!-- The engine's RecipeCard titles are h3s; this keeps the outline h1 → h2 → h3. -->
+    <h2 id="recipe-list-heading" class="sr-only">All recipes</h2>
     <!-- Updated by the filter script; a status region, so the new count is announced politely. -->
     <span id="recipe-count" class="dz-counter" role="status">{countLabel(recipes.length)}</span>
 
