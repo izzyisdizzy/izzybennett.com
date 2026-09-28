@@ -152,7 +152,8 @@
 
 /* ------------------------------------------------------------ theme toggle */
 /* Shows the theme you'd switch *to*: a moon by day, a sun by night. */
-.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding-inline: var(--space-2); font-size: 16px; }
+/* Two classes deep so the glyph size beats the retro type block's later `.dz-btn--sm` size. */
+.dz-btn.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding-inline: var(--space-2); font-size: 16px; }
 .iz-theme-toggle__sun { display: none; }
 [data-theme="afterglow"] .iz-theme-toggle__sun { display: inline; }
 [data-theme="afterglow"] .iz-theme-toggle__moon { display: none; }
@@ -325,6 +326,8 @@
 .dz-btn { font-size: 14px; }
 .dz-btn--lg { font-size: 16px; }
 .dz-btn--sm { font-size: 12px; }
+/* Syntax samples inside a caption (the /upload help's [[key]]) must show their real casing. */
+.caption code { text-transform: none; letter-spacing: normal; }
 
 /* Neon titles: an aqua/pink RGB split plus a soft halo in the text's own colour. The text
    colour itself is untouched. .rx-title comes from the unlayered recipes.css, which sets no
