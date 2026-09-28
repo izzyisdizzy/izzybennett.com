@@ -86,29 +86,38 @@
   line-height: 20px;
   text-align: left;
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition: background-color 120ms ease, transform 240ms var(--dz-ease-bounce);
 }
-.iz-option:hover { background-color: var(--orange-soft); }
+/* Options lift and tilt on hover, springing back when the pointer leaves. */
+.iz-option:hover { background-color: var(--orange-soft); transform: translateY(-3px) rotate(-1deg) scale(1.03); }
 .iz-option:has(:checked) { background-color: var(--hotpink-soft); }
 .iz-option:has(:focus-visible) { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+/* The mark is empty until picked, then filled solid: fill, not colour alone, carries the
+   selection. */
 .iz-option__check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 22px;
   height: 22px;
   flex: none;
   border: var(--stroke-1) solid var(--outline);
   border-radius: var(--radius-pill);
   background: var(--surface-raised);
-  color: var(--on-hotpink);
-  font-size: 13px;
-  font-weight: 700;
 }
 .iz-option:has(:checked) .iz-option__check { background: var(--hotpink); }
 /* Checkboxes get a squarer mark than radios, so "pick any" reads differently from "pick one". */
 .iz-option:has(input[type="checkbox"]) .iz-option__check { border-radius: var(--radius-xs); }
-.iz-option:has(:checked) .iz-option__check::after { content: "✓"; }
+/* Picking an option: the card squashes and springs back and its mark pops in. Runs each time
+   an option becomes checked. (Pressing also sets off the pixel burst, shared with buttons.) */
+.iz-option:has(:checked) { animation: iz-pick 460ms var(--dz-ease-bounce); }
+.iz-option:has(:checked) .iz-option__check { animation: iz-check-pop 520ms var(--dz-ease-bounce); }
+/* `scale`, not `transform`, so the squash stacks on the hover lift instead of replacing it. */
+@keyframes iz-pick { 0% { scale: 1; } 30% { scale: 0.95; } 65% { scale: 1.04; } 100% { scale: 1; } }
+@keyframes iz-check-pop { 0% { transform: scale(0) rotate(-90deg); } 70% { transform: scale(1.3) rotate(10deg); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .iz-option,
+  .iz-option:hover { transition: none; transform: none; }
+  .iz-option:has(:checked),
+  .iz-option:has(:checked) .iz-option__check { animation: none; }
+}
 
 /* -------------------------------------------------------------- mobile nav */
 /* The "Menu ▾" details/summary sheet the nav uses under the sm breakpoint. */
@@ -376,35 +385,41 @@ body::after {
 }
 
 /* ----------------------------------------------------------- button burst */
-/* Pixels in the button's own colours pop out and fall when a button is released. Pure CSS:
-   while :active they snap to the button's edge with no transition; on release `scale` eases
-   out fast (the pop) while `translate` eases in (gravity), and the fade lags so they're seen
-   falling. Two layers break up the uniformity: ::after holds the heavier pixels, which drop
-   further and faster and drift right; ::before holds lighter ones, which fall short, slower and
-   drift left. Positions are deliberately lopsided; sizes, shapes and colours mixed. Nothing
-   plays on load or hover, only after a press. Ghost buttons use hot pink, as their fill is the
-   page ground. */
+/* Pixels in the button's own colours pop out and fall the moment a button or cafe option is
+   pressed. src/scripts/burst.ts adds .iz-burst on pointer-down (or keyboard activation) and
+   clears it when the keyframes end: a quick upward pop, then gravity pulls the pixels down.
+   Two layers break up the uniformity: ::after holds the heavier pixels, which drop further and
+   faster and drift right; ::before holds lighter ones, which fall short, slower and drift left.
+   Positions are deliberately lopsided; sizes, shapes and colours mixed. Nothing plays on load
+   or hover, only on a press. Ghost buttons use hot pink, as their fill is the page ground. */
 .dz-btn {
   position: relative;
   --dz-burst: var(--dz-btn-fill);
   --dz-burst-2: var(--dz-btn-fill-hover);
 }
 .dz-btn--ghost { --dz-burst: var(--hotpink); --dz-burst-2: var(--hotpink-strong); }
-/* At rest the layers sit invisibly in their fallen position, which still counts as scrollable
-   overflow: a full-width button on a phone would make the page scroll sideways. Clip the
-   viewport horizontally (on <html>, so it doesn't propagate from <body> and stop vertical
-   scrolling; `clip` rather than `hidden` so the sticky nav still sticks). Vertically the drop
-   lands inside main's bottom padding and the footer, so nothing below needs clipping. */
-html { overflow-x: clip; }
+.iz-option { --dz-burst: var(--hotpink); --dz-burst-2: var(--orange); }
+/* Mid-burst the pixels spill past the element, which counts as scrollable overflow: a button
+   or option at the edge of a phone screen would make the page scroll sideways. Clip
+   horizontally on both: <html>'s value goes to the viewport, where `clip` acts as `hidden` and
+   so can still be scrolled; with <html> not `visible`, <body> keeps its own `clip` and cuts the
+   pixels off for real. `clip` rather than `hidden` so neither is a scroll container and the
+   sticky nav still sticks. Vertically the drop lands inside main's bottom padding and the
+   footer, so nothing below needs clipping. */
+html,
+body { overflow-x: clip; }
 .dz-btn::before,
-.dz-btn::after {
+.dz-btn::after,
+.iz-option::before,
+.iz-option::after {
   content: "";
   position: absolute;
   inset: -12px;
   pointer-events: none;
   opacity: 0;
 }
-.dz-btn::after {
+.dz-btn::after,
+.iz-option::after {
   background:
     linear-gradient(var(--dz-burst), var(--dz-burst)) 3% 58% / 6px 6px no-repeat,
     linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 97% 38% / 5px 5px no-repeat,
@@ -414,14 +429,9 @@ html { overflow-x: clip; }
     linear-gradient(var(--outline), var(--outline)) 83% 91% / 3px 3px no-repeat,
     radial-gradient(circle, var(--sunshine) 0 2.5px, transparent 3px) 91% 4% / 6px 6px no-repeat,
     linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 26% 96% / 5px 5px no-repeat;
-  scale: 1.22;
-  translate: 10px 64px;
-  transition:
-    scale 130ms cubic-bezier(0.2, 0.8, 0.3, 1),
-    translate 420ms cubic-bezier(0.55, 0, 0.85, 0.4),
-    opacity 420ms cubic-bezier(0.7, 0, 1, 0.6);
 }
-.dz-btn::before {
+.dz-btn::before,
+.iz-option::before {
   background:
     linear-gradient(var(--sunshine), var(--sunshine)) 8% 27% / 3px 3px no-repeat,
     radial-gradient(circle, var(--dz-burst-2) 0 2px, transparent 2.5px) 55% 0% / 5px 5px no-repeat,
@@ -430,18 +440,25 @@ html { overflow-x: clip; }
     radial-gradient(circle, var(--sunshine) 0 1.5px, transparent 2px) 45% 100% / 4px 4px no-repeat,
     linear-gradient(var(--outline), var(--outline)) 0% 88% / 2px 2px no-repeat,
     linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 33% 45% / 3px 3px no-repeat;
-  scale: 1.35;
-  translate: -12px 34px;
-  transition:
-    scale 160ms cubic-bezier(0.2, 0.8, 0.3, 1),
-    translate 540ms cubic-bezier(0.45, 0, 0.8, 0.5),
-    opacity 540ms cubic-bezier(0.6, 0, 1, 0.7);
 }
-.dz-btn:active::before,
-.dz-btn:active::after { opacity: 1; scale: 0.92; translate: 0 0; transition: none; }
+.iz-burst::after { animation: iz-burst-a 320ms both; }
+/* burst.ts clears .iz-burst when this, the longer layer, ends; keep the name in step. */
+.iz-burst::before { animation: iz-burst-b 380ms both; }
+@keyframes iz-burst-a {
+  0% { opacity: 1; scale: 0.92; translate: 0 0; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  25% { opacity: 1; scale: 1.22; translate: 4px -8px; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6); }
+  100% { opacity: 0; scale: 1.24; translate: 10px 64px; }
+}
+@keyframes iz-burst-b {
+  0% { opacity: 1; scale: 0.92; translate: 0 0; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  28% { opacity: 1; scale: 1.35; translate: -5px -6px; animation-timing-function: cubic-bezier(0.45, 0, 0.8, 0.6); }
+  100% { opacity: 0; scale: 1.36; translate: -12px 34px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .dz-btn::before,
-  .dz-btn::after { display: none; }
+  .dz-btn::after,
+  .iz-option::before,
+  .iz-option::after { display: none; }
 }
 
 /* ------------------------------------------------------------ window lists */
@@ -465,6 +482,109 @@ html { overflow-x: clip; }
 .iz-tag-button { cursor: pointer; }
 .iz-tag-button:hover:not(.dz-tag--selected) { background-color: var(--orange-soft); }
 
+/* ------------------------------------------------------------------ motion */
+/* The canvas's micro-motion (docs/design/flows/site.css, from "List rows pop out"): rows pop,
+   tags wiggle, titles and the footer twinkle, windows rise in, project cards lift. The pixel
+   burst and the option pick live with their own blocks above. Keyframes and easings not
+   defined here (dz-wiggle, dz-twinkle, --dz-ease-bounce) come from src/dizzy/bundle.css. */
+
+/* List rows pop out of the list on hover as one piece: the whole row springs up and grows
+   (overshooting, then settling), takes an outline and a hard sticker shadow, and sits above
+   its neighbours. Replaces bundle.css's sideways nudge. The end sparkle only fades in. */
+.dz-row {
+  position: relative;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 200ms ease, transform 280ms var(--dz-ease-bounce);
+}
+.dz-row:hover {
+  z-index: 2;
+  border-color: var(--outline);
+  box-shadow: var(--shadow-sticker);
+  transform: translateY(-5px) scale(1.03);
+  animation: iz-row-pop 420ms var(--dz-ease-bounce);
+}
+@keyframes iz-row-pop {
+  0% { transform: none; }
+  55% { transform: translateY(-9px) scale(1.055); }
+  100% { transform: translateY(-5px) scale(1.03); }
+}
+.dz-row::after {
+  content: "✦" / "";
+  flex: none;
+  color: var(--hotpink);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.dz-row:hover::after { opacity: 1; }
+
+/* Tags wiggle on hover, like the nav name. */
+button.dz-tag:hover,
+a.dz-tag:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
+
+/* Sparkles: one twinkles after each page title, two flank the footer line. A pseudo-element,
+   so it sits outside the spans Dizzy.bouncify writes into the h1. The hero name's ::after is
+   its cursor, so it has none; nor does the recipe page's .rx-title, whose motion is M15's.
+   text-shadow: none keeps the neon title glow off the sparkle. */
+h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
+  content: "✦" / "";
+  display: inline-block;
+  margin-left: 0.22em;
+  font-size: 0.42em;
+  vertical-align: 0.9em;
+  color: var(--aqua);
+  text-shadow: none;
+  animation: dz-twinkle 1.8s ease-in-out infinite;
+}
+.dz-footer p::before,
+.dz-footer p::after {
+  content: "✦" / "";
+  display: inline-block;
+  margin: 0 10px;
+  color: var(--hotpink);
+  animation: dz-twinkle 2.2s ease-in-out infinite;
+}
+.dz-footer p::after { color: var(--aqua); animation-delay: 1.1s; }
+
+/* Windows rise into place when a page opens, and their lights blink in turn on hover. No fill
+   mode, unlike the canvas: a transform held after the rise would leave every window a
+   stacking context, trapping any popover inside it under the next window. A window that
+   already pops in (.dz-pop, the order receipt) keeps bundle.css's pop. */
+.dz-window:not(.dz-pop) { animation: iz-rise 560ms var(--dz-ease-bounce); }
+@keyframes iz-rise { from { transform: translateY(16px) scale(0.985); } }
+.dz-window:hover .dz-window__light { animation: iz-light 900ms ease-in-out infinite; }
+.dz-window:hover .dz-window__light:nth-child(2) { animation-delay: 150ms; }
+.dz-window:hover .dz-window__light:nth-child(3) { animation-delay: 300ms; }
+@keyframes iz-light { 50% { transform: scale(1.35); filter: brightness(1.25); } }
+
+/* Project cards pop on hover: the window lifts, tilts a touch and grows, with a hard sticker
+   shadow under its bevel, and its artwork zooms slightly inside its frame. The frame
+   (.iz-card-art, in ProjectWindow.astro) clips the zoom and carries the divider the media
+   otherwise draws, so the art can't spill over the title bar or the body. The individual
+   translate / rotate / scale properties compose with the rise-in. */
+.iz-card-art { overflow: hidden; border-bottom: var(--stroke-2) solid var(--outline); }
+.iz-card-art > * { border-bottom: 0; }
+.iz-project-card { transition: translate 280ms var(--dz-ease-bounce), rotate 280ms var(--dz-ease-bounce), scale 280ms var(--dz-ease-bounce), box-shadow 200ms ease; }
+.iz-project-card:hover { translate: 0 -6px; rotate: -0.6deg; scale: 1.02; box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
+.iz-card-art > * { transition: scale 420ms ease; }
+.iz-project-card:hover .iz-card-art > * { scale: 1.06; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dz-row,
+  .dz-row:hover,
+  .dz-row::after { transition: none; transform: none; }
+  .iz-project-card,
+  .iz-card-art > * { transition: none; }
+  .iz-project-card:hover { translate: none; rotate: none; scale: none; }
+  .iz-project-card:hover .iz-card-art > * { scale: none; }
+  .dz-row:hover,
+  button.dz-tag:hover,
+  a.dz-tag:hover,
+  h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after,
+  .dz-footer p::before,
+  .dz-footer p::after,
+  .dz-window:not(.dz-pop),
+  .dz-window:hover .dz-window__light { animation: none; }
+}
+
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }
@@ -473,4 +593,5 @@ html { overflow-x: clip; }
   .dz-window { border: 0; box-shadow: none; }
   .dz-window__body { background-image: none; }
   body::after { display: none; }
+  h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after { display: none; }
 }

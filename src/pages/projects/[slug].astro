@@ -32,7 +32,7 @@ const kind = (other: CollectionEntry<'projects'>) => (other.data.repo ? 'repo' :
 
 <BaseLayout title={title} description={tagline}>
   <p><a href="/projects/" class="dz-link body-s">← Projects</a></p>
-  <h1 class="display-l mt-4" data-dz-bounce="hover">{title}</h1>
+  <h1 class="display-l mt-4" data-dz-bounce="once">{title}</h1>
   <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
 
   <div class="iz-prose mt-8">

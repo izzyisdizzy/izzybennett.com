@@ -22,7 +22,7 @@ const columns = [
 <BaseLayout title="Orders" description="Live kitchen queue for Izzy's home cafe.">
   <div class="flex flex-wrap items-end justify-between gap-4">
     <div>
-      <h1 class="display-xl">Kitchen 🧑‍🍳</h1>
+      <h1 class="display-xl" data-dz-bounce="once">Kitchen 🧑‍🍳</h1>
       <p class="body-s mt-2 text-ink-muted">Tap a card to move it along. Auto-refreshes.</p>
     </div>
     <div class="flex flex-wrap items-center gap-3">
@@ -84,6 +84,12 @@ const columns = [
     ingestSessionFromHash();
     const signIn = () => { location.href = `${RECIPE_API}/login?return_to=/orders/`; };
 
+    // Swap the toggle's look without wiping a pixel burst still playing on it (.iz-burst, added
+    // by src/scripts/burst.ts on press and cleared when its keyframes end).
+    function setToggleClass(cls) {
+      toggle.className = toggle.classList.contains('iz-burst') ? `${cls} iz-burst` : cls;
+    }
+
     // Set once the server tells us this signed-in user isn't an admin. Sticky: the status poll runs
     // every few seconds and would otherwise re-enable and relabel the button, so both renderKitchen()
     // and the click handler's `finally` have to respect it.
@@ -96,7 +102,7 @@ const columns = [
       toggle.disabled = true;
       toggle.textContent = 'Admin only';
       toggle.title = 'You can add recipes, but not open or close the kitchen.';
-      toggle.className = 'dz-btn dz-btn--ghost dz-btn--sm';
+      setToggleClass('dz-btn dz-btn--ghost dz-btn--sm');
     }
 
     // Reflect open/closed state onto the toggle button. The label always names the action, so the
@@ -106,7 +112,7 @@ const columns = [
       if (adminDenied) return; // keep the denied state; the poll must not resurrect the button
       toggle.disabled = false; // real state is known now — clickable
       toggle.textContent = open ? 'Close kitchen' : 'Open kitchen';
-      toggle.className = `dz-btn dz-btn--sm ${open ? 'dz-btn--cocoa' : ''}`;
+      setToggleClass(`dz-btn dz-btn--sm ${open ? 'dz-btn--cocoa' : ''}`);
     }
 
     // Order server unreachable or unconfigured: show a clearly-disabled "offline" control instead of
@@ -114,7 +120,7 @@ const columns = [
     function renderKitchenUnavailable() {
       toggle.disabled = true;
       toggle.textContent = 'Kitchen offline';
-      toggle.className = 'dz-btn dz-btn--ghost dz-btn--sm';
+      setToggleClass('dz-btn dz-btn--ghost dz-btn--sm');
     }
 
     toggle.addEventListener('click', async () => {
