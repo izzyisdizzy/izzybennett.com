@@ -62,8 +62,22 @@
 .iz-field:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
 .iz-field[aria-invalid="true"] { border-color: var(--cherry); box-shadow: 0 0 0 1px var(--cherry); }
 
-/* A plain visible checkbox (the uploader's Draft toggle), tinted to the brand pink. */
-.iz-check { width: 16px; height: 16px; accent-color: var(--hotpink); }
+/* Selects draw their own chevron (the native one ignores the ink colour in afterglow), and
+   textareas get room for a paragraph. */
+select.iz-field {
+  appearance: none;
+  padding-right: 34px;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+textarea.iz-field { min-height: 88px; resize: vertical; line-height: 22px; }
+
+/* A labelled checkbox (the uploader's Draft toggle): a 44px-tall target, box tinted brand pink. */
+.iz-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 700; cursor: pointer; }
+.iz-check input { width: 20px; height: 20px; accent-color: var(--hotpink); }
 
 /* ---------------------------------------------------------- option picker */
 /* A window-shaped radio/checkbox for the order form. The real <input> sits inside the label
@@ -595,7 +609,8 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
   .dz-row:hover,
   .dz-row::after { transition: none; transform: none; }
   .iz-project-card,
-  .iz-card-art > * { transition: none; }
+  .iz-card-art > *,
+  .iz-sum__chev { transition: none; }
   .iz-project-card:hover { translate: none; rotate: none; scale: none; }
   .iz-project-card:hover .iz-card-art > * { scale: none; }
   .dz-row:hover,
@@ -608,9 +623,121 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
   .dz-window:hover .dz-window__light { animation: none; }
 }
 
+/* ---------------------------------------------------------------- uploader */
+/* The /upload editor, from the canvas's Upload boards. Rows are reordered by a grip and removed
+   by a square ✕; ingredient and step groups sit in dashed boxes inside their windows. */
+.iz-status { margin: 0; }
+.iz-status--ok { color: var(--leaf); font-weight: 700; }
+.iz-status--err { color: var(--cherry); font-weight: 700; }
+.iz-status--info { color: var(--ink-muted); }
+
+.iz-grip { flex: none; width: 18px; color: var(--ink-muted); font-size: 18px; line-height: 44px; text-align: center; cursor: grab; user-select: none; touch-action: none; }
+.iz-grip:hover { color: var(--ink); }
+.iz-grip:active { cursor: grabbing; }
+.is-dragging { opacity: 0.5; }
+
+.iz-x {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: var(--stroke-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font: 700 15px/1 var(--font-body);
+  cursor: pointer;
+}
+.iz-x:hover { background: var(--orange-soft); }
+.iz-x:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+
+/* A window whose content may hang past its edge (the ingredient typeahead's dropdown on the last
+   row). .dz-window clips to round its corners, so here the bar and body round their own. */
+.iz-window-open { overflow: visible; }
+.iz-window-open > .dz-window__bar { border-radius: calc(var(--radius-lg) - var(--stroke-2)) calc(var(--radius-lg) - var(--stroke-2)) 0 0; }
+.iz-window-open > .dz-window__body { border-radius: 0 0 calc(var(--radius-lg) - var(--stroke-2)) calc(var(--radius-lg) - var(--stroke-2)); }
+
+.iz-group { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: var(--stroke-1) dashed var(--hairline); border-radius: var(--radius-md); background: var(--surface); }
+
+/* One ingredient: grip, qty, unit, name, detail, ✕ on one line (grid areas); on a phone the
+   name and detail drop to a second line under the amount (flex with a forced break). */
+.iz-ingrow {
+  display: grid;
+  grid-template-columns: 18px 80px 108px minmax(0, 1fr) 150px 44px;
+  grid-template-areas: "grip qty unit name detail x";
+  align-items: center;
+  gap: 8px;
+}
+.iz-ingrow > [data-drag-handle] { grid-area: grip; }
+.iz-ingrow > [data-field="item-qty"] { grid-area: qty; }
+.iz-ingrow > [data-field="item-unit"] { grid-area: unit; }
+.iz-ingrow > [data-typeahead] { grid-area: name; }
+.iz-ingrow > [data-field="item-detail"] { grid-area: detail; }
+.iz-ingrow > [data-action="remove"] { grid-area: x; }
+@media (max-width: 39.99rem) {
+  .iz-ingitem { padding-bottom: 10px; border-bottom: var(--stroke-hair) solid var(--hairline); }
+  /* Line 1: grip, qty, unit, ✕ pushed right. The zero-height ::after takes a whole line, so the
+     name (indented past the grip) and the detail always start line 2; the 4px row gap on either
+     side of it makes the 8px between the two lines. */
+  .iz-ingrow { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .iz-ingrow::after { content: ""; order: 1; flex-basis: 100%; }
+  .iz-ingrow > [data-field="item-qty"] { flex: none; width: 68px; padding: 12px 10px; }
+  .iz-ingrow > [data-field="item-unit"] { flex: none; width: 96px; padding-left: 10px; }
+  .iz-ingrow > [data-action="remove"] { order: 1; margin-left: auto; }
+  .iz-ingrow > [data-typeahead] { order: 2; flex: 1 1 0; margin-left: 24px; }
+  .iz-ingrow > [data-field="item-detail"] { order: 2; flex: none; width: 112px; padding-left: 10px; padding-right: 10px; }
+}
+
+/* The "how many grams?" prompt for an ingredient the shared density list doesn't know yet. */
+.iz-grams { display: flex; flex-direction: column; gap: 8px; margin-left: 26px; padding: 12px 14px; border: var(--stroke-1) solid var(--outline); border-radius: var(--radius-sm); background: var(--sunshine); color: var(--on-sunshine); }
+.iz-grams .caption { color: var(--on-sunshine); }
+
+.iz-authbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 44px; }
+.iz-banner { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px 16px; border: var(--stroke-1) solid var(--outline); border-radius: var(--radius-md); background: var(--aqua-soft); color: var(--ink); }
+.iz-linkbtn { min-height: 24px; padding: 0; border: 0; background: none; color: var(--hotpink); font: 700 14px/22px var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.iz-linkbtn:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+
+/* The markdown preview: a <details> window whose summary is the title bar. */
+.iz-sum { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-weight: 700; cursor: pointer; list-style: none; }
+.iz-sum::-webkit-details-marker { display: none; }
+.iz-sum:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
+.iz-sum__chev { transition: transform 120ms ease; }
+details[open] > .iz-sum .iz-sum__chev { transform: rotate(180deg); }
+.iz-pre { margin: 0; padding: 14px; max-height: 460px; overflow: auto; font-family: var(--font-mono); font-size: 12px; line-height: 18px; white-space: pre-wrap; word-break: break-word; color: var(--ink); }
+
+/* Publish / Delete float in a sticky bar over the form's foot. */
+.iz-actionbar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: var(--stroke-2) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-raised) 86%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sticker-lg);
+}
+.dz-btn--danger { --dz-btn-fill: var(--surface-raised); --dz-btn-fill-hover: var(--surface-sunken); --dz-btn-ink: var(--cherry); border-color: var(--cherry); box-shadow: var(--shadow-sticker); }
+
+/* In-page confirm: a small window over a scrim, anchored to what asked (the picker or the
+   action bar) rather than the browser's own confirm() sheet. */
+.iz-scrim { position: fixed; inset: 0; z-index: 20; background: rgba(10, 6, 20, 0.28); }
+.iz-anchor { position: relative; }
+.iz-confirm { position: absolute; left: 0; right: 0; z-index: 30; border: var(--stroke-2) solid var(--outline); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-sticker-lg); overflow: hidden; }
+.iz-confirm--below { top: calc(100% + 10px); }
+.iz-confirm--above { bottom: calc(100% + 14px); }
+
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }
+  .iz-actionbar { position: static; }
   /* A window prints as its content (the /resume/ page): no title bar, frame or bevel. */
   .dz-window__bar { display: none; }
   .dz-window { border: 0; box-shadow: none; }

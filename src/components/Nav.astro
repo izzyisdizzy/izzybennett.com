@@ -8,8 +8,17 @@ const navLinks = [
   { href: '/resume/', label: 'Resume' },
 ];
 
+interface Props {
+  /** A section to mark current when the page lives outside it (/upload belongs to Recipes). */
+  section?: string;
+}
+
+const { section } = Astro.props;
 const currentPath = Astro.url.pathname;
-const isCurrent = (href: string) => currentPath.startsWith(href);
+// "page" for the link whose section the URL is in; "true" (current item, not current page) for
+// the section a page outside it declares. The nav styles key on any aria-current value.
+const ariaCurrent = (href: string) =>
+  currentPath.startsWith(href) ? 'page' : href === section ? 'true' : undefined;
 ---
 
 <!-- Sticky, on the page ground, so the nav (and the theme toggle) stay reachable on long recipe
@@ -24,7 +33,7 @@ const isCurrent = (href: string) => currentPath.startsWith(href);
     <ul class="dz-nav__links hidden sm:flex">
       {navLinks.map((link) => (
         <li>
-          <a href={link.href} class="dz-nav__link" aria-current={isCurrent(link.href) ? 'page' : undefined}>
+          <a href={link.href} class="dz-nav__link" aria-current={ariaCurrent(link.href)}>
             {link.label}
           </a>
         </li>
@@ -41,7 +50,7 @@ const isCurrent = (href: string) => currentPath.startsWith(href);
         <ul class="iz-mnav__sheet">
           {navLinks.map((link) => (
             <li>
-              <a href={link.href} class="dz-nav__link" aria-current={isCurrent(link.href) ? 'page' : undefined}>
+              <a href={link.href} class="dz-nav__link" aria-current={ariaCurrent(link.href)}>
                 {link.label}
               </a>
             </li>

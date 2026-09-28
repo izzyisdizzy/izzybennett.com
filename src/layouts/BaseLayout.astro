@@ -11,9 +11,13 @@ import bodyFont from '@fontsource-variable/space-grotesk/files/space-grotesk-lat
 interface Props {
   title: string;
   description?: string;
+  /** Keep the page out of search results (the unlisted editors). */
+  noindex?: boolean;
+  /** Nav section to mark current for a page that lives outside it (see Nav's `section`). */
+  section?: string;
 }
 
-const { title, description = "Resume, recipes, and projects from Izzy Bennett." } = Astro.props;
+const { title, description = "Resume, recipes, and projects from Izzy Bennett.", noindex = false, section } = Astro.props;
 ---
 
 <!doctype html>
@@ -21,6 +25,7 @@ const { title, description = "Resume, recipes, and projects from Izzy Bennett." 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <ThemeBoot />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -31,7 +36,7 @@ const { title, description = "Resume, recipes, and projects from Izzy Bennett." 
     <title>{title} · Izzy Bennett</title>
   </head>
   <body class="flex min-h-screen flex-col">
-    <Nav />
+    <Nav section={section} />
     <main class="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:max-w-7xl lg:px-16">
       <slot />
     </main>
