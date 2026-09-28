@@ -57,7 +57,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
 ---
 
 <BaseLayout title="Add a recipe" noindex section="/recipes/">
-  <div class="mx-auto flex w-full max-w-[760px] flex-col gap-6 sm:gap-7">
+  <div class="flex w-full flex-col gap-6 sm:gap-7">
     <header class="flex flex-col gap-2 pt-2">
       <a href="/recipes/" class="dz-link body-s self-start">← Recipes</a>
       <h1 id="page-title" class="display-xl" data-dz-bounce="once">Add a recipe</h1>
@@ -203,12 +203,13 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       </details>
 
       <!-- Actions. Also the anchor for the overwrite and delete confirms. -->
-      <div id="action-bar" class="iz-actionbar">
-        <button type="submit" id="publish" class="dz-btn dz-btn--lg w-full justify-center disabled:opacity-60">
-          Publish 🚀
-        </button>
-        <button type="button" id="delete-recipe" class="dz-btn dz-btn--danger hidden w-full justify-center disabled:opacity-60">
+      <div id="action-bar" class="iz-actionbar iz-anchor">
+        <!-- mr-auto parks Delete on the far left, away from Publish. -->
+        <button type="button" id="delete-recipe" class="dz-btn dz-btn--danger dz-btn--sm mr-auto hidden min-h-10 disabled:opacity-60">
           Delete recipe
+        </button>
+        <button type="submit" id="publish" class="dz-btn min-h-11 disabled:opacity-60">
+          Publish 🚀
         </button>
         <p id="status" class="iz-status body-s" role="status" aria-live="polite"></p>
       </div>
@@ -903,7 +904,9 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
     // Flush any pending debounced save when the page is being hidden — the user clicking
     // "Sign in with GitHub" is a full-page navigation, and it can land inside the 400ms
     // debounce window and otherwise lose the most recent edits. pagehide covers nav + tab close.
-    window.addEventListener('pagehide', saveDraft);
+    // Only when there are unsaved edits: a recipe that was merely opened (or already saved)
+    // isn't a draft, and saving it here would resurrect it on the next visit.
+    window.addEventListener('pagehide', () => { if (formDirty) saveDraft(); });
 
     // ---- YAML frontmatter serializer ------------------------------------
     // Escape order matters: backslashes first, then the chars whose escapes
@@ -1381,6 +1384,9 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       const r = recipesBySlug[slug];
       if (!r) return;
       clearPending(); // fresh recipe context — drop any half-entered ratios from the last one
+      // Switching recipes discards the old one's unsaved work (the picker confirmed it), so
+      // its autosave must go too — or it would come back as a "restored draft" next visit.
+      clearDraft();
       editingSlug = slug;
       picker.value = slug;
       draftBanner.classList.add('hidden');
@@ -1393,6 +1399,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
 
     function enterAddMode() {
       clearPending();
+      clearDraft(); // a fresh form, so any autosave belongs to what was just discarded
       editingSlug = null;
       picker.value = '';
       draftBanner.classList.add('hidden');
@@ -1422,6 +1429,18 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       let saved;
       try { saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { saved = null; }
       if (!saved || !saved.recipe || !hasContent(saved.recipe)) return;
+
+      // Respect how the page was opened. A deep link to edit a different recipe
+      // (?edit=<slug>) wins over the draft, and "+ Add recipe" (?new) never reopens a draft
+      // of an existing recipe in edit mode. Either way the stale draft is dropped. Plain
+      // /upload (where the OAuth round-trip lands) restores whatever was in progress.
+      const params = new URLSearchParams(location.search);
+      const wantedEdit = params.get('edit');
+      const wantsNew = params.has('new');
+      if ((wantedEdit && wantedEdit !== saved.editingSlug) || (wantsNew && saved.editingSlug)) {
+        clearDraft();
+        return;
+      }
 
       // Restore any grams ratios entered before the OAuth round-trip so they still publish.
       if (saved.pendingDensities && typeof saved.pendingDensities === 'object') {

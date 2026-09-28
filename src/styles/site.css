@@ -710,22 +710,18 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
 details[open] > .iz-sum .iz-sum__chev { transform: rotate(180deg); }
 .iz-pre { margin: 0; padding: 14px; max-height: 460px; overflow: auto; font-family: var(--font-mono); font-size: 12px; line-height: 18px; white-space: pre-wrap; word-break: break-word; color: var(--ink); }
 
-/* Publish / Delete float in a sticky bar over the form's foot. */
+/* Publish / Delete in a plain row at the form's foot: Delete on the left, Publish on the
+   right, the status line wrapping underneath. Not sticky, so it never covers the form. */
 .iz-actionbar {
-  position: sticky;
-  bottom: 16px;
-  z-index: 25;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 16px;
-  border: var(--stroke-2) solid var(--outline);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface-raised) 86%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: var(--shadow-sticker-lg);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
 }
+.iz-actionbar .iz-status { flex-basis: 100%; text-align: right; }
+.iz-actionbar .iz-status:empty { display: none; }
 .dz-btn--danger { --dz-btn-fill: var(--surface-raised); --dz-btn-fill-hover: var(--surface-sunken); --dz-btn-ink: var(--cherry); border-color: var(--cherry); box-shadow: var(--shadow-sticker); }
 
 /* In-page confirm: a small window over a scrim, anchored to what asked (the picker or the
@@ -739,7 +735,6 @@ details[open] > .iz-sum .iz-sum__chev { transform: rotate(180deg); }
 /* ------------------------------------------------------------------- print */
 @media print {
   .iz-no-print { display: none !important; }
-  .iz-actionbar { position: static; }
   /* A window prints as its content (the /resume/ page): no title bar, frame or bevel. */
   .dz-window__bar { display: none; }
   .dz-window { border: 0; box-shadow: none; }
