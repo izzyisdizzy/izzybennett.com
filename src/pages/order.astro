@@ -33,7 +33,7 @@ const syrups = asOptions(sectionItems(sections, 'Syrups'));
 
     <div id="closed-banner" class="iz-well mt-6 flex items-center gap-3 p-4" hidden>
       <span class="dz-tag dz-tag--stopped">Closed</span>
-      <p>😴 The kitchen is closed — orders are paused right now.</p>
+      <p>😴 The kitchen is closed, so orders are paused for now.</p>
     </div>
 
     <form id="order-form" data-order-api={ORDER_API} class="mt-8 space-y-8" novalidate>
@@ -77,7 +77,7 @@ const syrups = asOptions(sectionItems(sections, 'Syrups'));
       </div>
     </form>
 
-    <!-- The confirmation. Every value is filled with textContent — name and notes are user input. -->
+    <!-- The confirmation. Every value is filled with textContent, since name and notes are user input. -->
     <section id="order-receipt" class="dz-window dz-pop mt-8" hidden aria-labelledby="receipt-heading">
       <div class="dz-window__bar">
         <span class="dz-window__lights" aria-hidden="true">
@@ -97,7 +97,7 @@ const syrups = asOptions(sectionItems(sections, 'Syrups'));
           <dt class="text-ink-muted">syrups</dt><dd data-receipt="syrups"></dd>
           <dt class="text-ink-muted" data-receipt-row="notes">notes</dt><dd data-receipt="notes"></dd>
         </dl>
-        <p class="body-s mt-4 text-ink-muted">Hang tight — I'll call your name when it's ready.</p>
+        <p class="body-s mt-4 text-ink-muted">Hang tight. I'll call your name when it's ready.</p>
         <button type="button" id="order-again" class="dz-btn dz-btn--ghost mt-5">Order another</button>
       </div>
     </section>
@@ -216,7 +216,7 @@ const syrups = asOptions(sectionItems(sections, 'Syrups'));
         // The kitchen closed since our last status poll — reflect that instead of a raw error.
         if (res.status === 403) {
           applyKitchen(false);
-          setStatus('The kitchen just closed — your order didn’t go through.', 'err');
+          setStatus('The kitchen just closed, so your order didn’t go through.', 'err');
           return;
         }
         if (!res.ok) throw new Error(`Server error ${res.status}`);
