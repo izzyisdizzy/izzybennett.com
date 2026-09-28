@@ -17,6 +17,10 @@ function setup({ reduced = false } = {}) {
     <a class="dz-btn" id="aria-off" aria-disabled="true" href="#">Off</a>
     <label class="iz-option" id="opt"><input type="radio" name="d" /><span>Latte</span></label>
     <label class="iz-option" id="opt-off"><input type="radio" name="d" disabled /><span>Mocha</span></label>
+    <div class="dz-seg">
+      <button class="dz-seg__btn" id="seg-us" aria-pressed="true">US</button>
+      <button class="dz-seg__btn" id="seg" aria-pressed="false">Grams</button>
+    </div>
     <p id="plain">text</p>`;
   installBurst(doc, win);
   const el = (id: string) => doc.getElementById(id)!;
@@ -113,6 +117,47 @@ describe('installBurst', () => {
     expect(t.bursting('opt')).toBe(false);
   });
 
+  it('bursts a segmented-control button (the recipe US / Grams switch) on press and from the keyboard', () => {
+    const pressed = setup();
+    pressed.pointerdown('seg');
+    expect(pressed.bursting('seg')).toBe(true);
+    // A fresh window: a click right after the press would count as its echo.
+    const keyed = setup();
+    keyed.keyClick(keyed.el('seg'));
+    expect(keyed.bursting('seg')).toBe(true);
+  });
+
+  // Stands in for the recipe engine's US / Grams handler: an arrow key on a button selects and
+  // focuses its neighbour on keydown, with no click.
+  function arrowNav(t: ReturnType<typeof setup>) {
+    for (const id of ['seg-us', 'seg']) {
+      t.el(id).addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key !== 'ArrowRight') return;
+        e.preventDefault();
+        (t.el(id === 'seg-us' ? 'seg' : 'seg-us') as HTMLElement).focus();
+      });
+    }
+  }
+  const arrow = (t: ReturnType<typeof setup>, id: string, key = 'ArrowRight') =>
+    t.el(id).dispatchEvent(new t.win.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+
+  it('bursts the segmented button an arrow key moves to', () => {
+    const t = setup();
+    arrowNav(t);
+    (t.el('seg-us') as HTMLElement).focus();
+    arrow(t, 'seg-us');
+    expect(t.bursting('seg')).toBe(true);
+    expect(t.bursting('seg-us')).toBe(false);
+  });
+
+  it('ignores arrow keys nothing handled', () => {
+    const t = setup();
+    (t.el('seg-us') as HTMLElement).focus();
+    arrow(t, 'seg-us');
+    arrow(t, 'seg-us', 'ArrowLeft');
+    expect(t.doc.querySelectorAll('.iz-burst')).toHaveLength(0);
+  });
+
   it('leaves disabled controls alone', () => {
     const t = setup();
     for (const id of ['off', 'aria-off', 'opt-off']) {
@@ -130,10 +175,13 @@ describe('installBurst', () => {
 
   it('adds no classes at all under reduced motion', () => {
     const t = setup({ reduced: true });
-    for (const id of ['btn', 'opt']) {
+    for (const id of ['btn', 'opt', 'seg']) {
       t.pointerdown(id);
       t.keyClick(t.el(id));
     }
+    arrowNav(t);
+    (t.el('seg-us') as HTMLElement).focus();
+    arrow(t, 'seg-us');
     expect(t.doc.querySelectorAll('.iz-burst')).toHaveLength(0);
   });
 });

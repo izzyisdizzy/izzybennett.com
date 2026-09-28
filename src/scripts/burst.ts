@@ -1,11 +1,13 @@
 // The pixel burst on press (Dizzy M13), ported from the design canvas's
 // docs/design/flows/iz-bounce.js. The pixels themselves are CSS (site.css, "button burst"):
-// this only adds `.iz-burst` to a button or cafe option the moment it's pressed, so the
-// one-shot keyframes play on press rather than release, and clears it when they finish.
+// this only adds `.iz-burst` to a button, cafe option or segmented-control button (the recipe
+// page's US / Grams switch) the moment it's pressed, so the one-shot keyframes play on press
+// rather than release, and clears it when they finish.
 
-const SELECTOR = '.dz-btn, .iz-option';
+const SELECTOR = '.dz-btn, .iz-option, .dz-seg__btn';
 // The longer of the two burst layers (::before); when it ends, the whole burst is over.
 const LAST_ANIMATION = 'iz-burst-b';
+const ARROW_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']);
 // A mouse click on an option's <label> also fires a forwarded click on its <input>, with
 // detail 0 like a keyboard click. Within this window of a pointerdown on the same element,
 // that click is the echo of the press, not a second one.
@@ -66,6 +68,19 @@ export function installBurst(doc: Document, win: Window & typeof globalThis): vo
     const pressed = lastPointer.get(el);
     if (pressed !== undefined && win.performance.now() - pressed < ECHO_MS) return;
     burst(el);
+  });
+
+  // A segmented control's arrow keys (the recipe page's US / Grams switch) select the
+  // neighbouring button on keydown and move focus to it, with no click. The control's own
+  // handler sits on the button, so by the time the keydown reaches the document focus has
+  // already moved: burst the newly focused button when the key was handled.
+  doc.addEventListener('keydown', (e) => {
+    if (!ARROW_KEYS.has(e.key) || !e.defaultPrevented) return;
+    const from = e.target instanceof win.Element ? e.target.closest('.dz-seg__btn') : null;
+    const to = doc.activeElement;
+    if (!from || !to || to === from || !to.matches('.dz-seg__btn')) return;
+    if (to.closest('.dz-seg') !== from.closest('.dz-seg')) return;
+    burst(to);
   });
 
   const clear = (e: Event) => {
