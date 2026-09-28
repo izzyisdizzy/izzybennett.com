@@ -42,7 +42,8 @@ const columns = [
           <span class="dz-window__lights" aria-hidden="true">
             <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
           </span>
-          <h2 id={`col-${col.status}`} class="dz-window__title">{col.label.toLowerCase()}</h2>
+          <!-- tabindex -1: board-focus.ts moves focus here when the column empties under it. -->
+          <h2 id={`col-${col.status}`} class="dz-window__title" tabindex="-1">{col.label.toLowerCase()}</h2>
           <span data-count={col.status} class="dz-counter">0</span>
         </div>
         <div class="p-3">
@@ -60,6 +61,7 @@ const columns = [
   <script>
     import { currentSession, clearSession, ingestSessionFromHash } from '@izzy/auth-client/session';
     import { fetchKitchenOpen, pollWhileVisible } from '../scripts/order-status';
+    import { captureBoardFocus, restoreBoardFocus } from '../scripts/board-focus';
 
     const NEXT = { new: 'making', making: 'done' };
     const POLL_MS = 3500;
@@ -235,13 +237,8 @@ const columns = [
       if (snapshot === lastRendered) return;
       lastRendered = snapshot;
 
-      // The board did change: note which order (and which control on it) has focus, rebuild, then
-      // put focus back on the same order — in its new column if it just moved. A card that moved
-      // to "done" is no longer a button, so focus lands on its Archive button instead.
-      const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      const focusedCard = focused?.closest<HTMLElement>('[data-order-id]');
-      const focusedId = focusedCard?.dataset.orderId;
-      const onArchive = !!focusedCard && focused !== focusedCard;
+      // The board did change: note where focus was, rebuild, then put it back (see board-focus.ts).
+      const saved = captureBoardFocus(document);
 
       const byStatus = { new: [], making: [], done: [] };
       for (const o of orders) if (byStatus[o.status]) byStatus[o.status].push(o);
@@ -252,11 +249,7 @@ const columns = [
         if (count) count.textContent = String(byStatus[status].length);
       }
 
-      if (focusedId) {
-        const same = document.querySelector<HTMLElement>(`[data-order-id="${focusedId}"]`);
-        const target = same instanceof HTMLButtonElement && !onArchive ? same : same?.querySelector<HTMLElement>('button');
-        target?.focus();
-      }
+      restoreBoardFocus(document, saved);
     }
 
     async function refresh() {

@@ -1,8 +1,12 @@
 ---
 /**
  * The daylight ↔ afterglow switch. Shows the theme you'd switch *to* (moon by day, sun by
- * night — see .iz-theme-toggle in site.css), persists the choice, and reports state through
- * aria-pressed ("afterglow is on"). ThemeBoot.astro must have stamped data-theme already.
+ * night — drawn by .iz-theme-toggle__glyph in site.css), persists the choice, and reports
+ * state through aria-pressed ("afterglow is on"). The name stays fixed so the pressed state is
+ * the only thing that changes; a name that also flipped ("Switch to…") would announce the state
+ * twice. The glyph is CSS content with empty alt text on an inner span (the button's own
+ * pseudo-elements belong to the burst), so the button carries no visible text that its name
+ * would have to include. ThemeBoot.astro must have stamped data-theme already.
  */
 ---
 
@@ -11,10 +15,9 @@
   class="dz-btn dz-btn--ghost dz-btn--sm iz-theme-toggle"
   data-theme-toggle
   aria-pressed="false"
-  aria-label="Switch to the afterglow theme"
+  aria-label="Afterglow theme"
 >
-  <span class="iz-theme-toggle__moon" aria-hidden="true">☾</span>
-  <span class="iz-theme-toggle__sun" aria-hidden="true">☀︎</span>
+  <span class="iz-theme-toggle__glyph" aria-hidden="true"></span>
 </button>
 
 <script>
@@ -25,10 +28,7 @@
 
   const sync = () => {
     const dark = root.dataset.theme === 'afterglow';
-    for (const btn of buttons) {
-      btn.setAttribute('aria-pressed', String(dark));
-      btn.setAttribute('aria-label', dark ? 'Switch to the daylight theme' : 'Switch to the afterglow theme');
-    }
+    for (const btn of buttons) btn.setAttribute('aria-pressed', String(dark));
   };
   sync();
 

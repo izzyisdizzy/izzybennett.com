@@ -163,9 +163,10 @@
 /* Shows the theme you'd switch *to*: a moon by day, a sun by night. */
 /* Two classes deep so the glyph size beats the retro type block's later `.dz-btn--sm` size. */
 .dz-btn.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding-inline: var(--space-2); font-size: 16px; }
-.iz-theme-toggle__sun { display: none; }
-[data-theme="afterglow"] .iz-theme-toggle__sun { display: inline; }
-[data-theme="afterglow"] .iz-theme-toggle__moon { display: none; }
+/* Empty alt text after the slash: the glyph is decoration, the button's aria-label names it.
+   The plain `content` first is the fallback for browsers without alt-text content. */
+.iz-theme-toggle__glyph::before { content: "☾"; content: "☾" / ""; }
+[data-theme="afterglow"] .iz-theme-toggle__glyph::before { content: "☀\FE0E"; content: "☀\FE0E" / ""; }
 
 /* ------------------------------------------------------------- window art */
 /* Media slot for a window whose project has no icon: a flat brand-colour block with a single
@@ -586,7 +587,8 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
 @media (prefers-reduced-motion: reduce) {
   /* The vendored .dz-btn nudges on hover and shifts on press; the pressed shadow stays as the
      state cue, the movement goes. */
-  .dz-btn { transition: none; }
+  .dz-btn,
+  .dz-nav__link { transition: none; }
   .dz-btn:hover,
   .dz-btn:active { transform: none; }
   .dz-row,
