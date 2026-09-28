@@ -42,7 +42,8 @@ const columns = [
           <span class="dz-window__lights" aria-hidden="true">
             <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
           </span>
-          <h2 id={`col-${col.status}`} class="dz-window__title">{col.label.toLowerCase()}</h2>
+          <!-- tabindex -1: board-focus.ts moves focus here when the column empties under it. -->
+          <h2 id={`col-${col.status}`} class="dz-window__title" tabindex="-1">{col.label.toLowerCase()}</h2>
           <span data-count={col.status} class="dz-counter">0</span>
         </div>
         <div class="p-3">

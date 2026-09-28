@@ -105,7 +105,7 @@ Pages, with two small backends alongside it. Tech decisions, and why:
 
 ### Dizzy redesign roadmap
 
-The site is being moved onto the Dizzy design system one milestone at a time,
+The site was moved onto the Dizzy design system one milestone at a time,
 each a GitHub issue. The design reference for all of them is
 `docs/design/flows/` — read its `README.md` before starting a milestone. Only the
 canvas defaults ship (sea glass light, neon purple dark, fewer shadows, Retro on);
@@ -127,7 +127,8 @@ the other tweak options were exploration and are not to be built.
 Order: M8 → M9 → M10–M15 by their stated dependencies, and **M7 lands last**,
 after M15 — its a11y and motion pass covers everything the later milestones add.
 All milestones are done. New motion must stay inside the `prefers-reduced-motion`
-guards in `site.css` (vendored `src/dizzy/` is never edited for it).
+guards in `site.css`; don't add reduced-motion overrides to vendored `src/dizzy/`
+(its only local patches are the two listed in `src/dizzy/README.md`).
 
 ### Build / run / test
 

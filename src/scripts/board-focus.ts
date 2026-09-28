@@ -4,35 +4,32 @@
  * capture notes where focus was, restore puts it back.
  *
  * - The same order still on the board: focus it again, in its new column if it moved. A card in
- *   "done" is not a button, so focus goes to its Archive button (and stays there if it was there).
+ *   "done" is not a button, so focus goes to its Archive button.
  * - The order left the board (archived, or cleared elsewhere): focus the card that took its slot
- *   in the same column, else the one before it, else the column's heading — never <body>.
+ *   in the column it sat in, else the one before it, else that column's heading — never <body>.
  */
 
 export interface BoardFocus {
   id: string;
-  /** Focus was on a control inside the card (its Archive button), not the card itself. */
-  onControl: boolean;
   /** The data-column the card sat in, and its position there. */
   column: string | undefined;
   index: number;
 }
 
 export function captureBoardFocus(doc: Document): BoardFocus | null {
-  const focused = doc.activeElement as HTMLElement | null;
-  const card = focused?.closest<HTMLElement>('[data-order-id]');
+  const card = doc.activeElement?.closest<HTMLElement>('[data-order-id]');
   const id = card?.dataset.orderId;
   if (!card || !id) return null;
   const column = card.closest<HTMLElement>('[data-column]');
   return {
     id,
-    onControl: focused !== card,
     column: column?.dataset.column,
     index: column ? Array.from(column.children).indexOf(card) : -1,
   };
 }
 
-// A card's own focus target: the card when it is a button, else its first button.
+// A card's own focus target: the card when it is a button (new, making), else its first button
+// (a done card's Archive).
 const focusTarget = (card: Element | null | undefined): HTMLElement | null =>
   card?.tagName === 'BUTTON' ? (card as HTMLElement) : (card?.querySelector<HTMLElement>('button') ?? null);
 
@@ -45,10 +42,9 @@ const byData = (doc: Document, attr: 'orderId' | 'column', value: string) =>
 export function restoreBoardFocus(doc: Document, saved: BoardFocus | null): void {
   if (!saved) return;
 
-  const same = byData(doc, 'orderId', saved.id);
+  const same = focusTarget(byData(doc, 'orderId', saved.id));
   if (same) {
-    const target = saved.onControl ? same.querySelector<HTMLElement>('button') : focusTarget(same);
-    target?.focus();
+    same.focus();
     return;
   }
 
@@ -61,10 +57,6 @@ export function restoreBoardFocus(doc: Document, saved: BoardFocus | null): void
     return;
   }
 
-  // An emptied column: its heading, made programmatically focusable.
-  const heading = doc.getElementById(`col-${saved.column}`);
-  if (heading) {
-    heading.tabIndex = -1;
-    heading.focus();
-  }
+  // An emptied column: its heading (tabindex="-1" in orders.astro, so it takes focus).
+  doc.getElementById(`col-${saved.column}`)?.focus();
 }

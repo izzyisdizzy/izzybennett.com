@@ -25,7 +25,7 @@ function setup(initial: Board) {
   const win = new HappyWindow() as unknown as Window & typeof globalThis;
   const doc = win.document;
   doc.body.innerHTML = (['new', 'making', 'done'] as const)
-    .map((s) => `<h2 id="col-${s}">${s}</h2><div data-column="${s}"></div>`)
+    .map((s) => `<h2 id="col-${s}" tabindex="-1">${s}</h2><div data-column="${s}"></div>`)
     .join('');
   // A full rebuild, as render() does: every card element is replaced.
   const render = (board: Board) => {
@@ -55,6 +55,14 @@ describe('board focus across a re-render', () => {
     expect(b.active().dataset.orderId).toBe('2');
   });
 
+  it('follows an order from "new" into "making", still on the card button', () => {
+    const b = setup({ new: ['1', '2'] });
+    b.focusOrder('1');
+    b.rerender({ new: ['2'], making: ['1'] });
+    expect(b.active().tagName).toBe('BUTTON');
+    expect(b.active().dataset.orderId).toBe('1');
+  });
+
   it('follows an order into "done" and lands on its Archive button', () => {
     const b = setup({ making: ['1'] });
     b.focusOrder('1');
@@ -63,11 +71,22 @@ describe('board focus across a re-render', () => {
     expect(b.active().closest<HTMLElement>('[data-order-id]')?.dataset.orderId).toBe('1');
   });
 
-  it('keeps focus on Archive when it was there', () => {
+  it('follows an order moved back out of "done" from its Archive onto the card button', () => {
+    // Another kitchen screen can send a done order back to making; Archive is gone, the card
+    // is a button again. Focus must land on it, not fall to <body>.
     const b = setup({ done: ['1'] });
     b.focusOrder('1', true);
-    b.rerender({ done: ['1'], new: ['2'] });
-    expect(b.active().textContent).toBe('Archive');
+    b.rerender({ making: ['1'] });
+    expect(b.active().tagName).toBe('BUTTON');
+    expect(b.active().dataset.orderId).toBe('1');
+  });
+
+  it('takes the slot by position when another card arrives ahead of the archived one', () => {
+    const b = setup({ done: ['1', '2', '3'] });
+    b.focusOrder('2', true);
+    // 2 archived while a newer order 4 lands at the top: slot 1 is now order 1.
+    b.rerender({ done: ['4', '1', '3'] });
+    expect(b.active().closest<HTMLElement>('[data-order-id]')?.dataset.orderId).toBe('1');
   });
 
   it('moves to the card that took the slot when the focused order is archived', () => {
@@ -89,7 +108,6 @@ describe('board focus across a re-render', () => {
     b.focusOrder('1', true);
     b.rerender({});
     expect(b.active().id).toBe('col-done');
-    expect(b.active().tabIndex).toBe(-1);
   });
 
   it('leaves focus alone when it was not on a card', () => {
