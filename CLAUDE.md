@@ -52,7 +52,9 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `ThemeBoot.astro` (stored choice in `localStorage['izzy-theme']`, else the OS)
   and flipped by `ThemeToggle.astro`. Tailwind is for layout; colour, type and
   shape come from Dizzy classes. A new boxed surface is a titled window: wrap it in
-  `src/components/Window.astro` (presentational — its title is never a heading).
+  `src/components/Window.astro` (presentational — its title is never a heading). The
+  recipe page's `tools.txt` / `ingredients.txt` / `steps.txt` / `notes.txt` windows come
+  from the engine's own `RecipeWindow.astro`; don't re-wrap them.
 - `docs/design/flows/` — a read-only snapshot of the "izzybennett.com flows"
   design canvas (the canvas itself is private): every board as `.dc.html`, plus
   its `site.css`, `iz-bounce.js` and `canvas.json`. Its `README.md` maps the
@@ -74,7 +76,8 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   pinned by git tag in `package.json`) — the recipe schema, `units` (US→grams
   conversion), `ingredients` (step↔ingredient linking), `markdown`,
   `ingredient-suggest`, the `/upload` ingredient typeahead, the recipe page body
-  (`Recipe.astro`) and index row
+  (`Recipe.astro`, which frames each section in a Dizzy window via `RecipeWindow.astro`)
+  and index row
   (`RecipeCard.astro`), their client scripts and styles, and all their tests.
   `src/pages/recipes/[...slug].astro` wraps `Recipe` in `BaseLayout` and runs the
   session check; `src/styles/global.css` must keep importing

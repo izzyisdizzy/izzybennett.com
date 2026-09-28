@@ -405,6 +405,9 @@ body::after {
   --dz-burst: var(--hotpink);
   --dz-burst-2: var(--hotpink-strong);
 }
+/* Segmented buttons sit edge to edge, so lift the bursting one: otherwise the pressed
+   neighbour's opaque fill, painted later, hides the pixels that drift across it. */
+.dz-seg__btn.iz-burst { z-index: 1; }
 /* Mid-burst the pixels spill past the element, which counts as scrollable overflow: a button
    or option at the edge of a phone screen would make the page scroll sideways. Clip
    horizontally on both: <html>'s value goes to the viewport, where `clip` acts as `hidden` and
@@ -468,7 +471,9 @@ body { overflow-x: clip; }
   .dz-btn::before,
   .dz-btn::after,
   .iz-option::before,
-  .iz-option::after { display: none; }
+  .iz-option::after,
+  .dz-seg__btn::before,
+  .dz-seg__btn::after { display: none; }
 }
 
 /* ------------------------------------------------------------ window lists */
