@@ -25,6 +25,14 @@ describe('generated Dizzy token stylesheets', () => {
     expect(tokensCss).toContain('--font-body: "Space Grotesk Variable", "Space Grotesk"');
   });
 
+  it('forces daylight under print whatever data-theme says', () => {
+    const print = tokensCss.slice(tokensCss.indexOf('@media print {'));
+    expect(print).toContain(':root:not([data-theme="daylight"]) {');
+    expect(print).toContain('color-scheme: light;');
+    expect(print).toContain('--ink: #14302e;');
+    expect(print).toContain('--orange-deep: #9c3d00;');
+  });
+
   it('aliases only colours into Tailwind', () => {
     expect(themeCss).toContain('--color-hotpink: var(--hotpink);');
     // A same-named alias (--radius-md: var(--radius-md)) would be self-referential and invalid.

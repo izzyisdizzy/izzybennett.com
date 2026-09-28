@@ -8,7 +8,8 @@
 //
 //   src/dizzy/tokens.css          both themes as custom properties on <html>, keyed off
 //                                 [data-theme], plus a prefers-color-scheme fallback for the
-//                                 no-JS / nothing-stored case
+//                                 no-JS / nothing-stored case, and a print block that forces
+//                                 daylight so dark-theme prints stay legible on white paper
 //   src/dizzy/tailwind-theme.css  an `@theme inline` block aliasing every colour token as
 //                                 `--color-<name>` so Tailwind utilities (bg-hotpink, text-ink)
 //                                 resolve to the live token
@@ -78,6 +79,14 @@ export function render(tokens) {
     '@media (prefers-color-scheme: dark) {',
     `  :root:not([data-theme="${light}"]) {`,
     ...themed(dark).map((line) => `  ${line}`),
+    '  }',
+    '}',
+    '',
+    '/* Paper is white: print in daylight whatever the screen theme. The selector covers both an',
+    '   explicit afterglow and the OS-dark fallback, and outranks both by specificity and order. */',
+    '@media print {',
+    `  :root:not([data-theme="${light}"]) {`,
+    ...themed(light).map((line) => `  ${line}`),
     '  }',
     '}',
     '',
