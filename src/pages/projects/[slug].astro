@@ -33,14 +33,15 @@ const kind = (other: CollectionEntry<'projects'>) => (other.data.repo ? 'repo' :
 <BaseLayout title={title} description={tagline}>
   <p><a href="/projects/" class="dz-link body-s">← Projects</a></p>
 
-  <!-- As on the canvas board: content beside a 420px aside from lg up. Below lg the aside follows
-       the content, its two windows side by side from sm, stacked on phones. -->
-  <div class="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-12">
+  <!-- As on the canvas board: content beside a 420px aside at the board's width, narrowing toward
+       lg so the prose keeps its measure. Below lg the aside follows the content, its two windows
+       side by side from sm, stacked on phones. -->
+  <div class="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(18rem,36.5%,420px)] lg:items-start lg:gap-12">
     <div class="min-w-0">
       <h1 class="display-l" data-dz-bounce="once">{title}</h1>
       <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
 
-      <div class="iz-prose mt-8 max-w-[45rem]">
+      <div class="iz-prose mt-8">
         <Content />
       </div>
 

@@ -10,9 +10,9 @@ const skills = ['Kotlin', 'Swift', 'Jetpack Compose', 'SwiftUI', 'Payments'];
 
 <BaseLayout title="Resume" description="The resume of Izzy Bennett, mobile software engineer.">
   <!-- From lg, as on the canvas board: the header is a 300px sticky column (top clears the sticky
-       nav) beside the resume window. Below lg it's a row above the window. -->
-  <div class="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-12">
-    <div class="flex flex-wrap items-end justify-between gap-4 lg:sticky lg:top-28 lg:flex-col lg:items-start lg:gap-6">
+       nav) beside the resume window. Below lg, and in print at any page width, it's a row above it. -->
+  <div class="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-12 print:block">
+    <div class="flex flex-wrap items-end justify-between gap-4 lg:sticky lg:top-28 lg:flex-col lg:items-start lg:gap-6 print:static">
       <div>
         <h1 class="display-xl" data-dz-bounce="once">Resume</h1>
         <p class="body-l mt-2 text-ink-muted">Please hire me.</p>
