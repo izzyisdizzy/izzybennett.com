@@ -1379,6 +1379,13 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       slugUrl.textContent = `${SITE_HOST}/recipes/${slug || '…'}/`;
       slugNote.textContent = editingSlug ? ' Stays put if you rename it.' : '';
     }
+    // Keep ?edit=<slug> (or no query, in add mode) in step with the mode. restoreDraft reads
+    // the query as the page's intent, so a stale one left over from before a picker switch
+    // would make a reload throw away the draft of the recipe actually being worked on.
+    function syncUrl() {
+      const search = editingSlug ? `?edit=${encodeURIComponent(editingSlug)}` : '';
+      history.replaceState(null, '', location.pathname + search);
+    }
 
     function enterEditMode(slug) {
       const r = recipesBySlug[slug];
@@ -1388,6 +1395,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       // its autosave must go too — or it would come back as a "restored draft" next visit.
       clearDraft();
       editingSlug = slug;
+      syncUrl();
       picker.value = slug;
       draftBanner.classList.add('hidden');
       fillForm(r);
@@ -1401,6 +1409,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       clearPending();
       clearDraft(); // a fresh form, so any autosave belongs to what was just discarded
       editingSlug = null;
+      syncUrl();
       picker.value = '';
       draftBanner.classList.add('hidden');
       setAddChrome();
