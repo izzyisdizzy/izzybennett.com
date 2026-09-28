@@ -2,34 +2,170 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Window from '../components/Window.astro';
 
-// The blurb below mirrors the summary at the top of resume/resume.typ (the single source of truth)
-// — keep the two in sync by hand. The skills are a hand-picked headline subset, not a mirror of the
-// resume's skills section.
-const skills = ['Kotlin', 'Swift', 'Jetpack Compose', 'SwiftUI', 'Payments'];
+// resume/resume.typ is the single source of truth. The header, experience, skills and education
+// below are a hand-condensed mirror of it (the summary verbatim, each role cut to a line or two)
+// — keep the two in sync by hand. The projects section is web-only; the PDF doesn't have one.
+const title = 'Mobile Software Engineer';
+const summary =
+  'Mobile software engineer with 6+ years shipping Android and iOS apps used by millions. Technical lead for payments-critical systems at Square, scaling Offline Payments to 4M+ sellers and ~$442M/yr in offline volume across mobile and custom hardware.';
+const updated = 'September 2026';
+
+const experience = [
+  {
+    dates: 'July 2022 – present',
+    role: 'Mobile Software Engineer',
+    company: 'Square',
+    blurb:
+      'Technical lead for Offline Payments and Checkout on Square Point of Sale for Android, iOS and custom hardware. Expanded Offline Payments to 4M+ sellers, raising enablement from ~40% to 92.6% of a ~$442M/yr payment flow.',
+  },
+  {
+    dates: 'June 2020 – July 2022',
+    role: 'Android Software Engineer II',
+    company: 'Alarm.com',
+    blurb:
+      'Led a complete UI/UX refresh and app-wide Dark Mode for an Android app used by millions, and mentored two interns to a shipped production feature.',
+  },
+  {
+    dates: 'June – August 2019',
+    role: 'Android Software Engineer Intern',
+    company: 'Alarm.com',
+    blurb: 'Rebuilt the Android notification system with bundled notifications and improved accessibility across the app.',
+  },
+];
+
+const projects = [
+  {
+    dates: '2026 – present',
+    name: 'dizzyos',
+    href: '/projects/dizzyos/',
+    blurb: "An LED matrix sign that reads the cafe menu off this site's JSON feed. Python on a Raspberry Pi.",
+  },
+  {
+    dates: '2019 – present',
+    name: 'izzybennett.com',
+    href: '/projects/this-site/',
+    blurb:
+      'This site and the Dizzy design system behind it, with recipes, a cafe ordering flow and a public feed. Built with Astro and Tailwind.',
+  },
+];
+
+// Tag tone groups the skills: languages aqua, mobile frameworks orange, domain pink.
+const skills = [
+  { name: 'Kotlin', tone: 'aqua' },
+  { name: 'Swift', tone: 'aqua' },
+  { name: 'TypeScript', tone: 'aqua' },
+  { name: 'Jetpack Compose', tone: 'orange' },
+  { name: 'SwiftUI', tone: 'orange' },
+  { name: 'Payments', tone: 'pink' },
+];
+
+const education = [
+  { dates: 'August 2017 – May 2020', degree: 'B.S. Computer Science', school: 'George Mason University' },
+];
+
+const entry = 'grid gap-1 border-b border-hairline py-5 last:border-b-0 last:pb-0 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-6';
+const entryDates = 'mono-s text-ink-muted sm:pt-1';
 ---
 
 <BaseLayout title="Resume" description="The resume of Izzy Bennett, mobile software engineer.">
   <!-- From lg, as on the canvas board: the header is a 300px sticky column (top clears the sticky
-       nav) beside the resume window. Below lg, and in print at any page width, it's a row above it. -->
+       nav) beside the resume window, with the contact well under it. Below lg, and in print at any
+       page width, it's a row above the window and the contact well moves to the window's foot. -->
   <div class="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-12 print:block">
     <div class="flex flex-wrap items-end justify-between gap-4 lg:sticky lg:top-28 lg:flex-col lg:items-start lg:gap-6 print:static">
       <div>
         <h1 class="display-xl" data-dz-bounce="once">Resume</h1>
         <p class="body-l mt-2 text-ink-muted">Please hire me.</p>
       </div>
-      <a href="/resume.pdf" download class="dz-btn iz-no-print">Download PDF</a>
+      <div class="flex gap-3 iz-no-print">
+        <a href="/resume.pdf" download class="dz-btn">Download PDF</a>
+        <button type="button" class="dz-btn dz-btn--cocoa lg:hidden" onclick="window.print()">Print</button>
+      </div>
+      <div class="iz-well hidden w-full flex-col gap-1 p-4 lg:flex print:hidden">
+        <span class="label">Contact</span>
+        <a class="dz-link body-s" href="https://izzybennett.com">izzybennett.com</a>
+        <a class="dz-link body-s" href="https://github.com/izzyisdizzy">github.com/izzyisdizzy</a>
+        <a class="dz-link body-s" href="mailto:me@izzybennett.com">me@izzybennett.com</a>
+      </div>
+      <p class="caption hidden lg:block print:hidden">Updated <span class="mono-s">{updated}</span></p>
     </div>
 
-    <Window as="article" title="resume.pdf" class="mt-8 lg:mt-0" bodyClass="p-6 sm:px-14 sm:py-10">
-      <p class="body-l">
-        Mobile software engineer with 6+ years shipping Android and iOS apps used by millions. Technical
-        lead for payments-critical systems at Square, scaling Offline Payments to 4M+ sellers and
-        ~$442M/yr in offline volume across mobile and custom hardware.
-      </p>
+    <Window as="article" title="resume.pdf" class="mt-8 lg:mt-0" bodyClass="flex flex-col gap-10 p-6 sm:px-14 sm:py-10">
+      <header class="flex flex-col gap-2">
+        <h2 class="h1">Izzy Bennett</h2>
+        <p class="body-l font-medium text-orange-deep">{title}</p>
+        <p class="max-w-[640px] text-pretty">{summary}</p>
+      </header>
 
-      <ul class="mt-6 flex flex-wrap gap-2" aria-label="Skills">
-        {skills.map((skill) => <li><span class="dz-tag dz-tag--aqua">{skill}</span></li>)}
-      </ul>
+      <section class="flex flex-col gap-1" aria-labelledby="resume-experience">
+        <h3 class="label" id="resume-experience">Experience</h3>
+        {
+          experience.map((job) => (
+            <div class={entry}>
+              <span class={entryDates}>{job.dates}</span>
+              <div class="flex flex-col gap-1">
+                <p class="h3">
+                  {job.role} · {job.company}
+                </p>
+                <p class="body-s">{job.blurb}</p>
+              </div>
+            </div>
+          ))
+        }
+      </section>
+
+      <section class="flex flex-col gap-1" aria-labelledby="resume-projects">
+        <h3 class="label" id="resume-projects">Projects</h3>
+        {
+          projects.map((project) => (
+            <div class={entry}>
+              <span class={entryDates}>{project.dates}</span>
+              <div class="flex flex-col gap-1">
+                <p class="h3">
+                  <a class="dz-link" href={project.href}>
+                    {project.name}
+                  </a>
+                </p>
+                <p class="body-s">{project.blurb}</p>
+              </div>
+            </div>
+          ))
+        }
+      </section>
+
+      <section class="flex flex-col gap-3" aria-labelledby="resume-skills">
+        <h3 class="label" id="resume-skills">Skills</h3>
+        <ul class="flex flex-wrap gap-3" aria-label="Skills">
+          {
+            skills.map((skill) => (
+              <li>
+                <span class={`dz-tag dz-tag--${skill.tone}`}>{skill.name}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="flex flex-col gap-1" aria-labelledby="resume-education">
+        <h3 class="label" id="resume-education">Education</h3>
+        {
+          education.map((school) => (
+            <div class={entry}>
+              <span class={entryDates}>{school.dates}</span>
+              <p class="h3">
+                {school.degree} · {school.school}
+              </p>
+            </div>
+          ))
+        }
+      </section>
+
+      <div class="iz-well flex flex-col gap-1 px-4 py-3.5 lg:hidden print:flex">
+        <span class="label">Contact</span>
+        <a class="dz-link body-s" href="https://izzybennett.com">izzybennett.com</a>
+        <a class="dz-link body-s" href="https://github.com/izzyisdizzy">github.com/izzyisdizzy</a>
+        <a class="dz-link body-s" href="mailto:me@izzybennett.com">me@izzybennett.com</a>
+      </div>
     </Window>
   </div>
 </BaseLayout>
