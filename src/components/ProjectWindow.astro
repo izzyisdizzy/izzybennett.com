@@ -26,11 +26,14 @@ const barTitle = repo ? repo.replace(/^https:\/\/github\.com\//, '') : project.i
     <span class="dz-window__title">{barTitle}</span>
   </div>
 
-  {icon ? (
-    <Image src={icon} alt="" width={480} height={360} class="dz-window__media" />
-  ) : (
-    <div class="iz-window-art" aria-hidden="true">✦</div>
-  )}
+  <!-- The frame clips the art's hover zoom (site.css, "Project cards pop on hover"). -->
+  <div class="iz-card-art">
+    {icon ? (
+      <Image src={icon} alt="" width={480} height={360} class="dz-window__media" />
+    ) : (
+      <div class="iz-window-art" aria-hidden="true">✦</div>
+    )}
+  </div>
 
   <div class="dz-window__body flex flex-1 flex-col">
     <h2 class="dz-window__heading"><a href={href} class="hover:text-hotpink">{title}</a></h2>

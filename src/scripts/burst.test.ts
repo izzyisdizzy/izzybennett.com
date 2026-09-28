@@ -33,21 +33,37 @@ function setup({ reduced = false } = {}) {
 }
 
 describe('installBurst', () => {
-  it('bursts a button on pointerdown, not later on release', () => {
+  it('bursts a button on pointerdown', () => {
     const t = setup();
     t.pointerdown('btn');
     expect(t.bursting('btn')).toBe(true);
   });
 
-  it('clears the burst when the longer layer ends, and on cancel', () => {
+  it('clears the burst when the longer layer ends', () => {
     const t = setup();
     t.pointerdown('btn');
     t.animationEnd('btn', 'iz-burst-a');
     expect(t.bursting('btn')).toBe(true);
     t.animationEnd('btn', 'iz-burst-b');
     expect(t.bursting('btn')).toBe(false);
+  });
+
+  it('clears the burst when it is cancelled for real', () => {
+    const t = setup();
     t.pointerdown('btn');
     t.animationEnd('btn', 'iz-burst-b', 'animationcancel');
+    expect(t.bursting('btn')).toBe(false);
+  });
+
+  it('restarts on a quick second press, surviving the old burst being cancelled', () => {
+    const t = setup();
+    t.pointerdown('btn');
+    t.pointerdown('btn');
+    // The restart cancels the first burst; that event lands after the class is back on.
+    t.animationEnd('btn', 'iz-burst-b', 'animationcancel');
+    expect(t.bursting('btn')).toBe(true);
+    // The new burst still clears when it finishes.
+    t.animationEnd('btn', 'iz-burst-b');
     expect(t.bursting('btn')).toBe(false);
   });
 
@@ -70,6 +86,30 @@ describe('installBurst', () => {
     t.animationEnd('opt', 'iz-burst-b');
     // The label's click is forwarded to its input with detail 0, right after the press.
     t.keyClick(t.el('opt').querySelector('input')!);
+    expect(t.bursting('opt')).toBe(false);
+  });
+
+  it('bursts an option picked from the keyboard (arrow keys click the radio)', () => {
+    const t = setup();
+    t.keyClick(t.el('opt').querySelector('input')!);
+    expect(t.bursting('opt')).toBe(true);
+  });
+
+  it("treats the label's forwarded click as an echo even after a long press", () => {
+    const t = setup();
+    const label = t.el('opt');
+    let now = 0;
+    t.win.performance.now = () => now;
+    label.dispatchEvent(new t.win.Event('pointerdown', { bubbles: true }));
+    t.animationEnd('opt', 'iz-burst-b');
+    now = 2000; // held well past the echo window before release
+    // In a browser the label's own click (detail 1) reaches the document first, then the
+    // forwarded click on its input (detail 0). happy-dom forwards before bubbling, so send the
+    // pointer click from inside the option (the input, which has no label to forward it) to get
+    // the browser's order.
+    const input = label.querySelector('input')!;
+    input.dispatchEvent(new t.win.MouseEvent('click', { bubbles: true, detail: 1 }));
+    t.keyClick(input);
     expect(t.bursting('opt')).toBe(false);
   });
 

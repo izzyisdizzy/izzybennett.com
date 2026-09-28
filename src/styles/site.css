@@ -109,7 +109,8 @@
    an option becomes checked. (Pressing also sets off the pixel burst, shared with buttons.) */
 .iz-option:has(:checked) { animation: iz-pick 460ms var(--dz-ease-bounce); }
 .iz-option:has(:checked) .iz-option__check { animation: iz-check-pop 520ms var(--dz-ease-bounce); }
-@keyframes iz-pick { 0% { transform: scale(1); } 30% { transform: scale(0.95); } 65% { transform: scale(1.04); } 100% { transform: scale(1); } }
+/* `scale`, not `transform`, so the squash stacks on the hover lift instead of replacing it. */
+@keyframes iz-pick { 0% { scale: 1; } 30% { scale: 0.95; } 65% { scale: 1.04; } 100% { scale: 1; } }
 @keyframes iz-check-pop { 0% { transform: scale(0) rotate(-90deg); } 70% { transform: scale(1.3) rotate(10deg); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .iz-option,
@@ -521,8 +522,9 @@ a.dz-tag:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
 
 /* Sparkles: one twinkles after each page title, two flank the footer line. A pseudo-element,
    so it sits outside the spans Dizzy.bouncify writes into the h1. The hero name's ::after is
-   its cursor, so it has none. text-shadow: none keeps the neon title glow off the sparkle. */
-h1[data-dz-bounce]:not(.iz-hero-name)::after {
+   its cursor, so it has none; nor does the recipe page's .rx-title, whose motion is M15's.
+   text-shadow: none keeps the neon title glow off the sparkle. */
+h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
   content: "✦" / "";
   display: inline-block;
   margin-left: 0.22em;
@@ -544,8 +546,9 @@ h1[data-dz-bounce]:not(.iz-hero-name)::after {
 
 /* Windows rise into place when a page opens, and their lights blink in turn on hover. No fill
    mode, unlike the canvas: a transform held after the rise would leave every window a
-   stacking context, trapping any popover inside it under the next window. */
-.dz-window { animation: iz-rise 560ms var(--dz-ease-bounce); }
+   stacking context, trapping any popover inside it under the next window. A window that
+   already pops in (.dz-pop, the order receipt) keeps bundle.css's pop. */
+.dz-window:not(.dz-pop) { animation: iz-rise 560ms var(--dz-ease-bounce); }
 @keyframes iz-rise { from { transform: translateY(16px) scale(0.985); } }
 .dz-window:hover .dz-window__light { animation: iz-light 900ms ease-in-out infinite; }
 .dz-window:hover .dz-window__light:nth-child(2) { animation-delay: 150ms; }
@@ -553,28 +556,32 @@ h1[data-dz-bounce]:not(.iz-hero-name)::after {
 @keyframes iz-light { 50% { transform: scale(1.35); filter: brightness(1.25); } }
 
 /* Project cards pop on hover: the window lifts, tilts a touch and grows, with a hard sticker
-   shadow under its bevel, and its artwork zooms slightly inside the frame (the window clips
-   it). The individual translate / rotate / scale properties compose with the rise-in. */
+   shadow under its bevel, and its artwork zooms slightly inside its frame. The frame
+   (.iz-card-art, in ProjectWindow.astro) clips the zoom and carries the divider the media
+   otherwise draws, so the art can't spill over the title bar or the body. The individual
+   translate / rotate / scale properties compose with the rise-in. */
+.iz-card-art { overflow: hidden; border-bottom: var(--stroke-2) solid var(--outline); }
+.iz-card-art > * { border-bottom: 0; }
 .iz-project-card { transition: translate 280ms var(--dz-ease-bounce), rotate 280ms var(--dz-ease-bounce), scale 280ms var(--dz-ease-bounce), box-shadow 200ms ease; }
 .iz-project-card:hover { translate: 0 -6px; rotate: -0.6deg; scale: 1.02; box-shadow: var(--retro-bevel), var(--shadow-sticker-lg); }
-.iz-project-card :is(.dz-window__media, .iz-window-art) { transition: scale 420ms ease; }
-.iz-project-card:hover :is(.dz-window__media, .iz-window-art) { scale: 1.06; }
+.iz-card-art > * { transition: scale 420ms ease; }
+.iz-project-card:hover .iz-card-art > * { scale: 1.06; }
 
 @media (prefers-reduced-motion: reduce) {
   .dz-row,
   .dz-row:hover,
-  .dz-row::after,
+  .dz-row::after { transition: none; transform: none; }
   .iz-project-card,
-  .iz-project-card :is(.dz-window__media, .iz-window-art) { transition: none; transform: none; }
-  .iz-project-card:hover,
-  .iz-project-card:hover :is(.dz-window__media, .iz-window-art) { translate: none; rotate: none; scale: none; }
+  .iz-card-art > * { transition: none; }
+  .iz-project-card:hover { translate: none; rotate: none; scale: none; }
+  .iz-project-card:hover .iz-card-art > * { scale: none; }
   .dz-row:hover,
   button.dz-tag:hover,
   a.dz-tag:hover,
-  h1[data-dz-bounce]:not(.iz-hero-name)::after,
+  h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after,
   .dz-footer p::before,
   .dz-footer p::after,
-  .dz-window,
+  .dz-window:not(.dz-pop),
   .dz-window:hover .dz-window__light { animation: none; }
 }
 
@@ -586,4 +593,5 @@ h1[data-dz-bounce]:not(.iz-hero-name)::after {
   .dz-window { border: 0; box-shadow: none; }
   .dz-window__body { background-image: none; }
   body::after { display: none; }
+  h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after { display: none; }
 }

@@ -26,6 +26,10 @@ export function installBurst(doc: Document, win: Window & typeof globalThis): vo
   installed.add(doc);
 
   const lastPointer = new WeakMap<Element, number>();
+  // Elements whose running burst was just restarted. Restarting cancels the old animation, and
+  // that animationcancel arrives a frame later, after the class is back on: it belongs to the
+  // old burst, so it must not clear the new one.
+  const restarted = new WeakSet<Element>();
   const reduced = () =>
     typeof win.matchMedia === 'function' && win.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -35,6 +39,7 @@ export function installBurst(doc: Document, win: Window & typeof globalThis): vo
 
   function burst(el: Element | null): void {
     if (!el || reduced() || isDisabled(el)) return;
+    if (el.classList.contains('iz-burst')) restarted.add(el);
     el.classList.remove('iz-burst');
     void (el as HTMLElement).offsetWidth; // restart the keyframes on a quick second press
     el.classList.add('iz-burst');
@@ -50,9 +55,14 @@ export function installBurst(doc: Document, win: Window & typeof globalThis): vo
   // Keyboard activation (Enter / Space, and arrow keys moving between radios) arrives as a
   // click with no pointer detail.
   doc.addEventListener('click', (e) => {
-    if ((e as MouseEvent).detail !== 0) return;
     const el = target(e);
     if (!el) return;
+    // A pointer click restarts the echo window, so a press held longer than it still counts
+    // the label's forwarded click, which follows at once, as an echo.
+    if ((e as MouseEvent).detail !== 0) {
+      lastPointer.set(el, win.performance.now());
+      return;
+    }
     const pressed = lastPointer.get(el);
     if (pressed !== undefined && win.performance.now() - pressed < ECHO_MS) return;
     burst(el);
@@ -60,7 +70,13 @@ export function installBurst(doc: Document, win: Window & typeof globalThis): vo
 
   const clear = (e: Event) => {
     if ((e as AnimationEvent).animationName !== LAST_ANIMATION) return;
-    if (e.target instanceof win.Element) e.target.classList.remove('iz-burst');
+    if (!(e.target instanceof win.Element)) return;
+    if (e.type === 'animationcancel' && restarted.has(e.target)) {
+      restarted.delete(e.target);
+      return;
+    }
+    restarted.delete(e.target);
+    e.target.classList.remove('iz-burst');
   };
   doc.addEventListener('animationend', clear);
   doc.addEventListener('animationcancel', clear);
