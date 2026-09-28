@@ -746,4 +746,8 @@ details[open] > .iz-sum .iz-sum__chev { transform: rotate(180deg); }
   .dz-window__body { background-image: none; }
   body::after { display: none; }
   h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after { display: none; }
+  /* tokens.css prints in daylight; fenced code follows suit instead of keeping the dark pair. */
+  :root:not([data-theme="daylight"]) .iz-prose pre span { color: var(--shiki-light); }
+  /* Keep the tag tints even when the browser drops background graphics. */
+  .dz-tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

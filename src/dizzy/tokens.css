@@ -157,3 +157,51 @@
     --shadow-soft: 0 12px 28px rgba(11, 6, 22, 0.7);
   }
 }
+
+/* Paper is white: print in daylight whatever the screen theme. The selector covers both an
+   explicit afterglow and the OS-dark fallback, and outranks both by specificity and order. */
+@media print {
+  :root:not([data-theme="daylight"]) {
+    color-scheme: light;
+    --surface: #ebf2f1;
+    --surface-raised: #f8fbfb;
+    --surface-sunken: #dce7e6;
+    --ink: #14302e;
+    --ink-muted: #3f5f5c;
+    --hairline: #d4e1e0;
+    --outline: #14302e;
+    --hotpink: #c60063;
+    --hotpink-strong: #a80055;
+    --hotpink-soft: #ffd9ec;
+    --on-hotpink: #fff2f8;
+    --orange: #ff7a1a;
+    --orange-strong: #e05e00;
+    --orange-deep: #9c3d00;
+    --orange-soft: #d2ecea;
+    --on-orange: #2a1409;
+    --cocoa: #2f5a57;
+    --cocoa-soft: #d9e5e4;
+    --on-cocoa: #eef6f5;
+    --sunshine: #ffc93c;
+    --on-sunshine: #14302e;
+    --aqua: #00a3b4;
+    --aqua-deep: #00697a;
+    --aqua-soft: #c9f2f6;
+    --on-aqua: #08262b;
+    --visited: #8a3ea8;
+    --leaf: #12694a;
+    --on-leaf: #f2fff8;
+    --cherry: #b8102b;
+    --on-cherry: #fff4f4;
+    --focus: #00697a;
+    --gloss-hi: #ffffffa6;
+    --gloss-lo: #0000001f;
+    --chrome-hi: #ffffff;
+    --chrome-lo: #b4c8c7;
+    --shadow-sticker: 4px 4px 0 #14302e;
+    --shadow-sticker-lg: 7px 7px 0 #14302e;
+    --shadow-pressed: 1px 1px 0 #14302e;
+    --shadow-gel: inset 0 2px 0 #ffffffa6, inset 0 -4px 0 #0000001f;
+    --shadow-soft: 0 10px 24px rgba(20, 48, 46, 0.18);
+  }
+}
