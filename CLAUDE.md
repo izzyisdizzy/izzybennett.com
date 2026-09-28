@@ -26,10 +26,10 @@ Pages, with two small backends alongside it. Tech decisions, and why:
   `name`) and `grams` (override). Steps can reference an ingredient as `[[key]]`
   or `[[key|display text]]`; unbracketed prose is still matched lexically. An
   unknown or ambiguous `[[key]]` **fails the build**, listing the valid keys.
-  `/upload` has no inputs for the v2 fields yet (M6) but carries them through an
-  edit untouched — `yield`/`oven` in page state, each item's `key`/`grams` on its
-  row — so re-saving can't orphan a `[[key]]` and break the build. Keep it that way:
-  any field `/upload` can't edit must still round-trip through `toMarkdown`.
+  `/upload` has inputs for all of them (Yield/Oven, and a Key + Grams line under each
+  ingredient) and checks `[[key]]` refs before publishing. Any field `/upload` can't
+  edit must still round-trip through `toMarkdown`, so re-saving can't orphan a
+  `[[key]]` and break the build.
 - `src/content/pages/*.md` — freeform pages, including the `izzys-cafe` entry
   whose markdown body **is** the cafe menu.
 - `src/content/projects/*.md` — the projects. Frontmatter (`title`, `tagline`,
