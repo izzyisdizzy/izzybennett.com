@@ -30,7 +30,8 @@ to. If `bundle.css`/`bundle.js` are ever re-copied from the canvas, re-apply the
 2. **Single-wave `hover` / `once` bounces** (`bundle.js` `replayOnHover`, plus the
    `.dz-bouncy--hover` / `--once` / `.dz-bouncing` rules in `bundle.css`).
    Upstream pauses an infinite bounce loop on mouse-out, which freezes letters
-   mid-air. Here each wave runs to completion and replays only while the title is
-   still hovered or focused. Reduced motion is checked on every wave, so toggling
+   mid-air. Here a wave starts on `mouseenter` or `focusin`, runs to completion, and
+   replays only while the title is still hovered or keyboard-focused
+   (`:focus-visible`). Reduced motion is checked on every wave, so toggling
    the OS setting applies live. `index.d.ts` documents the
    `'always' | 'hover' | 'once'` trigger.
