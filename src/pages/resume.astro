@@ -1,10 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
 import Window from '../components/Window.astro';
 
-// resume/resume.typ is the single source of truth. The header, experience, skills and education
-// below are a hand-condensed mirror of it (the summary verbatim, each role cut to a line or two)
-// — keep the two in sync by hand. The projects section is web-only; the PDF doesn't have one.
+// resume/resume.typ is the single source of truth. The header, experience and education below are
+// a hand-condensed mirror of it (the summary verbatim, each role cut to a line or two) — keep the
+// two in sync by hand. The skills are a hand-picked headline subset, not a mirror of the resume's
+// skills section, and the projects section is web-only; the PDF has neither.
 const title = 'Mobile Software Engineer';
 const summary =
   'Mobile software engineer with 6+ years shipping Android and iOS apps used by millions. Technical lead for payments-critical systems at Square, scaling Offline Payments to 4M+ sellers and ~$442M/yr in offline volume across mobile and custom hardware.';
@@ -16,7 +18,7 @@ const experience = [
     role: 'Mobile Software Engineer',
     company: 'Square',
     blurb:
-      'Technical lead for Offline Payments and Checkout on Square Point of Sale for Android, iOS and custom hardware. Expanded Offline Payments to 4M+ sellers, raising enablement from ~40% to 92.6% of a ~$442M/yr payment flow.',
+      'Technical lead for Offline Payments and Checkout on Square Point of Sale for Android, iOS and custom hardware. Expanded Offline Payments to 4M+ sellers, raising enablement from ~40% to 92.6% of users on a ~$442M/yr payment flow.',
   },
   {
     dates: 'June 2020 – July 2022',
@@ -33,17 +35,30 @@ const experience = [
   },
 ];
 
+const contact = [
+  { href: 'https://izzybennett.com', label: 'izzybennett.com' },
+  { href: 'https://github.com/izzyisdizzy', label: 'github.com/izzyisdizzy' },
+  { href: 'mailto:me@izzybennett.com', label: 'me@izzybennett.com' },
+];
+
+// Names and links come from the projects collection by id, so a renamed entry fails the build
+// here instead of leaving a dead link.
+const projectEntries = await getCollection('projects');
+const projectLink = (id: string) => {
+  const entry = projectEntries.find((p) => p.id === id);
+  if (!entry) throw new Error(`resume.astro: no project "${id}" in src/content/projects/`);
+  return { name: entry.data.title, href: `/projects/${entry.id}/` };
+};
+
 const projects = [
   {
     dates: '2026 – present',
-    name: 'dizzyos',
-    href: '/projects/dizzyos/',
+    ...projectLink('dizzyos'),
     blurb: "An LED matrix sign that reads the cafe menu off this site's JSON feed. Python on a Raspberry Pi.",
   },
   {
     dates: '2019 – present',
-    name: 'izzybennett.com',
-    href: '/projects/this-site/',
+    ...projectLink('this-site'),
     blurb:
       'This site and the Dizzy design system behind it, with recipes, a cafe ordering flow and a public feed. Built with Astro and Tailwind.',
   },
@@ -63,6 +78,8 @@ const education = [
   { dates: 'August 2017 – May 2020', degree: 'B.S. Computer Science', school: 'George Mason University' },
 ];
 
+// The date column is 176px, not the canvas's 150px: the real ranges ("August 2017 – May 2020")
+// wrap at 150px in mono-s.
 const entry = 'grid gap-1 border-b border-hairline py-5 last:border-b-0 last:pb-0 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-6';
 const entryDates = 'mono-s text-ink-muted sm:pt-1';
 ---
@@ -79,13 +96,11 @@ const entryDates = 'mono-s text-ink-muted sm:pt-1';
       </div>
       <div class="flex gap-3 iz-no-print">
         <a href="/resume.pdf" download class="dz-btn">Download PDF</a>
-        <button type="button" class="dz-btn dz-btn--cocoa lg:hidden" onclick="window.print()">Print</button>
+        <button type="button" class="dz-btn dz-btn--cocoa lg:hidden" data-resume-print>Print</button>
       </div>
       <div class="iz-well hidden w-full flex-col gap-1 p-4 lg:flex print:hidden">
         <span class="label">Contact</span>
-        <a class="dz-link body-s" href="https://izzybennett.com">izzybennett.com</a>
-        <a class="dz-link body-s" href="https://github.com/izzyisdizzy">github.com/izzyisdizzy</a>
-        <a class="dz-link body-s" href="mailto:me@izzybennett.com">me@izzybennett.com</a>
+        {contact.map((link) => <a class="dz-link body-s" href={link.href}>{link.label}</a>)}
       </div>
       <p class="caption hidden lg:block print:hidden">Updated <span class="mono-s">{updated}</span></p>
     </div>
@@ -135,7 +150,7 @@ const entryDates = 'mono-s text-ink-muted sm:pt-1';
 
       <section class="flex flex-col gap-3" aria-labelledby="resume-skills">
         <h3 class="label" id="resume-skills">Skills</h3>
-        <ul class="flex flex-wrap gap-3" aria-label="Skills">
+        <ul class="flex flex-wrap gap-3">
           {
             skills.map((skill) => (
               <li>
@@ -162,10 +177,12 @@ const entryDates = 'mono-s text-ink-muted sm:pt-1';
 
       <div class="iz-well flex flex-col gap-1 px-4 py-3.5 lg:hidden print:flex">
         <span class="label">Contact</span>
-        <a class="dz-link body-s" href="https://izzybennett.com">izzybennett.com</a>
-        <a class="dz-link body-s" href="https://github.com/izzyisdizzy">github.com/izzyisdizzy</a>
-        <a class="dz-link body-s" href="mailto:me@izzybennett.com">me@izzybennett.com</a>
+        {contact.map((link) => <a class="dz-link body-s" href={link.href}>{link.label}</a>)}
       </div>
     </Window>
   </div>
 </BaseLayout>
+
+<script>
+  document.querySelector('[data-resume-print]')?.addEventListener('click', () => window.print());
+</script>
