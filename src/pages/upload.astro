@@ -79,7 +79,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
 
     <!-- Shown when an autosaved draft was put back into the form on load. -->
     <div id="draft-banner" class="iz-banner hidden" role="status">
-      <span class="body-s">Restored your unsaved draft.</span>
+      <span id="draft-banner-text" class="body-s"></span>
       <button type="button" id="discard-draft" class="iz-linkbtn">Discard</button>
     </div>
 
@@ -93,7 +93,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       </select>
     </div>
 
-    <form id="recipe-form" class="flex flex-col gap-6 sm:gap-7" novalidate>
+    <form id="recipe-form" class="iz-uploader flex flex-col gap-6 sm:gap-7" novalidate>
       <Window title="basics.txt" aria-label="Basics" bodyClass={windowBody}>
         <div class={fieldCol}>
           <label for="title" class={labelCls}>Title *</label>
@@ -217,7 +217,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
 
   <!-- The in-page confirm (see izConfirm): moved under whichever card asked, over a scrim. -->
   <div id="confirm-scrim" class="iz-scrim hidden" aria-hidden="true"></div>
-  <div id="confirm" class="iz-confirm hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+  <div id="confirm" tabindex="-1" class="iz-confirm hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text">
     <div class="dz-window__bar">
       <span class="dz-window__lights" aria-hidden="true" set:html={lights} />
       <span id="confirm-title" class="dz-window__title">izzybennett.com says</span>
@@ -421,6 +421,8 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
     const publishBtn = $('#publish');
     // `let`: setHeading swaps in a fresh <h1> so the bounce re-splits the new text.
     let pageTitle = $('#page-title');
+    // Captured before Dizzy's bounce adds its runtime classes, so a swapped heading starts clean.
+    const HEADING_CLASS = pageTitle.className;
     const pageIntro = $('#page-intro');
     const picker = $('#recipe-picker');
     const deleteBtn = $('#delete-recipe');
@@ -665,6 +667,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       renumberSteps();
       formDirty = true; // a reorder is a real edit, but moving a node fires no 'input' event
       refreshPreview();
+      saveDraftSoon();
     });
 
     // ---- Session / auth -------------------------------------------------
@@ -717,38 +720,51 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
     const errorText = (err) =>
       err instanceof TypeError ? 'Something went wrong.' : err instanceof Error ? err.message : 'Something went wrong.';
 
+    // While a publish or delete is in flight, hold Publish, Delete and the picker — so switching
+    // recipes can't change editingSlug under the save, or open a confirm over it.
+    function setBusy(busy) {
+      publishBtn.disabled = deleteBtn.disabled = picker.disabled = busy;
+    }
+
     // ---- In-page confirm -------------------------------------------------
     // Replaces window.confirm with a small window anchored to what asked: under the picker
     // ('picker') or above the action bar ('actions'). Resolves true on OK, false on Cancel,
-    // Escape or a click on the scrim. Publish and Delete are held disabled while it's open.
+    // Escape or a click on the scrim. One at a time: a second ask while one is open is refused.
+    // Publish, Delete and the picker are held disabled while it's open.
+    let confirmOpen = false;
     function izConfirm(message, where) {
+      if (confirmOpen) return Promise.resolve(false);
+      confirmOpen = true;
       const below = where === 'picker';
       (below ? pickerCard : actionBar).appendChild(confirmEl);
       confirmEl.classList.toggle('iz-confirm--below', below);
       confirmEl.classList.toggle('iz-confirm--above', !below);
       confirmText.textContent = message;
       const returnFocus = document.activeElement;
-      const wasDisabled = [publishBtn.disabled, deleteBtn.disabled];
-      publishBtn.disabled = deleteBtn.disabled = true;
+      const wasDisabled = [publishBtn.disabled, deleteBtn.disabled, picker.disabled];
+      setBusy(true);
       confirmScrim.classList.remove('hidden');
       confirmEl.classList.remove('hidden');
       confirmOk.focus();
 
       return new Promise((resolve) => {
         const close = (ok) => {
+          confirmOpen = false;
           confirmEl.classList.add('hidden');
           confirmScrim.classList.add('hidden');
-          [publishBtn.disabled, deleteBtn.disabled] = wasDisabled;
+          [publishBtn.disabled, deleteBtn.disabled, picker.disabled] = wasDisabled;
           confirmOk.removeEventListener('click', onOk);
           confirmCancel.removeEventListener('click', onCancel);
           confirmScrim.removeEventListener('click', onCancel);
-          confirmEl.removeEventListener('keydown', onKey);
+          document.removeEventListener('keydown', onKey, true);
           returnFocus?.focus?.();
           resolve(ok);
         };
         const onOk = () => close(true);
         const onCancel = () => close(false);
-        // Escape cancels; Tab and Shift+Tab stay on the dialog's two buttons.
+        // On the document, not the dialog, so a click on the dialog's text (which drops focus
+        // to <body>) can't let Escape lapse or Tab walk into the page under the scrim. Tab and
+        // Shift+Tab move between the two buttons.
         const onKey = (e) => {
           if (e.key === 'Escape') { e.preventDefault(); close(false); }
           else if (e.key === 'Tab') {
@@ -759,7 +775,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
         confirmOk.addEventListener('click', onOk);
         confirmCancel.addEventListener('click', onCancel);
         confirmScrim.addEventListener('click', onCancel);
-        confirmEl.addEventListener('keydown', onKey);
+        document.addEventListener('keydown', onKey, true);
       });
     }
 
@@ -1102,8 +1118,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       const slug = editingSlug ?? slugify(recipe.title);
       const md = toMarkdown(recipe);
 
-      publishBtn.disabled = true;
-      deleteBtn.disabled = true;
+      setBusy(true);
       try {
         setStatus(editingSlug ? 'Saving…' : 'Publishing…', 'info');
         // New grams ratios ride along so the Worker can grow the shared list — but only for
@@ -1177,23 +1192,20 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
         }
 
         // Add mode: clear the form for the next recipe. Edit mode: stay put for further tweaks —
-        // but an edit saved as a draft has just left the picker (syncPickerEntry), so the page
-        // drops back to add chrome with the form as it is, rather than editing a missing entry.
+        // on the same slug even if this save made it a draft, so a re-save can't strand the file.
         if (!editingSlug) {
           clearPending(); // don't carry a failed-save's ratios into the next recipe
           form.reset();
           resetDynamic();
-        } else if (recipe.draft) {
-          editingSlug = null;
-          picker.value = '';
-          setAddChrome();
         }
         formDirty = false;
       } catch (err) {
         setStatus(errorText(err), 'err');
       } finally {
-        publishBtn.disabled = false;
-        deleteBtn.disabled = false;
+        setBusy(false);
+        // The overwrite confirm hands focus back to Publish while it's still disabled, which
+        // drops it on <body>; put it back now that the button works again.
+        if (document.activeElement === document.body) publishBtn.focus();
       }
     });
 
@@ -1208,8 +1220,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       const title = recipesBySlug[slug]?.title ?? slug;
       if (!(await izConfirm(`Delete “${title}”? This removes ${slug}.md from the site.`, 'actions'))) return;
 
-      deleteBtn.disabled = true;
-      publishBtn.disabled = true;
+      setBusy(true);
       try {
         setStatus('Deleting…', 'info');
         const res = await apiFetch('/api/recipe', {
@@ -1230,8 +1241,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       } catch (err) {
         setStatus(errorText(err), 'err');
       } finally {
-        deleteBtn.disabled = false;
-        publishBtn.disabled = false;
+        setBusy(false);
       }
     });
 
@@ -1352,7 +1362,7 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       if (pageTitle.textContent === text) return;
       const h1 = document.createElement('h1');
       h1.id = pageTitle.id;
-      h1.className = pageTitle.className;
+      h1.className = HEADING_CLASS;
       h1.dataset.dzBounce = 'once';
       h1.textContent = text;
       pageTitle.replaceWith(h1);
@@ -1431,8 +1441,10 @@ const lights = '<span class="dz-window__light"></span><span class="dz-window__li
       refreshPreview();
 
       refreshSlug();
-      // Auto-restored, with a one-click way to throw it away and start clean.
+      // Auto-restored, with a one-click way to throw it away and start clean. The text is
+      // written as the banner shows, so its role=status region announces it.
       draftBanner.classList.remove('hidden');
+      $('#draft-banner-text').textContent = 'Restored your unsaved draft.';
     }
     $('#discard-draft').addEventListener('click', () => { clearDraft(); enterAddMode(); });
 

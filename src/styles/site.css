@@ -62,8 +62,7 @@
 .iz-field:focus-visible { outline: var(--stroke-2) solid var(--focus); outline-offset: 2px; }
 .iz-field[aria-invalid="true"] { border-color: var(--cherry); box-shadow: 0 0 0 1px var(--cherry); }
 
-/* Selects draw their own chevron (the native one ignores the ink colour in afterglow), and
-   textareas get room for a paragraph. */
+/* Selects draw their own chevron (the native one ignores the ink colour in afterglow). */
 select.iz-field {
   appearance: none;
   padding-right: 34px;
@@ -73,7 +72,6 @@ select.iz-field {
   background-repeat: no-repeat;
   cursor: pointer;
 }
-textarea.iz-field { min-height: 88px; resize: vertical; line-height: 22px; }
 
 /* A labelled checkbox (the uploader's Draft toggle): a 44px-tall target, box tinted brand pink. */
 .iz-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 700; cursor: pointer; }
@@ -626,6 +624,9 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
 /* ---------------------------------------------------------------- uploader */
 /* The /upload editor, from the canvas's Upload boards. Rows are reordered by a grip and removed
    by a square ✕; ingredient and step groups sit in dashed boxes inside their windows. */
+/* The uploader's step and note fields get room for a paragraph. */
+.iz-uploader textarea.iz-field { min-height: 88px; resize: vertical; line-height: 22px; }
+
 .iz-status { margin: 0; }
 .iz-status--ok { color: var(--leaf); font-weight: 700; }
 .iz-status--err { color: var(--cherry); font-weight: 700; }
@@ -662,8 +663,9 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
 
 .iz-group { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: var(--stroke-1) dashed var(--hairline); border-radius: var(--radius-md); background: var(--surface); }
 
-/* One ingredient: grip, qty, unit, name, detail, ✕ on one line (grid areas); on a phone the
-   name and detail drop to a second line under the amount (flex with a forced break). */
+/* One ingredient: grip, qty, unit, name, detail, ✕ on one line (grid areas) from md; below
+   that the name and detail drop to a second line under the amount (flex with a forced break) —
+   the line holds 440px of fixed cells, which leaves the name too narrow short of md. */
 .iz-ingrow {
   display: grid;
   grid-template-columns: 18px 80px 108px minmax(0, 1fr) 150px 44px;
@@ -677,7 +679,7 @@ h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
 .iz-ingrow > [data-typeahead] { grid-area: name; }
 .iz-ingrow > [data-field="item-detail"] { grid-area: detail; }
 .iz-ingrow > [data-action="remove"] { grid-area: x; }
-@media (max-width: 39.99rem) {
+@media (max-width: 47.99rem) {
   .iz-ingitem { padding-bottom: 10px; border-bottom: var(--stroke-hair) solid var(--hairline); }
   /* Line 1: grip, qty, unit, ✕ pushed right. The zero-height ::after takes a whole line, so the
      name (indented past the grip) and the detail always start line 2; the 4px row gap on either
