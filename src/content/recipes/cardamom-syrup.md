@@ -1,6 +1,6 @@
 ---
 title: "Cardamom Syrup"
-category: "other"
+category: "drink"
 keywords: ["syrup", "coffee", "matcha", "cardamom"]
 prepTime: 10
 cookTime: 20

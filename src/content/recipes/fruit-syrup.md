@@ -1,6 +1,6 @@
 ---
 title: "Fruit Syrup"
-category: "other"
+category: "drink"
 keywords: ["melon", "strawberry", "honeydew", "cantaloupe", "watermelon"]
 prepTime: 5
 cookTime: 0

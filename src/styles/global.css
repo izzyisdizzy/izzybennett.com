@@ -26,31 +26,6 @@
    @izzy/auth-client. A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
 @import "@izzy/auth-client/styles/auth.css";
 
-/* Legacy `dark:` utilities follow the Dizzy theme instead of the OS while pages are still being
-   migrated, so toggling daylight on a dark OS cannot leave light text on a light page. The second
-   branch mirrors the no-JS fallback in tokens.css: with nothing stamped on <html>, a dark OS gets
-   afterglow tokens, so the utilities must flip with them. Remove once no `dark:` variant remains
-   in the site (and drop the accent bridge below with it). */
-@custom-variant dark {
-  &:where([data-theme="afterglow"], [data-theme="afterglow"] *) {
-    @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:root:not([data-theme="daylight"]), :root:not([data-theme="daylight"]) *) {
-      @slot;
-    }
-  }
-}
-
-@theme inline {
-  /* Bridge for the not-yet-migrated /upload and /update-menu, whose class strings still use the
-     old accent-* palette. Goes away with their restyle (and the dark variant above with it). */
-  --color-accent-50: var(--hotpink-soft);
-  --color-accent-100: var(--hotpink);
-  --color-accent-600: var(--hotpink);
-  --color-accent-700: var(--hotpink-strong);
-}
-
 /* Element defaults go in the base layer so both the component layer (dz-btn:focus-visible,
    iz-field) and utilities (focus:outline-none, font-mono on a heading) can still override them.
    Unlayered, these would beat every layered rule regardless of specificity. */
