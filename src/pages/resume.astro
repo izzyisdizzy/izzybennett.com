@@ -9,23 +9,27 @@ const skills = ['Kotlin', 'Swift', 'Jetpack Compose', 'SwiftUI', 'Payments'];
 ---
 
 <BaseLayout title="Resume" description="The resume of Izzy Bennett, mobile software engineer.">
-  <div class="flex flex-wrap items-end justify-between gap-4">
-    <div>
-      <h1 class="display-xl" data-dz-bounce="once">Resume</h1>
-      <p class="body-l mt-2 text-ink-muted">Please hire me.</p>
+  <!-- From lg, as on the canvas board: the header is a 300px sticky column (top clears the sticky
+       nav) beside the resume window. Below lg it's a row above the window. -->
+  <div class="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-12">
+    <div class="flex flex-wrap items-end justify-between gap-4 lg:sticky lg:top-28 lg:flex-col lg:items-start lg:gap-6">
+      <div>
+        <h1 class="display-xl" data-dz-bounce="once">Resume</h1>
+        <p class="body-l mt-2 text-ink-muted">Please hire me.</p>
+      </div>
+      <a href="/resume.pdf" download class="dz-btn iz-no-print">Download PDF</a>
     </div>
-    <a href="/resume.pdf" download class="dz-btn iz-no-print">Download PDF</a>
+
+    <Window as="article" title="resume.pdf" class="mt-8 lg:mt-0" bodyClass="p-6 sm:px-14 sm:py-10">
+      <p class="body-l">
+        Mobile software engineer with 6+ years shipping Android and iOS apps used by millions. Technical
+        lead for payments-critical systems at Square, scaling Offline Payments to 4M+ sellers and
+        ~$442M/yr in offline volume across mobile and custom hardware.
+      </p>
+
+      <ul class="mt-6 flex flex-wrap gap-2" aria-label="Skills">
+        {skills.map((skill) => <li><span class="dz-tag dz-tag--aqua">{skill}</span></li>)}
+      </ul>
+    </Window>
   </div>
-
-  <Window as="article" title="resume.pdf" class="mt-8" bodyClass="p-6 sm:px-14 sm:py-10">
-    <p class="body-l">
-      Mobile software engineer with 6+ years shipping Android and iOS apps used by millions. Technical
-      lead for payments-critical systems at Square, scaling Offline Payments to 4M+ sellers and
-      ~$442M/yr in offline volume across mobile and custom hardware.
-    </p>
-
-    <ul class="mt-6 flex flex-wrap gap-2" aria-label="Skills">
-      {skills.map((skill) => <li><span class="dz-tag dz-tag--aqua">{skill}</span></li>)}
-    </ul>
-  </Window>
 </BaseLayout>

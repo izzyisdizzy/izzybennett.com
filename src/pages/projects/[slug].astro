@@ -32,67 +32,71 @@ const kind = (other: CollectionEntry<'projects'>) => (other.data.repo ? 'repo' :
 
 <BaseLayout title={title} description={tagline}>
   <p><a href="/projects/" class="dz-link body-s">← Projects</a></p>
-  <h1 class="display-l mt-4" data-dz-bounce="once">{title}</h1>
-  <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
 
-  <div class="iz-prose mt-8">
-    <Content />
-  </div>
+  <!-- As on the canvas board: content beside a 420px aside from lg up. Below lg the aside follows
+       the content, its two windows side by side from sm, stacked on phones. -->
+  <div class="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-12">
+    <div class="min-w-0">
+      <h1 class="display-l" data-dz-bounce="once">{title}</h1>
+      <p class="mt-3"><span class="dz-tag dz-tag--aqua">{tagline}</span></p>
 
-  {demo && (
-    <div class="mt-8">
-      <FeedDemo kind={demo} />
+      <div class="iz-prose mt-8 max-w-[45rem]">
+        <Content />
+      </div>
+
+      {demo && (
+        <div class="mt-8">
+          <FeedDemo kind={demo} />
+        </div>
+      )}
     </div>
-  )}
 
-  <!-- The canvas board puts this aside in a 420px side column, but <main> is max-w-3xl here, so
-       that would crush the prose. It follows the content instead: its two windows side by side
-       from sm up, stacked on phones. -->
-  {(hasFacts || others.length > 0) && (
-    <aside class="mt-12 grid items-start gap-6 sm:grid-cols-2" aria-label={`About ${title}`}>
-      <!-- Facts come only from existing frontmatter; a row renders only when it has a value. The
-           repo and links rows carry every link the page has, so there's no separate button row. -->
-      {hasFacts && (
-        <Window title="facts.txt" bodyClass="p-6">
-          <h2 class="h3">Facts</h2>
-          <dl class="mt-3">
-            {repo && (
-              <div class="iz-fact">
-                <dt class="body-s text-ink-muted">Repo</dt>
-                <dd class="mono"><a href={repo} class="dz-link" target="_blank" rel="noopener noreferrer">{repoSlug}</a></dd>
-              </div>
-            )}
-            {factLinks.length > 0 && (
-              <div class="iz-fact">
-                <dt class="body-s text-ink-muted">Links</dt>
-                <dd class="mono flex flex-wrap justify-end gap-x-3">
-                  {factLinks.map((link) => <a href={link.href} class="dz-link">{link.label}</a>)}
-                </dd>
-              </div>
-            )}
-            {feedSrc && (
-              <div class="iz-fact">
-                <dt class="body-s text-ink-muted">Live feed</dt>
-                <dd class="mono"><a href={feedSrc} class="dz-link">{feedSrc}</a></dd>
-              </div>
-            )}
-          </dl>
-        </Window>
-      )}
+    {(hasFacts || others.length > 0) && (
+      <aside class="mt-12 grid items-start gap-6 sm:grid-cols-2 lg:mt-0 lg:grid-cols-1" aria-label={`About ${title}`}>
+        <!-- Facts come only from existing frontmatter; a row renders only when it has a value. The
+             repo and links rows carry every link the page has, so there's no separate button row. -->
+        {hasFacts && (
+          <Window title="facts.txt" bodyClass="p-6">
+            <h2 class="h3">Facts</h2>
+            <dl class="mt-3">
+              {repo && (
+                <div class="iz-fact">
+                  <dt class="body-s text-ink-muted">Repo</dt>
+                  <dd class="mono"><a href={repo} class="dz-link" target="_blank" rel="noopener noreferrer">{repoSlug}</a></dd>
+                </div>
+              )}
+              {factLinks.length > 0 && (
+                <div class="iz-fact">
+                  <dt class="body-s text-ink-muted">Links</dt>
+                  <dd class="mono flex flex-wrap justify-end gap-x-3">
+                    {factLinks.map((link) => <a href={link.href} class="dz-link">{link.label}</a>)}
+                  </dd>
+                </div>
+              )}
+              {feedSrc && (
+                <div class="iz-fact">
+                  <dt class="body-s text-ink-muted">Live feed</dt>
+                  <dd class="mono"><a href={feedSrc} class="dz-link">{feedSrc}</a></dd>
+                </div>
+              )}
+            </dl>
+          </Window>
+        )}
 
-      {others.length > 0 && (
-        <Window title="more-projects.txt" bodyClass="px-6 pb-6 pt-5">
-          <h2 class="h3">More projects</h2>
-          <div class="mt-3 flex flex-col">
-            {others.map((other) => (
-              <a href={`/projects/${other.id}/`} class="dz-row iz-row-tight">
-                <span class="dz-row__title">{other.data.title}</span>
-                {kind(other) && <span class="dz-row__meta">{kind(other)}</span>}
-              </a>
-            ))}
-          </div>
-        </Window>
-      )}
-    </aside>
-  )}
+        {others.length > 0 && (
+          <Window title="more-projects.txt" bodyClass="px-6 pb-6 pt-5">
+            <h2 class="h3">More projects</h2>
+            <div class="mt-3 flex flex-col">
+              {others.map((other) => (
+                <a href={`/projects/${other.id}/`} class="dz-row iz-row-tight">
+                  <span class="dz-row__title">{other.data.title}</span>
+                  {kind(other) && <span class="dz-row__meta">{kind(other)}</span>}
+                </a>
+              ))}
+            </div>
+          </Window>
+        )}
+      </aside>
+    )}
+  </div>
 </BaseLayout>

@@ -30,7 +30,7 @@ const picks = [0, 1, 2]
       <!-- The page's one bouncing headline (see the display-xxl token note). -->
       <h1 class="display-xxl mt-2 iz-hero-name" data-dz-bounce="once">Izzy Bennett</h1>
       <p class="body-l mt-4 text-ink-muted">Welcome to my personal website!</p>
-      <p class="mt-4">
+      <p class="mt-4 max-w-[45rem]">
         This website is a personal project of mine. I mostly use it to store my recipes and
         share them with others. I can be reached at <a class="dz-link" href="mailto:me@izzybennett.com">me@izzybennett.com</a>.
       </p>
@@ -41,7 +41,7 @@ const picks = [0, 1, 2]
       </div>
     </Window>
 
-    <figure class="dz-window w-40 shrink-0 self-center sm:w-48">
+    <figure class="dz-window w-40 shrink-0 self-center sm:w-48 lg:w-64">
       <div class="dz-window__bar">
         <span class="dz-window__lights" aria-hidden="true">
           <span class="dz-window__light"></span><span class="dz-window__light"></span><span class="dz-window__light"></span>
@@ -53,8 +53,8 @@ const picks = [0, 1, 2]
       <Image
         src={me}
         alt="Izzy, on a canal in Amsterdam"
-        width={192}
-        height={192}
+        width={256}
+        height={256}
         densities={[1, 2, 3]}
         class="dz-window__media aspect-square border-b-0"
       />

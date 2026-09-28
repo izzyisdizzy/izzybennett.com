@@ -22,6 +22,8 @@
 /* Recipe page + index row styles (v2: on Dizzy tokens and dz- classes), popovers, inline amounts,
    the upload typeahead, and the @source lines that register the engine with Tailwind. */
 @import "@izzy/recipe-engine/styles/recipes.css";
+/* The recipe page's two-column desktop layout; unlayered after recipes.css (see the file). */
+@import "./recipe-layout.css";
 /* `.auth-only` / `.auth-when-out`, gated off <html data-auth> by the applyAuthState() helper in
    @izzy/auth-client. A signed-in gate, not a permission gate — admin-only UI checks /api/me. */
 @import "@izzy/auth-client/styles/auth.css";
