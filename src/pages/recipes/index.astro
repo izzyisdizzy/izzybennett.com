@@ -43,28 +43,32 @@ const countLabel = (n: number) => `${n} ${n === 1 ? 'recipe' : 'recipes'}`;
     </div>
   </div>
 
-  <div class="mt-8">
-    <label for="recipe-search" class="sr-only">Search recipes</label>
-    <input
-      type="search"
-      id="recipe-search"
-      placeholder="Search recipes, ingredients, steps…"
-      autocomplete="off"
-      class="iz-field"
-    />
-  </div>
+  <!-- Search above the filters, as on the phone board; from lg they share a row, filters beside a
+       320px search, as on the desktop board. -->
+  <div class="mt-8 flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center lg:gap-6">
+    <div class="lg:order-last">
+      <label for="recipe-search" class="sr-only">Search recipes</label>
+      <input
+        type="search"
+        id="recipe-search"
+        placeholder="Search recipes, ingredients, steps…"
+        autocomplete="off"
+        class="iz-field"
+      />
+    </div>
 
-  <div id="recipe-filters" class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-    {filters.map((filter) => (
-      <button
-        type="button"
-        data-filter={filter}
-        class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
-        aria-pressed={filter === '' ? 'true' : 'false'}
-      >
-        {filter || 'All'}
-      </button>
-    ))}
+    <div id="recipe-filters" class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+      {filters.map((filter) => (
+        <button
+          type="button"
+          data-filter={filter}
+          class:list={['dz-tag iz-tag-button', { 'dz-tag--selected': filter === '' }]}
+          aria-pressed={filter === '' ? 'true' : 'false'}
+        >
+          {filter || 'All'}
+        </button>
+      ))}
+    </div>
   </div>
 
   <!-- The count and list live in the recipes/ window, search and filters above it, as on the

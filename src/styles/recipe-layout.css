@@ -1,0 +1,24 @@
+/* The recipe page's desktop layout, from the canvas's Recipe board: ingredients.txt beside
+   steps.txt, with the header and the optional tools/notes windows spanning both. The ingredients
+   column is 440px at the board's width and narrows toward lg so the steps keep a readable measure.
+   Unlayered and imported after the engine's recipes.css, like the engine itself, so these page
+   rules sit beside the engine's rather than under them (a layered site.css rule loses to any
+   engine rule on the same property). Screen and lg up only, so phones, tablets and print keep the
+   engine's single column. The windows are targeted by the aria-labelledby ids the engine's
+   Recipe.astro gives them. */
+
+@media screen and (min-width: 64rem) {
+  /* The board's lede measure; below lg <main> is narrow enough on its own. */
+  main .rx-lede { max-width: 38.75rem; }
+
+  main .rx-recipe {
+    display: grid;
+    grid-template-columns: clamp(20rem, 38.2%, 440px) minmax(0, 1fr);
+    column-gap: var(--space-7);
+    align-items: start;
+  }
+
+  main .rx-recipe > * { grid-column: 1 / -1; }
+  main .rx-recipe > [aria-labelledby="rx-ingredients"] { grid-column: 1; }
+  main .rx-recipe > [aria-labelledby="rx-steps"] { grid-column: 2; }
+}
