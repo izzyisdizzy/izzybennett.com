@@ -199,7 +199,7 @@ const columns = [
         btn.type = 'button';
         btn.classList.add('cursor-pointer', 'dz-wiggle-hover');
         btn.title = `Move to ${next}`;
-        btn.setAttribute('aria-label', `${spoken.join(', ')} — move to ${next}`);
+        btn.setAttribute('aria-label', `${spoken.join(', ')}, move to ${next}`);
         // In-flight guard via aria-disabled, not `disabled`: disabling the focused button would
         // push focus to <body>, and render() could no longer put it back on this order.
         btn.addEventListener('click', async () => {
@@ -273,7 +273,7 @@ const columns = [
         meta.textContent = '● live';
         meta.className = 'dz-tag dz-tag--ready';
       } else {
-        meta.textContent = 'offline — retrying';
+        meta.textContent = 'offline · retrying';
         meta.className = 'dz-tag dz-tag--stopped';
       }
     }

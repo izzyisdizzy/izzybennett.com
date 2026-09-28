@@ -83,7 +83,7 @@ const picks = [0, 1, 2]
     fetchKitchenOpen(marquee.dataset.orderApi ?? '').then((open) => {
       if (open === null) return;
       for (const el of marquee.querySelectorAll('[data-kitchen-status]')) {
-        el.textContent = open ? 'open — order a drink' : 'closed right now 😴';
+        el.textContent = open ? 'open for orders' : 'closed right now 😴';
       }
     });
   }
