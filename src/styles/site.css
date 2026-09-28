@@ -152,7 +152,8 @@
 
 /* ------------------------------------------------------------ theme toggle */
 /* Shows the theme you'd switch *to*: a moon by day, a sun by night. */
-.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding-inline: var(--space-2); font-size: 16px; }
+/* Two classes deep so the glyph size beats the retro type block's later `.dz-btn--sm` size. */
+.dz-btn.iz-theme-toggle { min-width: 40px; min-height: 40px; justify-content: center; padding-inline: var(--space-2); font-size: 16px; }
 .iz-theme-toggle__sun { display: none; }
 [data-theme="afterglow"] .iz-theme-toggle__sun { display: inline; }
 [data-theme="afterglow"] .iz-theme-toggle__moon { display: none; }
@@ -287,6 +288,93 @@
   background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent 55%, rgba(0, 0, 0, 0.06));
 }
 
+/* ------------------------------------------------------------- retro type */
+/* The canvas's Retro type and CRT (docs/design/flows/site.css, "Retro"): terminal-style mono
+   for the small UI text, a neon glow on the display titles, a blinking cursor after the home
+   page name, and faint scanlines with a vignette over the whole viewport. The --retro-* colours
+   are the canvas's shipped per-scheme values; like --retro-bevel they are retro-only, so they
+   live here rather than in tokens.json. Afterglow is keyed the way tokens.css keys it. */
+:root {
+  --retro-line: color-mix(in srgb, var(--outline) 3%, transparent);
+  --retro-vignette: color-mix(in srgb, var(--outline) 7%, transparent);
+}
+[data-theme="afterglow"] {
+  --retro-line: color-mix(in srgb, var(--chrome-lo) 30%, transparent);
+  --retro-vignette: color-mix(in srgb, var(--chrome-lo) 55%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="daylight"]) {
+    --retro-line: color-mix(in srgb, var(--chrome-lo) 30%, transparent);
+    --retro-vignette: color-mix(in srgb, var(--chrome-lo) 55%, transparent);
+  }
+}
+
+/* Terminal type. Overrides bundle.css's lowercase .dz-row__meta and the button sizes (same
+   layer, later import). */
+.dz-nav__link,
+.dz-btn,
+.iz-mnav > summary,
+.label,
+.caption,
+.dz-row__meta,
+.dz-footer {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dz-nav__link { font-size: 13px; }
+.dz-btn { font-size: 14px; }
+.dz-btn--lg { font-size: 16px; }
+.dz-btn--sm { font-size: 12px; }
+/* Syntax samples inside a caption (the /upload help's [[key]]) must show their real casing. */
+.caption code { text-transform: none; letter-spacing: normal; }
+
+/* Neon titles: an aqua/pink RGB split plus a soft halo in the text's own colour. The text
+   colour itself is untouched. .rx-title comes from the unlayered recipes.css, which sets no
+   text-shadow, so this layered rule still applies there. */
+.display-xxl,
+.display-xl,
+.display-l,
+main .rx-title {
+  text-shadow:
+    -2px 0 0 color-mix(in srgb, var(--aqua) 70%, transparent),
+    2px 0 0 color-mix(in srgb, var(--hotpink) 55%, transparent),
+    0 0 14px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+/* The blinking block cursor after the home page name. A pseudo-element, not a span:
+   Dizzy.bouncify rewrites the h1's children, and its hover replay listens on the last child
+   span. The empty alt text keeps screen readers from announcing the glyph. This ::after is
+   taken, so any sparkle on the hero title has to use ::before or its own element. It takes no
+   inline width (the gap is a translate), so a name that fills the line never wraps the cursor
+   onto a line of its own. */
+.iz-hero-name::after {
+  content: "▌" / "";
+  display: inline-block;
+  width: 0;
+  translate: 0.06em 0;
+  color: var(--aqua);
+  animation: iz-cursor-blink 1s steps(1) infinite;
+}
+@keyframes iz-cursor-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .iz-hero-name::after { animation: none; }
+}
+
+/* CRT: scanlines and a vignette fixed over the viewport, above the sticky nav (z 10) and the
+   mobile sheet (z 20). Click-through, and faint enough that focus rings read through it. Fixed
+   at inset 0, so it adds no scrollable overflow. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, var(--retro-line) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at center, transparent 65%, var(--retro-vignette) 100%);
+}
+
 /* ----------------------------------------------------------- button burst */
 /* Pixels in the button's own colours pop out and fall when a button is released. Pure CSS:
    while :active they snap to the button's edge with no transition; on release `scale` eases
@@ -384,4 +472,5 @@ html { overflow-x: clip; }
   .dz-window__bar { display: none; }
   .dz-window { border: 0; box-shadow: none; }
   .dz-window__body { background-image: none; }
+  body::after { display: none; }
 }
