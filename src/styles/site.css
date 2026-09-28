@@ -385,13 +385,14 @@ body::after {
 }
 
 /* ----------------------------------------------------------- button burst */
-/* Pixels in the button's own colours pop out and fall the moment a button or cafe option is
-   pressed. src/scripts/burst.ts adds .iz-burst on pointer-down (or keyboard activation) and
-   clears it when the keyframes end: a quick upward pop, then gravity pulls the pixels down.
-   Two layers break up the uniformity: ::after holds the heavier pixels, which drop further and
-   faster and drift right; ::before holds lighter ones, which fall short, slower and drift left.
-   Positions are deliberately lopsided; sizes, shapes and colours mixed. Nothing plays on load
-   or hover, only on a press. Ghost buttons use hot pink, as their fill is the page ground. */
+/* Pixels in the button's own colours pop out and fall the moment a button, cafe option or
+   segmented-control button is pressed. src/scripts/burst.ts adds .iz-burst on pointer-down (or
+   keyboard activation) and clears it when the keyframes end: a quick upward pop, then gravity
+   pulls the pixels down. Two layers break up the uniformity: ::after holds the heavier pixels,
+   which drop further and faster and drift right; ::before holds lighter ones, which fall short,
+   slower and drift left. Positions are deliberately lopsided; sizes, shapes and colours mixed.
+   Nothing plays on load or hover, only on a press. Ghost buttons and segmented buttons use hot
+   pink, as their fill is transparent. */
 .dz-btn {
   position: relative;
   --dz-burst: var(--dz-btn-fill);
@@ -399,6 +400,11 @@ body::after {
 }
 .dz-btn--ghost { --dz-burst: var(--hotpink); --dz-burst-2: var(--hotpink-strong); }
 .iz-option { --dz-burst: var(--hotpink); --dz-burst-2: var(--orange); }
+.dz-seg__btn {
+  position: relative;
+  --dz-burst: var(--hotpink);
+  --dz-burst-2: var(--hotpink-strong);
+}
 /* Mid-burst the pixels spill past the element, which counts as scrollable overflow: a button
    or option at the edge of a phone screen would make the page scroll sideways. Clip
    horizontally on both: <html>'s value goes to the viewport, where `clip` acts as `hidden` and
@@ -411,7 +417,9 @@ body { overflow-x: clip; }
 .dz-btn::before,
 .dz-btn::after,
 .iz-option::before,
-.iz-option::after {
+.iz-option::after,
+.dz-seg__btn::before,
+.dz-seg__btn::after {
   content: "";
   position: absolute;
   inset: -12px;
@@ -419,7 +427,8 @@ body { overflow-x: clip; }
   opacity: 0;
 }
 .dz-btn::after,
-.iz-option::after {
+.iz-option::after,
+.dz-seg__btn::after {
   background:
     linear-gradient(var(--dz-burst), var(--dz-burst)) 3% 58% / 6px 6px no-repeat,
     linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 97% 38% / 5px 5px no-repeat,
@@ -431,7 +440,8 @@ body { overflow-x: clip; }
     linear-gradient(var(--dz-burst-2), var(--dz-burst-2)) 26% 96% / 5px 5px no-repeat;
 }
 .dz-btn::before,
-.iz-option::before {
+.iz-option::before,
+.dz-seg__btn::before {
   background:
     linear-gradient(var(--sunshine), var(--sunshine)) 8% 27% / 3px 3px no-repeat,
     radial-gradient(circle, var(--dz-burst-2) 0 2px, transparent 2.5px) 55% 0% / 5px 5px no-repeat,
@@ -522,7 +532,8 @@ a.dz-tag:hover { animation: dz-wiggle var(--dz-wiggle-duration) ease-in-out; }
 
 /* Sparkles: one twinkles after each page title, two flank the footer line. A pseudo-element,
    so it sits outside the spans Dizzy.bouncify writes into the h1. The hero name's ::after is
-   its cursor, so it has none; nor does the recipe page's .rx-title, whose motion is M15's.
+   its cursor, so it has none; nor does the recipe page's .rx-title, as on the canvas's Recipe
+   board (it bounces once on load and keeps the neon glow).
    text-shadow: none keeps the neon title glow off the sparkle. */
 h1[data-dz-bounce]:not(.iz-hero-name, .rx-title)::after {
   content: "✦" / "";

@@ -1,9 +1,10 @@
 // The pixel burst on press (Dizzy M13), ported from the design canvas's
 // docs/design/flows/iz-bounce.js. The pixels themselves are CSS (site.css, "button burst"):
-// this only adds `.iz-burst` to a button or cafe option the moment it's pressed, so the
-// one-shot keyframes play on press rather than release, and clears it when they finish.
+// this only adds `.iz-burst` to a button, cafe option or segmented-control button (the recipe
+// page's US / Grams switch) the moment it's pressed, so the one-shot keyframes play on press
+// rather than release, and clears it when they finish.
 
-const SELECTOR = '.dz-btn, .iz-option';
+const SELECTOR = '.dz-btn, .iz-option, .dz-seg__btn';
 // The longer of the two burst layers (::before); when it ends, the whole burst is over.
 const LAST_ANIMATION = 'iz-burst-b';
 // A mouse click on an option's <label> also fires a forwarded click on its <input>, with

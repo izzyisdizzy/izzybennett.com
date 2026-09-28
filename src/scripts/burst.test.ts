@@ -17,6 +17,7 @@ function setup({ reduced = false } = {}) {
     <a class="dz-btn" id="aria-off" aria-disabled="true" href="#">Off</a>
     <label class="iz-option" id="opt"><input type="radio" name="d" /><span>Latte</span></label>
     <label class="iz-option" id="opt-off"><input type="radio" name="d" disabled /><span>Mocha</span></label>
+    <div class="dz-seg"><button class="dz-seg__btn" id="seg" aria-pressed="false">Grams</button></div>
     <p id="plain">text</p>`;
   installBurst(doc, win);
   const el = (id: string) => doc.getElementById(id)!;
@@ -113,6 +114,16 @@ describe('installBurst', () => {
     expect(t.bursting('opt')).toBe(false);
   });
 
+  it('bursts a segmented-control button (the recipe US / Grams switch) on press and from the keyboard', () => {
+    const pressed = setup();
+    pressed.pointerdown('seg');
+    expect(pressed.bursting('seg')).toBe(true);
+    // A fresh window: a click right after the press would count as its echo.
+    const keyed = setup();
+    keyed.keyClick(keyed.el('seg'));
+    expect(keyed.bursting('seg')).toBe(true);
+  });
+
   it('leaves disabled controls alone', () => {
     const t = setup();
     for (const id of ['off', 'aria-off', 'opt-off']) {
@@ -130,7 +141,7 @@ describe('installBurst', () => {
 
   it('adds no classes at all under reduced motion', () => {
     const t = setup({ reduced: true });
-    for (const id of ['btn', 'opt']) {
+    for (const id of ['btn', 'opt', 'seg']) {
       t.pointerdown(id);
       t.keyClick(t.el(id));
     }

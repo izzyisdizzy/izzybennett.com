@@ -119,7 +119,7 @@ the other tweak options were exploration and are not to be built.
 | M12 | #81 (done) | Every boxed surface in a Dizzy window |
 | M13 | #82 (done) | Canvas motion: burst on press, bounce once, pops, sparkles |
 | M14 | #83 (done) | Rewrite visible em-dash copy |
-| M15 | #84 | Adopt recipe-engine v2.1.0 on the recipe page |
+| M15 | #84 (done) | Adopt recipe-engine v2.1.0 on the recipe page |
 
 Order: M8 → M9 → M10–M15 by their stated dependencies, and **M7 lands last**,
 after M15 — its a11y and motion pass covers everything the later milestones add.
