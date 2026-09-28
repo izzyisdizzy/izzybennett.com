@@ -53,6 +53,16 @@ export function render(tokens) {
     ...tokens.shadow.tokens.map((token) => declare(token.name, token.value[theme])),
   ];
 
+  // A media-scoped theme on every page not explicitly set to daylight: the OS-dark fallback and
+  // the print override share this shape, so they can't drift apart.
+  const override = (media, theme) => [
+    `@media ${media} {`,
+    `  :root:not([data-theme="${light}"]) {`,
+    ...themed(theme).map((line) => `  ${line}`),
+    '  }',
+    '}',
+  ];
+
   const fixed = [
     ...Object.entries(tokens.type.families).map(([role, stack]) =>
       declare(`font-${role}`, SELF_HOSTED_FAMILY[role] ? `${SELF_HOSTED_FAMILY[role]}, ${stack}` : stack)
@@ -76,19 +86,11 @@ export function render(tokens) {
     '',
     '/* Nothing stored and no script: follow the OS. ThemeBoot stamps data-theme when it runs, so',
     '   this only decides the first paint for no-JS visitors. */',
-    '@media (prefers-color-scheme: dark) {',
-    `  :root:not([data-theme="${light}"]) {`,
-    ...themed(dark).map((line) => `  ${line}`),
-    '  }',
-    '}',
+    ...override('(prefers-color-scheme: dark)', dark),
     '',
     '/* Paper is white: print in daylight whatever the screen theme. The selector covers both an',
     '   explicit afterglow and the OS-dark fallback, and outranks both by specificity and order. */',
-    '@media print {',
-    `  :root:not([data-theme="${light}"]) {`,
-    ...themed(light).map((line) => `  ${line}`),
-    '  }',
-    '}',
+    ...override('print', light),
     '',
   ].join('\n');
 

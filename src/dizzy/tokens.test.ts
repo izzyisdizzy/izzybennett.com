@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { build, TOKENS_CSS, THEME_CSS } from '../../scripts/build-dizzy-tokens.mjs';
+import { build, TOKENS_CSS, THEME_CSS, TOKENS_JSON } from '../../scripts/build-dizzy-tokens.mjs';
 
 // tokens.json is the source of truth; the two CSS files are generated from it and committed.
 // This fails the moment someone edits the JSON (or the generator) without re-running
 // `npm run dizzy:tokens`, so the stylesheets can never quietly drift from the token file.
 describe('generated Dizzy token stylesheets', () => {
   const { tokensCss, themeCss } = build();
+  const tokens = JSON.parse(readFileSync(TOKENS_JSON, 'utf8'));
 
   it('tokens.css matches tokens.json', () => {
     expect(readFileSync(TOKENS_CSS, 'utf8')).toBe(tokensCss);
@@ -26,11 +27,15 @@ describe('generated Dizzy token stylesheets', () => {
   });
 
   it('forces daylight under print whatever data-theme says', () => {
-    const print = tokensCss.slice(tokensCss.indexOf('@media print {'));
+    const start = tokensCss.indexOf('@media print {');
+    expect(start).toBeGreaterThanOrEqual(0);
+    const print = tokensCss.slice(start, tokensCss.indexOf('\n}', start));
     expect(print).toContain(':root:not([data-theme="daylight"]) {');
     expect(print).toContain('color-scheme: light;');
-    expect(print).toContain('--ink: #14302e;');
-    expect(print).toContain('--orange-deep: #9c3d00;');
+    // Every themed token, not a sample: a dropped colour or shadow would print in afterglow.
+    for (const token of [...tokens.color.tokens, ...tokens.shadow.tokens]) {
+      expect(print).toContain(`--${token.name}: ${token.value.daylight};`);
+    }
   });
 
   it('aliases only colours into Tailwind', () => {
