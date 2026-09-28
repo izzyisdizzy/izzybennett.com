@@ -1,0 +1,67 @@
+// The pixel burst on press (Dizzy M13), ported from the design canvas's
+// docs/design/flows/iz-bounce.js. The pixels themselves are CSS (site.css, "button burst"):
+// this only adds `.iz-burst` to a button or cafe option the moment it's pressed, so the
+// one-shot keyframes play on press rather than release, and clears it when they finish.
+
+const SELECTOR = '.dz-btn, .iz-option';
+// The longer of the two burst layers (::before); when it ends, the whole burst is over.
+const LAST_ANIMATION = 'iz-burst-b';
+// A mouse click on an option's <label> also fires a forwarded click on its <input>, with
+// detail 0 like a keyboard click. Within this window of a pointerdown on the same element,
+// that click is the echo of the press, not a second one.
+const ECHO_MS = 500;
+
+const installed = new WeakSet<Document>();
+
+function isDisabled(el: Element): boolean {
+  if ((el as HTMLButtonElement).disabled) return true;
+  if (el.getAttribute('aria-disabled') === 'true') return true;
+  // An .iz-option is a <label>; its real control is the input inside it.
+  const input = el.classList.contains('iz-option') ? el.querySelector('input') : null;
+  return input?.disabled ?? false;
+}
+
+export function installBurst(doc: Document, win: Window & typeof globalThis): void {
+  if (installed.has(doc)) return;
+  installed.add(doc);
+
+  const lastPointer = new WeakMap<Element, number>();
+  const reduced = () =>
+    typeof win.matchMedia === 'function' && win.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function target(e: Event): Element | null {
+    return e.target instanceof win.Element ? e.target.closest(SELECTOR) : null;
+  }
+
+  function burst(el: Element | null): void {
+    if (!el || reduced() || isDisabled(el)) return;
+    el.classList.remove('iz-burst');
+    void (el as HTMLElement).offsetWidth; // restart the keyframes on a quick second press
+    el.classList.add('iz-burst');
+  }
+
+  doc.addEventListener('pointerdown', (e) => {
+    const el = target(e);
+    if (!el) return;
+    lastPointer.set(el, win.performance.now());
+    burst(el);
+  });
+
+  // Keyboard activation (Enter / Space, and arrow keys moving between radios) arrives as a
+  // click with no pointer detail.
+  doc.addEventListener('click', (e) => {
+    if ((e as MouseEvent).detail !== 0) return;
+    const el = target(e);
+    if (!el) return;
+    const pressed = lastPointer.get(el);
+    if (pressed !== undefined && win.performance.now() - pressed < ECHO_MS) return;
+    burst(el);
+  });
+
+  const clear = (e: Event) => {
+    if ((e as AnimationEvent).animationName !== LAST_ANIMATION) return;
+    if (e.target instanceof win.Element) e.target.classList.remove('iz-burst');
+  };
+  doc.addEventListener('animationend', clear);
+  doc.addEventListener('animationcancel', clear);
+}

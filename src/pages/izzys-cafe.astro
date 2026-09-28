@@ -19,7 +19,7 @@ const glyph: Record<string, string> = { Drinks: '☕', Milks: '🥛', Syrups: '�
 <BaseLayout title={page.data.title} description="The menu at Izzy's home cafe.">
   <div class="flex flex-wrap items-end justify-between gap-4">
     <div>
-      <h1 class="display-xl" data-dz-bounce="hover">{page.data.title}</h1>
+      <h1 class="display-xl" data-dz-bounce="once">{page.data.title}</h1>
       <p class="body-l mt-2 text-ink-muted">Pick a drink, tell me how you like it, and I'll make it.</p>
     </div>
     <!-- Filled in from the order server's public /status; stays hidden if it can't be reached. -->

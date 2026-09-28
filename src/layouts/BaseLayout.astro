@@ -42,7 +42,10 @@ const { title, description = "Izzy Bennett's personal website — resume, recipe
 <script>
   // Dizzy's behaviour bundle: a classic IIFE that assigns window.Dizzy (typed by
   // src/dizzy/index.d.ts). init() starts every [data-dz-bounce] and [data-dz-marquee] on the
-  // page; both are idempotent, so this is safe to run once per full page load.
+  // page; both are idempotent, so this is safe to run once per full page load. installBurst
+  // plays the pixel burst on every button and cafe option press.
   import '../dizzy/bundle.js';
+  import { installBurst } from '../scripts/burst';
   Dizzy.init();
+  installBurst(document, window);
 </script>
