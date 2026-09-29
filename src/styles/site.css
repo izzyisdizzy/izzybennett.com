@@ -385,6 +385,10 @@ main .rx-title {
   .iz-hero-name::after { animation: none; }
 }
 
+/* Homepage ticker items are links. Preflight already makes them inherit the marquee's ink; this
+   adds the hover cue (the track pauses on hover, so they're easy to hit). */
+.iz-ticker-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
 /* CRT: scanlines and a vignette fixed over the viewport, above the sticky nav (z 10) and the
    mobile sheet (z 20). Click-through, and faint enough that focus rings read through it. Fixed
    at inset 0, so it adds no scrollable overflow. Each line fades out over a pixel rather than
