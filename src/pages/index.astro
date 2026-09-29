@@ -13,9 +13,10 @@ const recipes = (await getCollection('recipes', ({ data }) => !data.draft)).sort
   a.data.title.localeCompare(b.data.title)
 );
 
-// The ticker's one featured recipe. Throw rather than ship a dead link if it's renamed or drafted.
-const featured = await getEntry('recipes', 'cherry-tomato-pasta');
-if (!featured || featured.data.draft) throw new Error('Missing featured recipe "cherry-tomato-pasta"');
+// The ticker's one featured recipe. /upload can rename, delete or draft it, so a missing or draft
+// entry just drops the ticker item — throwing here would fail every deploy until index.astro changed.
+const entry = await getEntry('recipes', 'cherry-tomato-pasta');
+const featured = entry && !entry.data.draft ? entry : undefined;
 ---
 
 <BaseLayout title="Home">
@@ -65,7 +66,7 @@ if (!featured || featured.data.draft) throw new Error('Missing featured recipe "
   <div class="dz-marquee mt-8" data-dz-marquee data-order-api={ORDER_API} role="marquee" aria-label="Site ticker">
     <div class="dz-marquee__track">
       <a class="iz-ticker-link" href="/recipes/">✦ {recipes.length} recipes and counting</a>
-      <a class="iz-ticker-link" href={`/recipes/${featured.id}/`}>🍳 try the {featured.data.title}</a>
+      {featured && <a class="iz-ticker-link" href={`/recipes/${featured.id}/`}>🍳 try the {featured.data.title}</a>}
       <a class="iz-ticker-link" href="/izzys-cafe/" data-kitchen-link>☕ Izzy's Cafe is <span data-kitchen-status>currently closed</span></a>
       <a class="iz-ticker-link" href="/projects/">✦ Built with Astro + Izzy</a>
     </div>
