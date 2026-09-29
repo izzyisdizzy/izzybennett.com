@@ -96,7 +96,6 @@ const entryDates = 'mono-s text-ink-muted sm:pt-1';
       </div>
       <div class="flex gap-3 iz-no-print">
         <a href="/resume.pdf" download class="dz-btn">Download PDF</a>
-        <button type="button" class="dz-btn dz-btn--cocoa lg:hidden" data-resume-print>Print</button>
       </div>
       <div class="iz-well hidden w-full flex-col gap-1 p-4 lg:flex print:hidden">
         <span class="label">Contact</span>
@@ -182,7 +181,3 @@ const entryDates = 'mono-s text-ink-muted sm:pt-1';
     </Window>
   </div>
 </BaseLayout>
-
-<script>
-  document.querySelector('[data-resume-print]')?.addEventListener('click', () => window.print());
-</script>
