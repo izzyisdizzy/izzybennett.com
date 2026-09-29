@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Window from '../components/Window.astro';
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import me from '../assets/me.jpeg';
 
 // Base URL of the Pi order server, for the live "kitchen open/closed" word in the ticker. Same
@@ -13,12 +13,9 @@ const recipes = (await getCollection('recipes', ({ data }) => !data.draft)).sort
   a.data.title.localeCompare(b.data.title)
 );
 
-// Three recipes for the ticker. Recipes carry no date, so "newest" isn't knowable; instead the
-// pick rotates with the build day, so every deploy (menu edits, new recipes) reshuffles it.
-const day = Math.floor(Date.now() / 86_400_000);
-const picks = [0, 1, 2]
-  .map((i) => recipes[(day * 3 + i * 7) % recipes.length])
-  .filter((recipe, i, all) => recipe && all.indexOf(recipe) === i);
+// The ticker's one featured recipe. Throw rather than ship a dead link if it's renamed or drafted.
+const featured = await getEntry('recipes', 'cherry-tomato-pasta');
+if (!featured || featured.data.draft) throw new Error('Missing featured recipe "cherry-tomato-pasta"');
 ---
 
 <BaseLayout title="Home">
@@ -62,14 +59,15 @@ const picks = [0, 1, 2]
     </figure>
   </div>
 
-  <!-- Ticker. Plain text only: bundle.js clones the track (aria-hidden) for the seamless loop,
-       and a link in there would come back as a second, hidden tab stop. -->
+  <!-- Ticker. Every item is a link; bundle.js clones the track (aria-hidden) for the seamless
+       loop, and the script below makes that clone inert so each link is a single tab stop. The
+       cafe item ships in its closed state and only flips to "taking orders" once the Pi says so. -->
   <div class="dz-marquee mt-8" data-dz-marquee data-order-api={ORDER_API} role="marquee" aria-label="Site ticker">
     <div class="dz-marquee__track">
-      <span>✦ {recipes.length} recipes and counting</span>
-      {picks.map((recipe) => <span>🍳 try the {recipe.data.title}</span>)}
-      <span>☕ Izzy's Cafe is <span data-kitchen-status>taking orders</span></span>
-      <span>✦ built with Astro + Dizzy</span>
+      <a class="iz-ticker-link" href="/recipes/">✦ {recipes.length} recipes and counting</a>
+      <a class="iz-ticker-link" href={`/recipes/${featured.id}/`}>🍳 try the {featured.data.title}</a>
+      <a class="iz-ticker-link" href="/izzys-cafe/" data-kitchen-link>☕ Izzy's Cafe is <span data-kitchen-status>currently closed</span></a>
+      <a class="iz-ticker-link" href="/projects/">✦ Built with Astro + Izzy</a>
     </div>
   </div>
 </BaseLayout>
@@ -77,14 +75,26 @@ const picks = [0, 1, 2]
 <script>
   import { fetchKitchenOpen } from '../scripts/order-status';
 
-  // Swap the ticker's kitchen word for the live state. Updates every copy — the marquee clone
-  // included — and leaves the build-time text alone when the Pi can't be reached.
   const marquee = document.querySelector<HTMLElement>('[data-dz-marquee]');
   if (marquee) {
+    // The loop's duplicate track is aria-hidden but its links would still take focus. It may be
+    // added before or after this runs (Dizzy.init lives in another module), so catch both.
+    const inertClones = () => {
+      for (const track of marquee.querySelectorAll<HTMLElement>('.dz-marquee__track[aria-hidden="true"]')) {
+        track.inert = true;
+      }
+    };
+    inertClones();
+    new MutationObserver(inertClones).observe(marquee, { childList: true });
+
+    // Flip the cafe item to its open state on every copy, clone included. Closed or unreachable
+    // leaves the build-time "currently closed" link to the menu page alone.
     fetchKitchenOpen(marquee.dataset.orderApi ?? '').then((open) => {
-      if (open === null) return;
-      for (const el of marquee.querySelectorAll('[data-kitchen-status]')) {
-        el.textContent = open ? 'open for orders' : 'closed right now 😴';
+      if (open !== true) return;
+      for (const link of marquee.querySelectorAll<HTMLAnchorElement>('[data-kitchen-link]')) {
+        link.href = '/order/';
+        const status = link.querySelector('[data-kitchen-status]');
+        if (status) status.textContent = 'taking orders';
       }
     });
   }
