@@ -315,18 +315,20 @@ select.iz-field {
    for the small UI text, a neon glow on the display titles, a blinking cursor after the home
    page name, and faint scanlines with a vignette over the whole viewport. The --retro-* colours
    are the canvas's shipped per-scheme values; like --retro-bevel they are retro-only, so they
-   live here rather than in tokens.json. Afterglow is keyed the way tokens.css keys it. */
+   live here rather than in tokens.json. Afterglow is keyed the way tokens.css keys it. The one
+   departure: afterglow's line is 12% rather than the canvas's 30%, because the overlay sits
+   above the text and a near-black line at 30% cut visibly through light glyphs. */
 :root {
   --retro-line: color-mix(in srgb, var(--outline) 3%, transparent);
   --retro-vignette: color-mix(in srgb, var(--outline) 7%, transparent);
 }
 [data-theme="afterglow"] {
-  --retro-line: color-mix(in srgb, var(--chrome-lo) 30%, transparent);
+  --retro-line: color-mix(in srgb, var(--chrome-lo) 12%, transparent);
   --retro-vignette: color-mix(in srgb, var(--chrome-lo) 55%, transparent);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="daylight"]) {
-    --retro-line: color-mix(in srgb, var(--chrome-lo) 30%, transparent);
+    --retro-line: color-mix(in srgb, var(--chrome-lo) 12%, transparent);
     --retro-vignette: color-mix(in srgb, var(--chrome-lo) 55%, transparent);
   }
 }
@@ -385,7 +387,8 @@ main .rx-title {
 
 /* CRT: scanlines and a vignette fixed over the viewport, above the sticky nav (z 10) and the
    mobile sheet (z 20). Click-through, and faint enough that focus rings read through it. Fixed
-   at inset 0, so it adds no scrollable overflow. */
+   at inset 0, so it adds no scrollable overflow. Each line fades out over a pixel rather than
+   ending hard, so it reads as a glow band instead of a cut through text. */
 body::after {
   content: "";
   position: fixed;
@@ -393,7 +396,7 @@ body::after {
   z-index: 50;
   pointer-events: none;
   background:
-    repeating-linear-gradient(to bottom, var(--retro-line) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(to bottom, var(--retro-line) 0 1px, transparent 2px 4px),
     radial-gradient(ellipse at center, transparent 65%, var(--retro-vignette) 100%);
 }
 
