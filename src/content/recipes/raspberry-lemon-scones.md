@@ -35,7 +35,7 @@ ingredients:
       - name: "milk"
         qty: "¾"
         unit: "cup"
-      - name: "raspberries"
+      - name: "frozen raspberries"
         qty: "3-6"
         unit: "oz"
   - group: "Lemon Icing"
