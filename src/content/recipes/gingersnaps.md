@@ -4,7 +4,7 @@ category: "dessert"
 keywords: ["cookies", "ginger", "baking"]
 tools:
   - "Mixing bowl"
-  - "Egg beater"
+  - "Egg beater or stand mixer"
   - "Baking sheet"
 ingredients:
   - items:
