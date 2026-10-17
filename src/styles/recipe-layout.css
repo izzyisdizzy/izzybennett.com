@@ -22,3 +22,30 @@
   main .rx-recipe > [aria-labelledby="rx-ingredients"] { grid-column: 1; }
   main .rx-recipe > [aria-labelledby="rx-steps"] { grid-column: 2; }
 }
+
+/* Readability: the engine's ingredient list (16px names, 14px amounts), its measurement popovers
+   (16px) and the header's "Edit recipe" / "Print" controls (14px) read too small, so they are a
+   size up at every screen width. Screen only, so print keeps the engine's sizes; scoped to
+   .rx-recipe, so the popover changes only reach the recipe page, whose script
+   (src/pages/recipes/[...slug].astro) nudges an open popover back onto the screen and caps its
+   width to the viewport. A popover wider than the screen wraps its group labels, never its
+   amounts. The engine's `min-width: max-content` is swapped for `width` so that cap can take
+   effect; the 100vw max-width here is the fallback before the script runs. */
+@media screen {
+  main .rx-recipe .rx-ing { font-size: 19px; line-height: 30px; }
+  main .rx-recipe .rx-amt { font-size: 17px; line-height: 26px; }
+  main .rx-recipe .ing-pop {
+    width: max-content;
+    min-width: 0;
+    max-width: calc(100vw - 16px);
+    font-size: 19px;
+    line-height: 28px;
+    white-space: normal;
+  }
+  main .rx-recipe .ing-pop .ing-amt { white-space: nowrap; }
+  main .rx-recipe .ing-inline .ing-amt { font-size: 0.95em; }
+
+  /* The lede's 18px, with a little vertical padding so they're easier to tap. */
+  main .rx-recipe .rx-edit,
+  main .rx-recipe .rx-print { font-size: 18px; padding-block: 6px; }
+}

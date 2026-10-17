@@ -26,4 +26,40 @@ const { recipe } = Astro.props;
   // Reveal the edit link only when signed in. OAuth never returns to a detail page, so there's no
   // hash to ingest here — just reflect the stored session onto <html data-auth> and let CSS gate.
   applyAuthState();
+
+  // The engine anchors each measurement popover to the left edge of its ingredient, so one near
+  // the right of the line (or a wide multi-group one) can run off a phone screen. When a popover
+  // opens — hover, keyboard focus or tap — cap its width to the viewport (clientWidth, which
+  // excludes a classic scrollbar, unlike the CSS fallback's 100vw) and shift it left just enough
+  // to fit, never past the left edge and never to the right. Measured on the next frame so the
+  // engine's tap handler has set data-open first; refitted on resize/rotation while open.
+  const EDGE = 8;
+  const fit = (pop: HTMLElement) => {
+    const viewport = document.documentElement.clientWidth;
+    pop.style.left = '';
+    pop.style.maxWidth = `${viewport - 2 * EDGE}px`;
+    requestAnimationFrame(() => {
+      const rect = pop.getBoundingClientRect();
+      if (!rect.width) return; // not open
+      const over = rect.right - (viewport - EDGE);
+      if (over > 0) pop.style.left = `${-Math.max(0, Math.min(over, rect.left - EDGE))}px`;
+    });
+  };
+  const refOf = (node: EventTarget | null) => (node instanceof Element ? node.closest('.ing-ref') : null);
+  const steps = document.querySelector('[aria-labelledby="rx-steps"]');
+  if (steps) {
+    const onOpen = (e: Event) => {
+      const ref = refOf(e.target);
+      // pointerover repeats as the pointer crosses the ref's children; only act on entering it.
+      if (e instanceof PointerEvent && refOf(e.relatedTarget) === ref) return;
+      const pop = ref?.querySelector<HTMLElement>('.ing-pop');
+      if (pop) fit(pop);
+    };
+    for (const type of ['pointerover', 'focusin', 'click']) steps.addEventListener(type, onOpen);
+    window.addEventListener('resize', () => {
+      steps
+        .querySelectorAll<HTMLElement>('.ing-ref:is([data-open], :hover, :focus-within) > .ing-pop')
+        .forEach(fit);
+    });
+  }
 </script>
