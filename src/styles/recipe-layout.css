@@ -41,3 +41,8 @@ main .ing-pop {
 }
 main .ing-pop .ing-amt { white-space: nowrap; }
 main .ing-inline .ing-amt { font-size: 0.95em; }
+
+/* The header's "Edit recipe" link and "Print" button (engine: 14px) match the 18px lede, with a
+   little vertical padding so they're easier to tap. */
+main .rx-edit,
+main .rx-print { font-size: 18px; padding-block: 6px; }
