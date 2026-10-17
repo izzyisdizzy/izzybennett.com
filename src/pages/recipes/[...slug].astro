@@ -26,4 +26,28 @@ const { recipe } = Astro.props;
   // Reveal the edit link only when signed in. OAuth never returns to a detail page, so there's no
   // hash to ingest here — just reflect the stored session onto <html data-auth> and let CSS gate.
   applyAuthState();
+
+  // The engine anchors each measurement popover to the left edge of its ingredient, so one near
+  // the right of the line (or a wide multi-group one) can run off a phone screen. When a popover
+  // opens — hover, keyboard focus or tap — shift it left just enough to fit, never past the left
+  // edge. Measured on the next frame so the engine's tap handler has set data-open first.
+  const EDGE = 8;
+  const refOf = (node: EventTarget | null) => (node instanceof Element ? node.closest('.ing-ref') : null);
+  const fitPopover = (e: Event) => {
+    const ref = refOf(e.target);
+    // pointerover repeats as the pointer crosses the ref's children; only act on entering it.
+    if (e instanceof PointerEvent && refOf(e.relatedTarget) === ref) return;
+    const pop = ref?.querySelector<HTMLElement>('.ing-pop');
+    if (!pop) return;
+    pop.style.left = '';
+    requestAnimationFrame(() => {
+      const rect = pop.getBoundingClientRect();
+      if (!rect.width) return; // not open
+      const over = rect.right - (document.documentElement.clientWidth - EDGE);
+      if (over > 0) pop.style.left = `${-Math.min(over, rect.left - EDGE)}px`;
+    });
+  };
+  for (const type of ['pointerover', 'focusin', 'click']) {
+    document.addEventListener(type, fitPopover);
+  }
 </script>
