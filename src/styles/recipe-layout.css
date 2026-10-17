@@ -49,3 +49,16 @@
   main .rx-recipe .rx-edit,
   main .rx-recipe .rx-print { font-size: 18px; padding-block: 6px; }
 }
+
+/* The index's ✎ edit link sits right beside the row link; on touch, give it a full 44px target
+   so a tap meant for edit doesn't open the recipe. No `display` here: this selector outranks
+   auth.css's `.auth-only` gate, so setting one would show the link when signed out. It's a flex
+   item already, so the min sizes apply; 28px line + the engine's 8px padding centres the glyph. */
+@media (pointer: coarse) {
+  main #recipe-grid .rx-card__edit {
+    min-width: 44px;
+    min-height: 44px;
+    line-height: 28px;
+    text-align: center;
+  }
+}

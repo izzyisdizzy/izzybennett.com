@@ -512,6 +512,19 @@ body { overflow-x: clip; }
 /* A dz-row inside a narrow window (more-projects.txt): less side padding. */
 .iz-row-tight { padding-inline: var(--space-2); }
 
+/* Rows on phones. At 375px the row's 16px sides and gaps left a 19px nowrap title too little
+   room beside its meta (about 155px in the recipes window), so long names ellipsised. Below sm
+   every row runs tight, and titles wrap rather than clip. */
+@media (width < 40rem) {
+  .dz-row { gap: var(--space-3); padding-inline: var(--space-2); }
+  .dz-row__title { white-space: normal; overflow-wrap: break-word; }
+}
+/* The end sparkle is a hover cue and holds its gap even at opacity 0; without hover it's dead
+   space, so drop it there (tablets and landscape phones included, not just narrow screens). */
+@media (hover: none) {
+  .dz-row::after { display: none; }
+}
+
 /* ------------------------------------------------------------- tag buttons */
 /* A dz-tag used as a toggle (the recipe category filters). */
 .iz-tag-button { cursor: pointer; }
