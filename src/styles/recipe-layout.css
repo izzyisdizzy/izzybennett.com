@@ -50,16 +50,15 @@
   main .rx-recipe .rx-print { font-size: 18px; padding-block: 6px; }
 }
 
-/* The /recipes index on phones. Below sm the window body's 24px, the row's 16px and its three
-   16px gaps (title, category, and the hover-only ✦ sparkle, which holds its space at opacity 0)
-   left a 19px nowrap title about 155px at 375px wide, so longer names ellipsised. Tighten the
-   padding, drop the sparkle (there's no hover on touch), and let titles wrap rather than clip.
-   The window is targeted by its aria-labelledby id, like the recipe page's windows above. */
-@media screen and (max-width: 39.99rem) {
-  main [aria-labelledby="recipe-list-heading"] > .dz-window__body { padding: var(--space-3); }
-  main #recipe-grid .rx-card { gap: var(--space-1); }
-  main #recipe-grid .dz-row { gap: var(--space-3); padding: var(--space-3) var(--space-2); }
-  main #recipe-grid .dz-row::after { display: none; }
-  main #recipe-grid .dz-row__title { white-space: normal; overflow-wrap: anywhere; }
-  main #recipe-grid .rx-card__edit { padding: var(--space-2); }
+/* The index's ✎ edit link sits right beside the row link; on touch, give it a full 44px target
+   so a tap meant for edit doesn't open the recipe. No `display` here: this selector outranks
+   auth.css's `.auth-only` gate, so setting one would show the link when signed out. It's a flex
+   item already, so the min sizes apply; 28px line + the engine's 8px padding centres the glyph. */
+@media (pointer: coarse) {
+  main #recipe-grid .rx-card__edit {
+    min-width: 44px;
+    min-height: 44px;
+    line-height: 28px;
+    text-align: center;
+  }
 }
