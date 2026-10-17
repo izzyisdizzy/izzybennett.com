@@ -56,6 +56,8 @@ steps:
       - "In a separate bowl mix together the flour, baking soda, salt, ginger, cinnamon, allspice, and cloves."
       - "Add the dry ingredients to the wet and squish together with hands until crumbly."
       - "Add the oat milk and continue to squish together until evenly combined."
-      - "Spray baking sheet with canola spray and place balls of dough on it. Flatten dough balls if flatter cookies are desired."
+      - "Spray baking sheet with canola spray and place balls of dough on it."
+      - "Sprinkle the cinnamon sugar on top of the dough balls."
+      - "Flatten dough balls if flatter cookies are desired."
       - "Bake for 15 minutes. Allow to cool for 20 minutes."
 ---
