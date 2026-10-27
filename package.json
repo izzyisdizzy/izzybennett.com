@@ -24,7 +24,7 @@
     "@izzy/cafe-menu": "github:izzyisdizzy/cafe-menu#v1.0.0",
     "@izzy/recipe-engine": "github:izzyisdizzy/recipe-engine#v2.3.1",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.2.8",
+    "astro": "^7.4.2",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
